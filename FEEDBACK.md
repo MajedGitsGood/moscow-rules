@@ -23,12 +23,12 @@ Running notes from playthroughs. Raw feedback first; it becomes work items once 
 - Orders shouldn't go through a separate cable page. **Click an agent on the map** and write their cable in a popup, with an indicator of how many actions are left this week.
 
 ### Free-text cables
-- Several free-text cables came back "unclear" straight away. **Log every cable and its interpretation** so we can see what players are trying to tell their agents.
+- Several free-text cables came back "unclear" straight away. **Log every cable and its interpretation** so we can see what players are trying to tell their agents. **Done 2026-11-24:** `logs/cables.jsonl`.
 - Right now it feels like you either spell out exactly what you want or you're writing nonsense. The free-form mechanic needs rethinking.
 - Observed in the screenshot (all three read by Claude, not the offline reader):
   - "Report on persona in the city" to a Lamplighter became Watch. Correct.
   - "Anyone worth talking to?" to a Talent-spotter came back unclear. A reasonable reading is: scout the city for someone to approach (Watch), or make an approach (Recruit).
-  - "Who's in your city?" to a Scalphunter came back unclear. That is plainly a Watch. The interpreter seems to treat questions as "not an instruction", which is too strict.
+  - "Who's in your city?" to a Scalphunter came back unclear. That is plainly a Watch. The interpreter seems to treat questions as "not an instruction", which is too strict. **Fixed 2026-11-24:** questions and coded phrasing now become orders; covered by `tools/eval-cables.js`.
 
 ### Morning traffic (week 2)
 - Reading the traffic is the most fun part so far.

@@ -3,10 +3,10 @@
 import { ARCHETYPES } from './world.js';
 
 const VERBS = {
-  strike: /\b(kill|eliminat\w*|strike|hit|remove|terminat\w*|liquidat\w*|assassinat\w*|take (him|her|them) out|deal with|neutrali[sz]e|wet work)\b/i,
-  expose: /\b(expose|burn|blow (his|her|their)? ?cover|unmask|out (him|her|them))\b/i,
-  recruit: /\b(recruit|turn|approach|pitch|cultivate|flip|buy|befriend|sound out)\b/i,
-  watch: /\b(watch|observe|surveil\w*|report|look|see|scout|eyes on|count|who is|what do you see)\b/i,
+  strike: /\b(kill|eliminat\w*|strike|hit|remove|terminat\w*|liquidat\w*|assassinat\w*|take (him|her|them) out|take care of|deal with|neutrali[sz]e|wet work|clean house|(doesn't|does not|won't|never) see)\b/i,
+  expose: /\b(expose|burn|blow (him|her|them|(his|her|their) cover)|unmask|out (him|her|them))\b/i,
+  recruit: /\b(recruit|turn|approach|pitch|cultivate|flip|buy|befriend|sound out|quiet word|(has|have) a price)\b/i,
+  watch: /\b(watch|observe|surveil\w*|report|look|see|scout|eyes on|count|who('s| is| are)|anyone|anybody|what('s| is) (happening|going on|the picture)|picture|worth talking to)\b/i,
   move: /\b(go|move|travel|proceed|relocate|head|get to|transfer|fly|drive|take the train|cross)\b/i,
   lielow: /\b(lie low|stay put|hold|wait|do nothing|stand down|sit tight|go quiet)\b/i,
 };
@@ -19,7 +19,8 @@ export function keywordInterpret({ agent, text, cities, enemies }) {
   for (const k of ['strike', 'expose', 'recruit', 'lielow', 'watch', 'move']) {
     if (VERBS[k].test(t)) { order = k; break; }
   }
-  if (!order && city && city !== agent.city) order = 'move';
+  // Naming another city means going there first: nothing else can happen until they arrive.
+  if (order !== 'lielow' && city && city !== agent.city) order = 'move';
   if (order === 'move' && (!city || city === agent.city)) order = city ? 'lielow' : null;
   return finalize({ agent, order, city, targetId: target ? target.id : 'any', clarity: order ? 0.8 : 0.2 });
 }

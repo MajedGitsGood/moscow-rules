@@ -21,3 +21,4 @@ venv/
 *.log
 .env
 node_modules/
+logs/

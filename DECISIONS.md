@@ -4,6 +4,19 @@ Why-this-not-that for this project, newest first. Companion to [CHANGELOG.md](CH
 
 ---
 
+## 2026-11-24: Read cables generously; "unclear" only when there is no reasonable reading
+**Decision:** The interpreter now looks for the most plausible order given the agent's role and city.
+Questions count as instructions, coded language is expected, and a cable asking for several things
+becomes the first one that can happen (moving before acting there). Low clarity is reserved for
+pleasantries, nonsense or contradictions. Every cable Claude reads is logged, and an eval set of real
+phrasings (starting with playtest 1's misreads) guards the behaviour.
+**Why:** Playtest 1: "Who's in your city?" and "Anyone worth talking to?" came back unclear, leaving
+players feeling they had to spell orders out precisely or be ignored. The skill the game tests is what
+you *reveal* in a cable, not how precisely you phrase commands.
+**Rejected:** *Asking the player to confirm a menu of interpretations* (turns free text back into
+menus). *Treating multi-part cables as unclear* (punishes natural writing). *Queuing the second half
+of a multi-part cable for next week* (a hidden rule; may come later if players want it).
+
 ## 2026-11-24: Fact-check Claude's agent text in code, not just in the prompt
 **Decision:** Every line Claude writes for an agent (the reply to a cable, the morning rewrite) passes
 `factsCheck` in `js/cables.js`. It may not name a city, agent or role that its source doesn't name, or

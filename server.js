@@ -39,6 +39,21 @@ const client = hasCredentials ? new Anthropic() : null;
 const offlineReason = hasCredentials ? null : 'No Anthropic credentials on the server (set ANTHROPIC_API_KEY).';
 
 const usage = new Map(); // session -> tokens
+
+// Every cable Claude reads is appended to logs/cables.jsonl (gitignored), so playtests show what
+// players tried to say and how it was understood.
+const LOG_DIR = path.join(ROOT, 'logs');
+function logCable(session, user, text) {
+  try {
+    const u = JSON.parse(user), r = JSON.parse(text);
+    fs.mkdirSync(LOG_DIR, { recursive: true });
+    fs.appendFileSync(path.join(LOG_DIR, 'cables.jsonl'), JSON.stringify({
+      time: new Date().toISOString(), session, agent: u.agent, cable: u.cable,
+      order: r.order, city: r.city, target: r.target, clarity: r.clarity, reply: r.reply,
+    }) + '\n');
+    console.log(`[cable] ${u.agent?.name} (${u.agent?.archetype}, ${u.agent?.city}): "${u.cable}" -> ${r.order}${r.city ? ' ' + r.city : ''}${r.target ? ' ' + r.target : ''} (clarity ${r.clarity})`);
+  } catch { /* logging must never break the game */ }
+}
 const isOwner = (req) => !!OWNER_TOKEN && req.headers['x-owner-token'] === OWNER_TOKEN;
 const remaining = (session, owner) => (owner ? null : Math.max(0, GUEST_BUDGET - (usage.get(session) || 0)));
 
@@ -120,6 +135,7 @@ const server = http.createServer(async (req, res) => {
     if (r.stop_reason === 'max_tokens') return json(res, 502, { ok: false, error: 'response cut off', remaining: remaining(session, owner) });
     const text = r.content.find((b) => b.type === 'text')?.text;
     if (!text) return json(res, 502, { ok: false, error: 'no text in response' });
+    if (kind === 'interpret') logCable(session, user, text);
     return json(res, 200, { ok: true, text, remaining: remaining(session, owner) });
   }
   if (req.method === 'GET') return serveStatic(req, res);

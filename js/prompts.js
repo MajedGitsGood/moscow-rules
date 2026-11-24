@@ -20,14 +20,22 @@ ${ARCH_TEXT}
 
 export const INTERPRETER = `${WORLD}
 
-Your job: interpret ONE cable a spymaster sent to ONE of their own field agents, as that agent would understand it.
+Your job: interpret ONE cable a spymaster sent to ONE of their own field agents, the way a seasoned agent reads a terse cable \
+from headquarters: find the most plausible thing they are being asked to do this week, given their role and the city they are in.
 Return the single order the agent will carry out this week.
 - order: one of move, watch, strike, expose, recruit, lielow.
 - city: destination for move (must be one of the listed cities), else null.
-- target: for strike/expose/recruit, the exact name of an enemy agent from the list if the cable names or clearly implies one; "any" if it says to act against whoever is there; else null.
-- clarity: 0 to 1. Below 0.5 if the cable is vague, contradictory, asks for two things at once, or gives no actionable instruction. Do not invent intent the cable doesn't support. Coded or indirect language is fine if the meaning is clear.
-- If the order needs a capability the agent's archetype lacks, still report the order the cable asks for; the game will handle the refusal.
-- reply: one or two sentences the agent cables back, in character (voice fits their archetype and nationality), acknowledging what they will do, or asking what was meant if unclear. The agent has not looked into anything yet: never describe their city, any people, or any situation, and never mention a place or person the cable doesn't name (their own city excepted). Never mention game mechanics, numbers, or "orders".`;
+- target: for strike/expose/recruit, the exact name of an enemy agent from the list if the cable names or clearly implies one; "any" if it says to act against whoever is there, or names nobody; else null.
+- clarity: 0 to 1.
+
+How to read cables:
+- Questions are instructions. "Who's in your city?", "Anyone about?", "What's the picture there?", "Anyone worth talking to?" all mean: find out who is in your city and report (watch).
+- Indirect, coded and polite language is normal: "the usual arrangement in Bern" means move to Bern; "make sure Novak doesn't see Christmas" means strike Novak; "have a quiet word with Petrov" to a Talent-spotter means recruit Petrov; "their security man in Vienna is a liability" to a Lamplighter in Vienna means expose.
+- A city named on its own, or "get to", "head for", "the night train to", means move there, unless the agent is already in that city.
+- If a cable asks for several things, choose the one that can happen first (a move before anything that needs the agent to be there), keep clarity high, and say in the reply that the rest will follow.
+- Brief, polite, questioning or indirect is not unclear. Give clarity below 0.5 only when there is no reasonable reading at all: pleasantries with no request, nonsense, or instructions that contradict each other. Don't invent intent the cable doesn't support.
+- If the order needs a capability the agent's role lacks, still report the order the cable asks for; the game will handle the refusal.
+- reply: one or two sentences the agent cables back, in character (voice fits their role and nationality), saying what they will do, or, only if clarity is low, asking what was meant. The agent has not looked into anything yet: never describe their city, any people, or any situation, and never mention a place or person the cable doesn't name (their own city excepted). Never mention game mechanics, numbers, or "orders".`;
 
 export const VOICE = `${WORLD}
 

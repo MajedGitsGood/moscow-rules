@@ -5,11 +5,16 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 ## [Unreleased]
 
 ### Fixed
+- Agents read cables generously. Questions ("Who's in your city?"), coded phrasing ("Paris. Usual
+  arrangement.") and cables asking for several things now become orders instead of "unclear". When a
+  cable names another city, the agent goes there first.
 - Agents no longer invent intelligence in their replies ("London is quiet" from an agent in Moscow who
   never looked). Text Claude writes for an agent is fact-checked against what the game actually
   produced; anything that adds a city, a person, a role or a description falls back to the plain report.
 
 ### Added
+- Every cable Claude reads is logged to `logs/cables.jsonl` and printed in the server window, with
+  the order it became. `node tools/eval-cables.js [--live]` checks 17 sample cables against both readers.
 - `.env` support: put your API key in `.env` (copy `.env.example`) and run `npm start`.
 - First playable build: setup on six cities, eight agents a side (Scalphunter, Lamplighter, Ferret,
   Talent-spotter) in a rock-paper-scissors cycle, free-text cables, Watch / Move / Strike / Expose /
