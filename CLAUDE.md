@@ -1,6 +1,6 @@
 # CLAUDE.md: working conventions for this repo
 
-Moscow Rules, a le Carré-inspired spy duel. Vanilla HTML/CSS/JS with ES modules, no build step.
+Moscow Rules, a le Carré-inspired spy duel: Stratego on a map, AI-written reports (see SPEC.md). Vanilla HTML/CSS/JS with ES modules, no build step.
 Run with `npm start` (port 8643; static files plus the `/api/claude` proxy). Secrets live in `.env` (gitignored; see `.env.example`).
 
 ## Architecture rules
@@ -9,7 +9,9 @@ Run with `npm start` (port 8643; static files plus the `/api/claude` proxy). Sec
 - Controllers (human UI, `controllers/claude.js`, `controllers/heuristic.js`) only ever see `viewFor(side)`.
   Never pass the full game to Claude.
 - Both sides follow identical rules. Don't add Karla-only logic to the engine.
-- Model routing lives in `server.js` (`MODELS`): Karla on Opus, everything else on Haiku.
+- Model routing lives in `server.js` (`MODELS`): Karla on Opus, report voices on Haiku.
+- Claude never states facts: report rewrites go through `factsCheck` in `js/voices.js`.
+- Keep mechanics minimal; playtest feedback lives in FEEDBACK.md.
 - System prompts in `js/prompts.js` must stay byte-stable so they cache; put game data in the user message.
 - Every Claude call has an offline fallback. Keep it that way.
 

@@ -1,91 +1,102 @@
-// Claude as a player (Opus). It sees only viewFor(side), the same fog-of-war a human gets,
-// and returns cables (text + intended order) that the engine validates. If anything goes wrong
-// (no proxy, budget spent, invalid output) it falls back to the heuristic bot for that week.
+// Claude as a player (Opus). It sees only viewFor(side), the same fog of war a human gets, and
+// returns orders that the engine validates one by one. Anything invalid is dropped; if the call
+// fails entirely (no proxy, budget spent, refusal) the heuristic bot plays that week instead.
 import { callClaude } from '../llm.js';
 import { KARLA, KARLA_PLACEMENT } from '../prompts.js';
 import { ARCHETYPES, RULES } from '../world.js';
-import { validateOrders, validatePlacement } from '../engine.js';
+import { validateOrders, validatePlacement, legalOrders } from '../engine.js';
 import { heuristicOrders, heuristicPlacement } from './heuristic.js';
 
-const lastClaim = (s) => (s.claims.length ? s.claims[s.claims.length - 1] : null);
+const label = (k) => ARCHETYPES[k].label;
 
-// A compact, readable rendering of the view, so Opus spends tokens on thinking, not parsing.
-function summarize(view, journal) {
-  const label = (k) => ARCHETYPES[k].label;
+function summarize(game, view) {
+  const name = (id) => game.agents[id]?.name;
+  const intelOn = (id) => {
+    const i = view.intel[id];
+    if (!i) return {};
+    const r = i.roles.at(-1);
+    return {
+      reportedRole: r ? `${label(r.archetype)} (per ${r.source}, wk ${r.week})` : undefined,
+      suspicions: i.suspicions.length ? i.suspicions.map((s) => `${s.kind} by ${s.source}, wk ${s.week}`) : undefined,
+    };
+  };
   return {
-    week: view.week,
-    weeksTotal: RULES.weeks,
-    cities: view.cities,
-    limits: view.limits,
-    tally: view.tally,
-    yourAgents: view.own.filter((a) => a.alive).map((a) => ({ name: a.name, archetype: label(a.archetype), city: a.city })),
-    yourLosses: view.own.filter((a) => !a.alive).map((a) => ({ name: a.name, archetype: label(a.archetype), how: a.eliminated.how, week: a.eliminated.week })),
-    britishAgentsYouHaveTurned: view.assets.map((a) => ({ name: a.name, archetype: label(a.archetype), city: a.city })),
-    britishAgentsSighted: Object.values(view.sightings).map((s) => {
-      const c = lastClaim(s);
-      return { name: s.name, lastSeen: s.lastCity, week: s.lastWeek, reportedArchetype: c ? `${label(c.archetype)} (per ${c.source}, wk ${c.week})` : 'unknown', status: s.fate || 'active' };
-    }),
-    trafficThisWeek: view.inbox.filter((m) => m.week === view.week).map((m) => ({ kind: m.kind, from: m.from, text: m.text })),
-    earlierTraffic: view.inbox.filter((m) => m.week < view.week && m.week >= view.week - 3).map((m) => ({ week: m.week, kind: m.kind, from: m.from, text: m.text })),
-    yourJournalSoFar: journal.slice(-4),
+    week: view.week, weeksTotal: RULES.weeks, ordersAllowed: RULES.ordersPerWeek, cities: view.cities,
+    score: view.score,
+    yourAgents: view.own.filter((a) => a.alive).map((a) => ({
+      name: a.name, role: label(a.archetype), city: a.city,
+      preparedStrikeOn: a.prep ? name(a.prep.targetId) : undefined,
+      canDo: legalOrders(game, view.side, a.id).map((l) => l.targets ? `${l.type} [${l.targets.map(name).join(', ')}]` : l.type),
+      ...intelOn(a.id),
+    })),
+    yourLosses: view.own.filter((a) => !a.alive).map((a) => `${a.name} (${label(a.archetype)}), ${a.eliminated.how}, wk ${a.eliminated.week}`),
+    yourTraps: view.traps.map((t) => `${t.city} (${t.active ? 'ready' : 'ready next week'})`),
+    yourApproaches: Object.entries(view.approachProgress).map(([id, n]) => `${name(id)}: ${n}/${RULES.approachesToTurn}`),
+    britishAgents: view.enemies.filter((e) => e.alive).map((e) => ({
+      name: e.name, cover: e.cover, city: e.city,
+      ...(e.asset ? { workingForYou: true, role: label(e.archetype) } : intelOn(e.id)),
+    })),
+    britishLosses: view.enemies.filter((e) => !e.alive).map((e) => e.name),
+    trafficThisWeek: view.inbox.filter((m) => m.week === view.week).map((m) => ({ kind: m.kind, from: name(m.from) || 'Station', city: m.city, text: m.text })),
+    earlierTraffic: view.inbox.filter((m) => m.week < view.week && m.week >= view.week - 2).map((m) => ({ week: m.week, from: name(m.from) || 'Station', text: m.text })),
+    yourJournalSoFar: game.journal[view.side].slice(-4),
   };
 }
 
 const ORDER_SCHEMA = {
   type: 'object',
   properties: {
-    cables: {
+    orders: {
       type: 'array',
       items: {
         type: 'object',
         properties: {
           agent: { type: 'string' },
-          text: { type: 'string' },
-          order: { type: 'string', enum: ['move', 'watch', 'strike', 'expose', 'recruit', 'lielow', 'feed'] },
-          city: { type: ['string', 'null'] },
-          target: { type: ['string', 'null'] },
+          type: { type: 'string', enum: ['move', 'surveil', 'lielow', 'prepare', 'strike', 'trap', 'approach', 'vet', 'brief', 'lie'] },
+          city: { type: ['string', 'null'], description: 'move: destination' },
+          target: { type: ['string', 'null'], description: 'prepare/strike/approach/vet: agent name' },
+          planKind: { type: ['string', 'null'], enum: ['strike', 'trap', null], description: 'brief only' },
+          planCity: { type: ['string', 'null'], description: 'brief only' },
+          lieKind: { type: ['string', 'null'], enum: ['hide', 'frame', 'alarm', null], description: 'lie only (British agents working for you)' },
+          lieTarget: { type: ['string', 'null'], description: 'lie frame: which British agent to frame' },
         },
-        required: ['agent', 'text', 'order', 'city', 'target'],
+        required: ['agent', 'type', 'city', 'target', 'planKind', 'planCity', 'lieKind', 'lieTarget'],
         additionalProperties: false,
       },
     },
+    execute: { type: 'array', items: { type: 'string' } },
     journal: { type: 'string' },
   },
-  required: ['cables', 'journal'],
+  required: ['orders', 'execute', 'journal'],
   additionalProperties: false,
 };
 
-function toOrders(game, side, view, r) {
-  const byName = (n, pool) => pool.find((a) => n && (a.name.toLowerCase() === n.toLowerCase() || n.toLowerCase().includes(a.name.toLowerCase())));
-  const mine = view.own.filter((a) => a.alive);
-  const enemies = Object.values(view.sightings).filter((s) => s.fate !== 'eliminated');
-  const orders = [];
-  for (const c of r.cables.slice(0, RULES.cablesPerWeek)) {
-    const a = c.order === 'feed' ? byName(c.agent, view.assets) : byName(c.agent, mine);
-    if (!a || orders.some((o) => o.agentId === a.id)) continue;
-    const o = { agentId: a.id, type: c.order, text: c.text };
-    if (c.order === 'feed') o.message = c.text;
-    if (c.order === 'move') o.city = view.cities.find((x) => x.toLowerCase() === (c.city || '').toLowerCase());
-    if (['strike', 'expose', 'recruit'].includes(c.order)) {
-      const t = c.target && c.target !== 'any' ? byName(c.target, enemies) : null;
-      o.targetId = t ? t.id : 'any';
-    }
-    if (o.type === 'move' && !o.city) continue;
-    orders.push(o);
-  }
-  // Drop anything the engine would reject, one order at a time.
+function toOrders(game, side, r) {
+  const byName = (n) => n && Object.values(game.agents).find((a) => a.name.toLowerCase() === n.toLowerCase());
+  const city = (c) => game.cities.find((x) => x.toLowerCase() === (c || '').toLowerCase());
   const valid = [];
-  for (const o of orders) if (!validateOrders(game, side, [...valid, o]).length) valid.push(o);
-  return valid;
+  for (const c of r.orders) {
+    const a = byName(c.agent);
+    if (!a) continue;
+    const o = { agentId: a.id, type: c.type };
+    if (c.type === 'move') o.city = city(c.city);
+    if (['prepare', 'strike', 'approach', 'vet'].includes(c.type)) o.targetId = byName(c.target)?.id;
+    if (c.type === 'brief') o.plan = { kind: c.planKind || 'strike', city: city(c.planCity) };
+    if (c.type === 'lie') o.lie = { kind: c.lieKind || 'hide', targetId: byName(c.lieTarget)?.id };
+    if (!validateOrders(game, side, [...valid, o]).length) valid.push(o);
+    if (valid.length >= RULES.ordersPerWeek) break;
+  }
+  const executions = (r.execute || []).map(byName).filter((a) => a && a.side === side && a.alive).map((a) => a.id);
+  return { orders: valid, executions };
 }
 
 export async function claudeOrders(game, side, view) {
   try {
-    const r = await callClaude('karla', { system: KARLA, user: JSON.stringify(summarize(view, game.journal[side])), schema: ORDER_SCHEMA, maxTokens: 6000 });
-    return { orders: toOrders(game, side, view, r), journal: r.journal, via: 'claude' };
+    const r = await callClaude('karla', { system: KARLA, user: JSON.stringify(summarize(game, view)), schema: ORDER_SCHEMA, maxTokens: 8000 });
+    return { ...toOrders(game, side, r), journal: r.journal, via: 'claude' };
   } catch (e) {
     console.warn('Karla fell back to the offline bot:', e.message);
-    return { orders: heuristicOrders(view, game.seed), journal: null, via: 'bot' };
+    return { orders: heuristicOrders(game, view, game.seed), executions: [], journal: null, via: 'bot' };
   }
 }
 
@@ -101,7 +112,11 @@ const PLACEMENT_SCHEMA = {
 
 export async function claudePlacement(game, side, view) {
   try {
-    const user = JSON.stringify({ cities: view.cities, yourAgents: view.own.map((a) => ({ name: a.name, archetype: ARCHETYPES[a.archetype].label })), britishAgentsYouHaveTurned: view.assets.map((a) => ({ name: a.name, archetype: ARCHETYPES[a.archetype].label })) });
+    const user = JSON.stringify({
+      cities: view.cities,
+      yourAgents: view.own.map((a) => ({ name: a.name, role: label(a.archetype), cover: a.cover })),
+      britishAgentsWorkingForYou: view.enemies.filter((e) => e.asset).map((e) => ({ name: e.name, role: label(e.archetype) })),
+    });
     const r = await callClaude('karla', { system: KARLA_PLACEMENT, user, schema: PLACEMENT_SCHEMA, maxTokens: 4000 });
     const placement = {};
     for (const p of r.placement) {

@@ -1,112 +1,111 @@
-// Rule checks: the archetype cycle, Ferret guard, Expose, leaks, turned-agent sabotage, end states.
-//   node tools/test.js
-import { newGame, submitOrders, resolveWeek, viewFor } from '../js/engine.js';
-import { keywordInterpret } from '../js/interpret.js';
-import { factsCheck } from '../js/cables.js';
+// v2 rule checks.   node tools/test.js
+import { newGame, submitOrders, resolveWeek, viewFor, executeAgent, surrender, legalOrders } from '../js/engine.js';
+import { factsCheck } from '../js/voices.js';
 
 let fails = 0;
 const ok = (cond, msg) => { if (!cond) { fails++; console.error('FAIL', msg); } else console.log('ok  ', msg); };
 
-// Build a game with a known layout: everyone at home, then move named archetypes into test
-// cities 'A', 'B', 'C' (the first three contested cities). Bypasses the setup cap on purpose.
+// Known layout: everyone at home, then named agents into test cities 'A'/'B'. `where` maps
+// 'role' or 'role:index' to a city letter for each side.
 function setup(where = {}) {
   const g = newGame(7, { sleepers: false });
-  const map = { A: g.cities[1], B: g.cities[2], C: g.cities[3] };
-  const byArch = (side, arch, i = 0) => Object.values(g.agents).filter((x) => x.side === side && x.archetype === arch)[i];
+  const map = { A: g.cities[1], B: g.cities[2] };
+  const get = (side, arch, i = 0) => Object.values(g.agents).filter((x) => x.side === side && x.archetype === arch)[i];
   for (const a of Object.values(g.agents)) { a.city = a.side === 'control' ? 'London' : 'Moscow'; a.history = []; }
-  for (const side of ['control', 'karla']) {
-    for (const [key, c] of Object.entries(where[side] || {})) { const [arch, i] = key.split(':'); byArch(side, arch, Number(i || 0)).city = map[c]; }
-  }
+  for (const side of ['control', 'karla']) for (const [k, c] of Object.entries(where[side] || {})) { const [arch, i] = k.split(':'); get(side, arch, Number(i || 0)).city = map[c]; }
   g.placed = { control: true, karla: true }; g.phase = 'orders';
-  return { g, cities: ['A', 'B', 'C'], byArch };
+  return { g, get, A: map.A };
 }
-const week = (g, control, karla) => { submitOrders(g, 'control', control); submitOrders(g, 'karla', karla); resolveWeek(g); };
+const week = (g, control = [], karla = []) => { submitOrders(g, 'control', control); submitOrders(g, 'karla', karla); resolveWeek(g); };
+const inbox = (g, side) => viewFor(g, side).inbox.map((m) => m.text).join(' | ');
 
-{ // Scalphunter kills a Lamplighter in an unguarded city.
-  const { g, byArch } = setup({ control: { scalphunter: 'A' }, karla: { lamplighter: 'A' } });
-  const sh = byArch('control', 'scalphunter'), ll = byArch('karla', 'lamplighter');
-  week(g, [{ agentId: sh.id, type: 'strike', targetId: ll.id, text: 'x' }], []);
-  ok(!g.agents[ll.id].alive && g.agents[sh.id].alive, 'Scalphunter beats Lamplighter');
+{ const { g, get } = setup({ control: { scalphunter: 'A' }, karla: { lamplighter: 'A' } });
+  const sh = get('control', 'scalphunter'), ll = get('karla', 'lamplighter');
+  week(g, [{ agentId: sh.id, type: 'strike', targetId: ll.id }]);
+  ok(!ll.alive && sh.alive, 'Scalphunter strikes without preparing');
+  ok(viewFor(g, 'control').intel[ll.id]?.roles.at(-1).archetype === 'lamplighter', 'interrogation reveals the dead agent\'s role');
 }
-{ // Ferret catches a Scalphunter.
-  const { g, byArch } = setup({ control: { scalphunter: 'A' }, karla: { ferret: 'A', lamplighter: 'A' } });
-  const sh = byArch('control', 'scalphunter'), ll = byArch('karla', 'lamplighter');
-  week(g, [{ agentId: sh.id, type: 'strike', targetId: ll.id, text: 'x' }], []);
-  ok(!g.agents[sh.id].alive && g.agents[ll.id].alive && g.credits.karla.length === 1, 'Ferret guard catches Scalphunter');
+{ const { g, get } = setup({ control: { lamplighter: 'A' }, karla: { talentspotter: 'A' } });
+  const ll = get('control', 'lamplighter'), ts = get('karla', 'talentspotter');
+  ok(!legalOrders(g, 'control', ll.id).some((l) => l.type === 'strike'), 'non-Scalphunter cannot strike unprepared');
+  week(g, [{ agentId: ll.id, type: 'prepare', targetId: ts.id }]);
+  ok(legalOrders(g, 'control', ll.id).find((l) => l.type === 'strike')?.targets.includes(ts.id), 'after a week of preparation the strike is available');
+  week(g, [{ agentId: ll.id, type: 'strike', targetId: ts.id }]);
+  ok(!ts.alive, 'prepared strike kills');
 }
-{ // Lamplighter exposes the Ferret, the same night a Scalphunter strikes: the strike succeeds.
-  const { g, byArch } = setup({ control: { scalphunter: 'A', lamplighter: 'A' }, karla: { ferret: 'A', talentspotter: 'A' } });
-  const sh = byArch('control', 'scalphunter'), ll = byArch('control', 'lamplighter'), fe = byArch('karla', 'ferret'), ts = byArch('karla', 'talentspotter');
-  week(g, [{ agentId: ll.id, type: 'expose', targetId: fe.id, text: 'x' }, { agentId: sh.id, type: 'strike', targetId: ts.id, text: 'x' }], []);
-  ok(!g.agents[fe.id].alive && !g.agents[ts.id].alive && g.agents[sh.id].alive, 'Lamplighter beats Ferret; expose resolves before strike');
+{ const { g, get } = setup({ control: { scalphunter: 'A' }, karla: { ferret: 'A', lamplighter: 'A' } });
+  const sh = get('control', 'scalphunter'), fe = get('karla', 'ferret'), ll = get('karla', 'lamplighter');
+  week(g, [{ agentId: sh.id, type: 'strike', targetId: ll.id }], [{ agentId: fe.id, type: 'trap' }]);
+  ok(!sh.alive && ll.alive, "a Ferret's trap works the same night");
 }
-{ // Wrong accusation exposes the Lamplighter instead.
-  const { g, byArch } = setup({ control: { lamplighter: 'A' }, karla: { talentspotter: 'A' } });
-  const ll = byArch('control', 'lamplighter'), ts = byArch('karla', 'talentspotter');
-  week(g, [{ agentId: ll.id, type: 'expose', targetId: ts.id, text: 'x' }], []);
-  const s = viewFor(g, 'karla').sightings[ll.id];
-  ok(g.agents[ts.id].alive && s && s.claims.at(-1).archetype === 'lamplighter', 'failed expose reveals the Lamplighter');
+{ const { g, get } = setup({ control: { scalphunter: 'A' }, karla: { lamplighter: 'A', talentspotter: 'A' } });
+  const sh = get('control', 'scalphunter'), ll = get('karla', 'lamplighter'), ts = get('karla', 'talentspotter');
+  week(g, [{ agentId: sh.id, type: 'strike', targetId: ts.id }], [{ agentId: ll.id, type: 'trap' }]);
+  ok(!ts.alive && sh.alive, "anyone else's trap isn't ready the first night");
 }
-{ // Ferret notices a watcher.
-  const { g, byArch } = setup({ control: { talentspotter: 'A' }, karla: { ferret: 'A' } });
-  const ts = byArch('control', 'talentspotter');
-  week(g, [{ agentId: ts.id, type: 'watch', text: 'x' }], []);
-  ok(viewFor(g, 'karla').inbox.some((m) => m.kind === 'spotted' && m.facts.agentId === ts.id), 'Ferret spots the watcher');
+{ const { g, get } = setup({ control: { scalphunter: 'A' }, karla: { talentspotter: 'A' } });
+  const sh = get('control', 'scalphunter'), ts = get('karla', 'talentspotter');
+  week(g, [{ agentId: sh.id, type: 'strike', targetId: ts.id }], [{ agentId: ts.id, type: 'lielow' }]);
+  ok(ts.alive && sh.alive, 'an agent lying low cannot be found');
 }
-{ // Scalphunter vs Scalphunter: both die.
-  const { g, byArch } = setup({ control: { scalphunter: 'A' }, karla: { scalphunter: 'A' } });
-  const a = byArch('control', 'scalphunter'), b = byArch('karla', 'scalphunter');
-  week(g, [{ agentId: a.id, type: 'strike', targetId: b.id, text: 'x' }], []);
-  ok(!g.agents[a.id].alive && !g.agents[b.id].alive, 'Scalphunter vs Scalphunter: both die');
+{ const { g, get } = setup({ control: { lamplighter: 'A' }, karla: { scalphunter: 'A', talentspotter: 'A' } });
+  const ll = get('control', 'lamplighter'), sh = get('karla', 'scalphunter'), ts = get('karla', 'talentspotter');
+  week(g, [{ agentId: ll.id, type: 'surveil' }], [{ agentId: ts.id, type: 'lielow' }]);
+  const r = viewFor(g, 'control').intel;
+  ok(r[sh.id]?.roles.at(-1).archetype === 'scalphunter' && !r[ts.id], 'Lamplighter surveillance reveals roles, except of agents lying low');
 }
-{ // Turned agent: leaks verbatim, lies (hides the Ferret), sabotages strikes.
-  const { g, byArch } = setup({ control: { lamplighter: 'A', scalphunter: 'B' }, karla: { ferret: 'A', talentspotter: 'A', lamplighter: 'B' } });
-  const ll = byArch('control', 'lamplighter'), sh = byArch('control', 'scalphunter'), kll = byArch('karla', 'lamplighter');
-  g.agents[ll.id].turnedBy = 'karla'; g.agents[sh.id].turnedBy = 'karla';
-  week(g, [{ agentId: ll.id, type: 'watch', text: 'Tell me everything about the city.' }, { agentId: sh.id, type: 'strike', targetId: kll.id, text: 'Remove their Lamplighter.' }], []);
-  const kv = viewFor(g, 'karla'), cv = viewFor(g, 'control');
-  ok(kv.inbox.filter((m) => m.kind === 'leak').map((m) => m.text).includes('Tell me everything about the city.'), 'cable to turned agent leaks word for word');
-  const rep = cv.inbox.find((m) => m.kind === 'report' && m.agentId === ll.id);
-  ok(rep && !rep.facts.seen.some((x) => x.archetype === 'ferret'), 'turned Lamplighter hides the Ferret');
-  ok(g.agents[kll.id].alive, 'turned Scalphunter sabotages the strike');
+{ const { g, get } = setup({ control: { talentspotter: 'A' }, karla: { lamplighter: 'A' } });
+  const ts = get('control', 'talentspotter'), ll = get('karla', 'lamplighter');
+  for (let i = 0; i < 3; i++) week(g, [{ agentId: ts.id, type: 'approach', targetId: ll.id }]);
+  ok(ll.turnedBy === 'control', 'three approaches turn an agent');
+  ok(viewFor(g, 'control').enemies.find((e) => e.id === ll.id).asset, 'the turning side sees its new asset');
+  week(g, [{ agentId: ll.id, type: 'lie', lie: { kind: 'hide' } }], [{ agentId: ll.id, type: 'move', city: 'Moscow' }]);
+  ok(inbox(g, 'control').includes('My orders from Karla this week: go to Moscow'), 'every order to a turned agent leaks');
 }
-{ // Feed: the turner dictates the turned agent's next report.
-  const { g, byArch } = setup();
-  const ll = byArch('control', 'lamplighter');
-  g.agents[ll.id].turnedBy = 'karla';
-  week(g, [], [{ agentId: ll.id, type: 'feed', message: 'Berlin is empty.', text: 'Berlin is empty.' }]);
-  ok(viewFor(g, 'control').inbox.some((m) => m.agentId === ll.id && m.text === 'Berlin is empty.'), 'feed reaches the original owner as a report');
+{ const { g, get } = setup({ control: { scalphunter: 'A' }, karla: { lamplighter: 'A' } });
+  const sh = get('control', 'scalphunter'), ll = get('karla', 'lamplighter');
+  sh.turnedBy = 'karla';
+  week(g, [{ agentId: sh.id, type: 'strike', targetId: ll.id }]);
+  ok(ll.alive, "a turned agent's strike quietly fails");
 }
-{ // Game ends at week 12 with a result.
-  const { g } = setup();
-  for (let i = 0; i < 12; i++) week(g, [], []);
-  ok(g.phase === 'over' && g.outcome && g.outcome.winner === null, 'twelve empty weeks end in a draw');
+{ const { g, get } = setup({ control: { ferret: 'A', lamplighter: 'A', scalphunter: 'A' } });
+  const fe = get('control', 'ferret'), ll = get('control', 'lamplighter'), sh = get('control', 'scalphunter');
+  ll.turnedBy = 'karla';
+  week(g, [{ agentId: fe.id, type: 'vet', targetId: ll.id }], [{ agentId: ll.id, type: 'lie', lie: { kind: 'frame', targetId: sh.id } }]);
+  const t = inbox(g, 'control');
+  ok(t.includes(`They're working for Karla`), 'a loyal Ferret exposes a mole when vetting');
+  ok(viewFor(g, 'control').intel[sh.id]?.suspicions.some((s) => s.kind === 'accused'), "a mole's frame lie casts suspicion on a loyal colleague");
 }
-{ // Keyword interpreter.
-  const agent = { name: 'Hale', archetype: 'scalphunter', city: 'Berlin' };
-  const enemies = [{ id: 'k1', name: 'Petrov' }];
-  const r1 = keywordInterpret({ agent, text: 'Take the night train to Vienna.', cities: ['Berlin', 'Vienna'], enemies });
-  const r2 = keywordInterpret({ agent, text: 'Deal with Petrov quietly.', cities: ['Berlin', 'Vienna'], enemies });
-  const r3 = keywordInterpret({ agent: { ...agent, archetype: 'ferret' }, text: 'Kill Petrov.', cities: ['Berlin'], enemies });
-  ok(r1.type === 'move' && r1.city === 'Vienna', 'keywords: move');
-  ok(r2.type === 'strike' && r2.targetId === 'k1', 'keywords: strike with named target');
-  ok(r3.type === 'lielow' && r3.unclear, 'keywords: wrong archetype refuses');
+{ const { g, get } = setup({ control: { lamplighter: 'A' } });
+  const ll = get('control', 'lamplighter');
+  week(g, [{ agentId: ll.id, type: 'brief', plan: { kind: 'strike', city: g.cities[2] } }]);
+  ok(!inbox(g, 'karla').includes('briefed'), 'briefing a loyal agent leaks nothing');
+  ll.turnedBy = 'karla';
+  week(g, [{ agentId: ll.id, type: 'brief', plan: { kind: 'strike', city: g.cities[2] } }]);
+  ok(inbox(g, 'karla').includes(`there will be a strike in ${g.cities[2]}`), 'briefing a mole hands the plan to the other side');
 }
-{ // Fact check on Claude-written agent text (the playtest 1 bug: replies inventing "London is quiet").
+{ const { g, get } = setup();
+  const loyalOne = get('control', 'ferret');
+  executeAgent(g, 'control', loyalOne.id);
+  ok(!loyalOne.alive && viewFor(g, 'karla').score.us === 1, 'executing your own agent gives the other side a point');
+}
+{ const { g, get } = setup();
+  get('control', 'ferret').turnedBy = 'karla';
+  for (let i = 0; i < 12; i++) week(g);
+  ok(g.phase === 'over' && g.outcome.score.karla.total === 1 && g.outcome.winner === 'karla', 'a mole alive at the end scores for the side that turned it');
+}
+{ const { g } = setup();
+  surrender(g, 'control');
+  ok(g.phase === 'over' && g.outcome.winner === 'karla', 'surrendering hands the game to the other side');
+}
+{ // Fact check on Claude-written report text.
   const g = newGame(3, { sleepers: false });
-  g.cities = ['London', 'Lisbon', 'Istanbul', 'Paris', 'Prague', 'Moscow'];
-  const a = Object.values(g.agents).find((x) => x.side === 'control' && x.archetype === 'talentspotter');
+  g.cities = ['London', 'Lisbon', 'Istanbul', 'Paris', 'Vienna', 'Moscow'];
   const k = Object.values(g.agents).find((x) => x.side === 'karla');
-  a.city = 'Moscow';
-  const self = `Moscow ${a.first} ${a.name} Talent-spotter`;
-  ok(!factsCheck(g, `Anyone worth talking to? ${self}`, 'London is quiet as far as I can tell, sir. Give me a name.'), 'reply naming a city it was never sent to is rejected');
-  ok(!factsCheck(g, `Who's in your city? ${self}`, 'Moscow is quiet on my side, but I need a clearer instruction.'), 'reply describing a city it never watched is rejected');
-  ok(factsCheck(g, `Anyone worth talking to? ${self}`, 'Do you want me to find someone to approach here in Moscow, or make a pitch?'), 'a plain clarifying question passes');
-  ok(!factsCheck(g, `Who's in your city? ${self}`, `I'll keep an eye on ${k.name}.`), 'reply naming an enemy agent the cable never mentioned is rejected');
-  const src = `Opposition in Istanbul: ${k.name} (Scalphunter).`;
-  ok(factsCheck(g, src, `Istanbul. ${k.name} is here, and he is a Scalphunter.`, { preserve: true }), 'voice rewrite keeping every fact passes');
-  ok(!factsCheck(g, src, `Istanbul. ${k.name} is here, a Lamplighter by the look of it.`, { preserve: true }), 'voice rewrite changing the role is rejected');
-  ok(!factsCheck(g, src, 'Istanbul has one of theirs, a Scalphunter.', { preserve: true }), 'voice rewrite dropping the name is rejected');
+  const src = `${k.name} is a Scalphunter. ${k.name} has been studying Hale's routine. Istanbul`;
+  ok(!factsCheck(g, 'Nothing worth reporting in Istanbul.', 'London is quiet as far as I can tell.'), 'rewrite naming a city its source never mentioned is rejected');
+  ok(factsCheck(g, src, `In Istanbul, ${k.name} (a Scalphunter) keeps watching Hale's routine.`, { preserve: true }), 'faithful rewrite passes');
+  ok(!factsCheck(g, src, `In Istanbul, ${k.name} looks like a Lamplighter to me.`, { preserve: true }), 'rewrite changing a role is rejected');
 }
 console.log(fails ? `\n${fails} FAILED` : '\nall passed');
 process.exit(fails ? 1 : 0);

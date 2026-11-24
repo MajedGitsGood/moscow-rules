@@ -13,11 +13,15 @@ description: >-
    `{url: "http://localhost:8643"}` if it is already running.
 3. Load the page and check `read_console_messages` (`onlyErrors: true`): expect none.
 4. Drive a game through `window.MR` with `javascript_tool`:
-   - `localStorage.clear(); MR.startNew('bot')`, then click `#btn-place`. Expect `MR.app.screen === 'desk'`.
-   - Fill `MR.app.drafts.control` (or leave empty), `MR.render()`, click `#btn-dispatch`, and repeat until
-     `MR.app.screen === 'debrief'`.
-   - `MR.startNew('hotseat')` and walk through placement → handoff → placement → handoff → desk.
+   - `localStorage.clear(); MR.startNew('bot')`, click `[data-act=shuffle]` then `[data-act=place]`. Expect
+     `MR.app.screen === 'play'` and agent tokens on the map.
+   - Click a token, pick an order in the dock (`[data-act=order]`), and for a move click a city medallion.
+   - Fill `MR.app.queued.control` (e.g. from `heuristicOrders`), `MR.render()`, click `[data-act=end]`; repeat
+     until `MR.app.screen === 'debrief'`. Wait on `MR.app.screen` rather than fixed sleeps.
+   - `MR.startNew('hotseat')` and walk placement → handoff → placement → handoff → play.
 5. Re-check the console and take a screenshot of the desk and the debrief.
-6. With an API key set, play one week against Karla and watch the `[claude]` lines in the server log.
+6. To test the Claude path without spending tokens, stub `window.fetch` for `/api/status` and `/api/claude`
+   (see git history of this skill's first v2 run). With a real key, one week against Karla shows `[claude]`
+   lines in the server log.
 
 PASS means both scripts are green, a full game reaches the debrief, hot-seat handoffs work, and the console is clean.

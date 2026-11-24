@@ -1,46 +1,54 @@
-// The in-game Field Manual: rules on top, then tradecraft (strategy, not rules).
+// The Field Manual: shown, not told. Roles, the strike-and-trap exchange, orders, and tradecraft.
 import { ARCHETYPES, ARCHETYPE_KEYS, RULES } from '../world.js';
+import { ROLE_ICON, ORDER_ICON, sized } from './icons.js';
+
+const ORDERS = [
+  ['move', 'Move', 'Any city by tomorrow'],
+  ['surveil', 'Surveil', 'Learn roles here'],
+  ['lielow', 'Lie low', 'Vanish for a week'],
+  ['prepare', 'Prepare', 'Study a target (loud)'],
+  ['strike', 'Strike', 'Kill, unless trapped'],
+  ['trap', 'Trap', 'Catch the next attacker (loud)'],
+  ['approach', 'Approach', `${RULES.approachesToTurn} pitches turn them (loud)`],
+  ['vet', 'Vet', 'Test one of ours'],
+  ['brief', 'Brief', 'Feed a plan to a suspect'],
+];
 
 export function manualHTML() {
+  const g = (x, y, icon, color) => `<g transform="translate(${x},${y})"><circle r="26" fill="#0a0f14" stroke="${color}" stroke-width="2.5"/><g color="#ecc978">${sized(icon, 28)}</g></g>`;
   return `<div class="manual">
-  <h2>Field Manual</h2>
-  <p class="small muted">Circus internal. Not to leave the building.</p>
+  <div><div class="eyebrow">Field Manual · Circus internal</div><h2 style="margin-top:6px">Every agent is on the map. None of them are what they seem.</h2></div>
+  <p class="lead">${RULES.weeks} weeks. ${RULES.ordersPerWeek} orders a week. Every enemy agent who dies is a point; every one you turn and keep alive is a point.</p>
 
-  <h3>The object</h3>
-  <p>Twelve weeks. Eliminate more of their agents than they eliminate of yours. The game ends early if one side loses everyone.
-  Agents you have turned, and who are still alive at the end, count as eliminations for you.</p>
+  <div class="man-h">Your people</div>
+  <div class="man-roles">${ARCHETYPE_KEYS.map((k) => `<div class="man-role">${ROLE_ICON[k]}<b>${ARCHETYPES[k].label}</b><span>${ARCHETYPES[k].power}</span></div>`).join('')}</div>
 
-  <h3>Your people</h3>
-  <table class="arch-table small">${ARCHETYPE_KEYS.map((k) => `<tr><td>${ARCHETYPES[k].label}</td><td>${ARCHETYPES[k].does}</td></tr>`).join('')}</table>
-  <p><b>The cycle:</b> Scalphunter beats Lamplighter · Lamplighter beats Ferret · Ferret beats Scalphunter. Talent-spotters beat nobody.</p>
+  <div class="man-h">The exchange</div>
+  <div class="man-flow"><svg viewBox="0 0 760 150" role="img" aria-label="Prepare, they spot it and trap, you spot the trap and call it off">
+    <path d="M90 60 H330 M370 60 H610" stroke="#c9a24e" stroke-width="2" stroke-dasharray="6 5"/>
+    ${g(60, 60, ORDER_ICON.prepare, '#4a8bd1')}${g(350, 60, ORDER_ICON.trap, '#cf4234')}${g(640, 60, ORDER_ICON.strike, '#4a8bd1')}
+    <text x="60" y="112" text-anchor="middle" font-size="14" font-weight="600">You prepare</text><text x="60" y="130" text-anchor="middle" font-size="12" fill="#9fa7ad">their people may notice</text>
+    <text x="350" y="112" text-anchor="middle" font-size="14" font-weight="600">They set a trap</text><text x="350" y="130" text-anchor="middle" font-size="12" fill="#9fa7ad">your people may notice</text>
+    <text x="640" y="112" text-anchor="middle" font-size="14" font-weight="600">Strike, or call it off</text><text x="640" y="130" text-anchor="middle" font-size="12" fill="#9fa7ad">into a trap, you lose them</text>
+    <text x="205" y="48" text-anchor="middle" font-size="12" fill="#9fa7ad">week 1</text><text x="490" y="48" text-anchor="middle" font-size="12" fill="#9fa7ad">week 2</text>
+  </svg></div>
 
-  <h3>Each week</h3>
-  <ul>
-    <li>Read the morning traffic. Your notebook and board fill in automatically from what you're told, true or not.</li>
-    <li>Send up to ${RULES.cablesPerWeek} cables, each to one agent, written however you like. Each becomes one order: <b>Move</b>, <b>Watch</b>, <b>Strike</b>, <b>Expose</b>, <b>Recruit</b>, or <b>Lie low</b>. At most ${RULES.watchesPerWeek} Watches a week; ${RULES.recruitsPerGame} Recruit attempts a game, one a week.</li>
-    <li>"Encode" shows how the agent understood you. A vague cable gets a puzzled reply, and the agent does nothing.</li>
-    <li>That night, in order: moves, watches, exposes, strikes, recruits.</li>
-  </ul>
+  <div class="man-h">Orders</div>
+  <div class="man-orders">${ORDERS.map(([k, n, d]) => `<div class="man-order">${ORDER_ICON[k]}<div><b>${n}</b>${d}</div></div>`).join('')}</div>
 
-  <h3>Turned agents</h3>
-  <p>A Talent-spotter's pitch works half the time, unless a Ferret is in the city. A turned agent looks exactly as before and still obeys you. But:</p>
-  <ul>
-    <li>every cable you send them is read, word for word, in the other capital;</li>
-    <li>their reports are lies (hidden Ferrets, Scalphunters passed off as Talent-spotters), or whatever the other side tells them to say;</li>
-    <li>their strikes, exposes and pitches quietly fail, and a turned Ferret stops guarding.</li>
-  </ul>
-  <p>Some games begin with a sleeper already in place on one side or both. If you hold a source inside their network, you can cable it to dictate its next report home.</p>
+  <div class="man-h">Moles</div>
+  <div class="man-orders">
+    <div class="man-order">${ORDER_ICON.lie}<div><b>Their mole, your voice</b>Pick the lie they report home: all quiet, a false alarm, or framing a loyal colleague.</div></div>
+    <div class="man-order">${ORDER_ICON.vet}<div><b>Your mole, their ears</b>Every order you give a mole reaches the other side. A Ferret can vet them.</div></div>
+    <div class="man-order">${ORDER_ICON.execute}<div><b>Execute</b>Free. The other side scores either way. You'll know if you were right at the debrief.</div></div>
+  </div>
 
-  <h3>Tradecraft (advice, not rules)</h3>
-  <ul>
-    <li><b>Canary trap.</b> Tell two suspect agents two different stories. Whichever story the opposition acts on tells you who is talking.</li>
-    <li><b>Chicken feed.</b> Once you know an agent is turned, don't waste them. Keep cabling them, with lies.</li>
-    <li><b>Cross-check.</b> Have two agents Watch the same city. If the reports disagree, one of them isn't yours.</li>
-    <li><b>Sequencing.</b> A city with a Ferret is a trap for Scalphunters. Send a Lamplighter to Watch, Expose the Ferret, then strike, ideally all in one week, since exposes resolve before strikes.</li>
-    <li><b>Ferrets notice watchers.</b> Watching a guarded city tells them who is looking. Expect a Scalphunter to come for your Lamplighter.</li>
-    <li><b>Bait.</b> A city that looks empty invites a blind strike. Make sure your Ferret is there when it comes.</li>
-    <li><b>Brevity.</b> "Vienna. Usual arrangement." is safe if it leaks, and easy to misread if it doesn't. Name targets only when you must.</li>
-    <li><b>Failed strikes are information.</b> If your Scalphunter keeps "finding no target" where a report said one would be, ask who sent that report, or ask whether the Scalphunter is still yours.</li>
-  </ul>
+  <div class="man-h">Tradecraft</div>
+  <div class="tips">
+    <div><b>Canary trap</b>Brief two suspects with different plans. Whichever plan Karla reacts to names the mole.</div>
+    <div><b>Sequencing</b>Surveil first. Strike only what you know, where no one is setting a trap.</div>
+    <div><b>Go quiet</b>Someone studying your agent's routine? Lie low and the strike finds no one.</div>
+    <div><b>Feint</b>Brief a known mole about a strike in the wrong city. Watch Karla trap an empty street.</div>
+  </div>
   </div>`;
 }

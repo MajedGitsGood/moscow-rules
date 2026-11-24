@@ -1,115 +1,104 @@
-// Offline bot. Plays from viewFor(side) only, the same information a human gets. Used for
-// balance simulation, as an opponent with no LLM, and as the fallback when the token budget runs out.
-// It is deliberately straightforward: believe the latest report, strike where no Ferret is known,
-// keep Lamplighters scouting. It does not reason about turned agents, which humans and Claude can.
+// Offline bot for v2. Plays from viewFor(side) only. Used for balance runs, as an opponent with no
+// LLM, and as Karla's fallback. Straightforward habits: scout with Lamplighters, react to warnings
+// with traps or retreats, strike known soft targets, pitch with Talent-spotters, lie through moles.
 import { makeRng } from '../rng.js';
 import { RULES } from '../world.js';
+import { legalOrders } from '../engine.js';
 
-const latestClaim = (s) => (s.claims.length ? s.claims[s.claims.length - 1].archetype : null);
+const lastRole = (intel, id) => { const r = intel[id]?.roles; return r && r.length ? r[r.length - 1].archetype : null; };
 
 export function heuristicPlacement(view, seed = 1) {
   const rng = makeRng(seed);
   const agents = rng.shuffle(view.own.filter((a) => a.alive));
-  const placement = {};
-  const counts = {};
-  // Spread across cities; each Ferret goes where at least one teammate will be.
+  const placement = {}, counts = {};
   const cities = rng.shuffle(view.cities);
   let i = 0;
-  for (const a of agents.filter((x) => x.archetype !== 'ferret')) {
+  for (const a of agents) {
     let c;
     do { c = cities[i++ % cities.length]; } while ((counts[c] || 0) >= RULES.maxPerCityAtSetup);
     placement[a.id] = c; counts[c] = (counts[c] || 0) + 1;
   }
-  for (const f of agents.filter((x) => x.archetype === 'ferret')) {
-    const options = cities.filter((c) => (counts[c] || 0) > 0 && (counts[c] || 0) < RULES.maxPerCityAtSetup);
-    const c = options.length ? rng.pick(options) : cities.find((x) => (counts[x] || 0) < RULES.maxPerCityAtSetup);
-    placement[f.id] = c; counts[c] = (counts[c] || 0) + 1;
-  }
   return placement;
 }
 
-export function heuristicOrders(view, seed = 1) {
-  const rng = makeRng(seed + view.week * 7919);
+// `game` is only used for legalOrders (which needs the public board) and never for hidden facts:
+// the bot's knowledge comes from `view`.
+export function heuristicOrders(game, view, seed = 1) {
+  const rng = makeRng(seed * 31 + view.week * 7919);
+  const side = view.side;
   const me = view.own.filter((a) => a.alive);
-  const week = view.week;
-  const sightings = Object.values(view.sightings).filter((s) => s.fate !== 'eliminated');
-  const recent = sightings.filter((s) => s.lastWeek !== null && s.lastWeek >= week - 2);
-  const guardedCities = new Set(recent.filter((s) => latestClaim(s) === 'ferret').map((s) => s.lastCity));
-  const myCities = new Set(me.map((a) => a.city));
-  // Cities a watch reported on recently.
-  const watched = {};
-  for (const m of view.inbox) {
-    if (m.kind === 'report' && m.facts?.city && m.facts?.seen) watched[m.facts.city] = Math.max(watched[m.facts.city] || 0, m.week);
-  }
+  const orders = [], used = new Set();
+  const add = (o) => { if (orders.length < RULES.ordersPerWeek && !used.has(o.agentId)) { orders.push(o); used.add(o.agentId); } };
+  const legal = (a, type) => legalOrders(game, side, a.id).find((l) => l.type === type);
+  const fresh = view.inbox.filter((m) => m.week === view.week);
+  const warnings = fresh.flatMap((m) => m.facts?.activities || []).filter((x) => x.kind === 'prepare' && me.some((a) => a.id === x.targetId));
+  const trapCities = new Set(fresh.filter((m) => (m.facts?.activities || []).some((x) => x.kind === 'trap')).map((m) => m.city));
+  const suspects = new Set(Object.entries(view.intel).filter(([id, i]) => i.suspicions?.length && me.some((a) => a.id === id)).map(([id]) => id));
 
-  const orders = [];
-  const used = new Set();
-  let watches = 0;
-  let recruits = view.limits.recruitsThisWeek;
-  const add = (o) => { orders.push(o); used.add(o.agentId); };
-  const free = (a) => !used.has(a.id) && orders.length < RULES.cablesPerWeek;
-
-  // 0. Counter-surveillance: a Lamplighter spotted watching one of our Ferrets gets hunted,
-  //    or failing that the Ferret slips away to another city.
-  for (const m of view.inbox.filter((x) => x.week === week && x.kind === 'spotted' && x.facts?.archetype === 'lamplighter')) {
-    const city = m.facts.city;
-    const hunter = me.find((a) => a.archetype === 'scalphunter' && free(a) && a.city === city);
-    if (hunter) { add({ agentId: hunter.id, type: 'strike', targetId: m.facts.agentId, text: `${hunter.name}: the Lamplighter watching our people. Deal with it.` }); continue; }
-    const ferret = me.find((a) => a.archetype === 'ferret' && free(a) && a.city === city);
-    if (ferret) {
-      const dest = rng.pick(view.cities.filter((c) => c !== city));
-      add({ agentId: ferret.id, type: 'move', city: dest, text: `${ferret.name}: you are blown in ${city}. Get to ${dest}.` });
-    }
+  // 1. Someone is preparing to kill one of ours: trap the city, or get the target out.
+  for (const wn of warnings) {
+    const target = me.find((a) => a.id === wn.targetId);
+    const trapper = me.find((a) => a.city === target.city && a.archetype !== 'talentspotter' && !used.has(a.id) && !suspects.has(a.id));
+    if (trapper) add({ agentId: trapper.id, type: 'trap' });
+    else add({ agentId: target.id, type: 'move', city: rng.pick(view.cities.filter((c) => c !== target.city)) });
   }
-  // 1. Strikes on known targets in unguarded cities.
-  for (const s of me.filter((a) => a.archetype === 'scalphunter')) {
-    if (!free(s) || guardedCities.has(s.city)) continue;
-    const targets = recent.filter((t) => t.lastCity === s.city && latestClaim(t) !== 'ferret');
-    const scouted = (watched[s.city] && watched[s.city] >= week - 1) || targets.some((t) => latestClaim(t));
-    if (targets.length && scouted) {
-      const t = targets.find((x) => ['lamplighter', 'talentspotter'].includes(latestClaim(x))) || targets[0];
-      add({ agentId: s.id, type: 'strike', targetId: t.id, text: `${s.name}: remove ${t.name}. Tonight.` });
-    }
+  // 1b. Ferrets keep a standing trap in their city.
+  for (const a of me.filter((x) => x.archetype === 'ferret')) {
+    if (!view.traps.some((t) => t.city === a.city) && rng() < 0.6) add({ agentId: a.id, type: 'trap' });
   }
-  // 2. Recruit a known enemy in the same city.
-  for (const r of me.filter((a) => a.archetype === 'talentspotter')) {
-    if (!free(r) || recruits <= 0 || guardedCities.has(r.city)) continue;
-    const t = recent.find((x) => x.lastCity === r.city);
-    if (t) { add({ agentId: r.id, type: 'recruit', targetId: t.id, text: `${r.name}: make a pitch to ${t.name}.` }); recruits--; }
+  // 2. Strike: a prepared or Scalphunter attacker, avoiding cities where a trap was reported.
+  for (const a of rng.shuffle(me)) {
+    const l = legal(a, 'strike');
+    if (!l || trapCities.has(a.city) || suspects.has(a.id)) continue;
+    const t = l.targets.find((id) => ['lamplighter', 'talentspotter'].includes(lastRole(view.intel, id)))
+      || (a.archetype === 'scalphunter' && rng() < 0.12 ? rng.pick(l.targets) : null)
+      || (a.prep ? a.prep.targetId : null);
+    if (t && l.targets.includes(t)) add({ agentId: a.id, type: 'strike', targetId: t });
   }
-  // 3. Lamplighters expose a known Ferret, watch where we lack fresh information, or move toward suspected guards.
-  for (const l of rng.shuffle(me.filter((a) => a.archetype === 'lamplighter'))) {
-    if (!free(l)) continue;
-    const ferret = recent.find((t) => t.lastCity === l.city && latestClaim(t) === 'ferret');
-    if (ferret) { add({ agentId: l.id, type: 'expose', targetId: ferret.id, text: `${l.name}: blow ${ferret.name}'s cover.` }); continue; }
-    if (watches >= RULES.watchesPerWeek) continue;
-    const stale = !watched[l.city] || watched[l.city] < week - 1;
-    if (stale) { add({ agentId: l.id, type: 'watch', text: `${l.name}: report on the opposition where you are.` }); watches++; }
+  // 3. Moles we run: tell a lie.
+  for (const e of view.enemies.filter((x) => x.asset && x.alive)) {
+    const colleagues = view.enemies.filter((x) => x.alive && !x.asset && x.id !== e.id);
+    const kind = rng.pick(['hide', 'alarm', colleagues.length ? 'frame' : 'hide']);
+    add({ agentId: e.id, type: 'lie', lie: kind === 'frame' ? { kind, targetId: rng.pick(colleagues).id } : { kind } });
+  }
+  // 4. Talent-spotters keep working the same target.
+  for (const a of me.filter((x) => x.archetype === 'talentspotter')) {
+    const l = legal(a, 'approach');
+    if (!l) continue;
+    const ongoing = l.targets.find((id) => view.approachProgress[id]);
+    add({ agentId: a.id, type: 'approach', targetId: ongoing || rng.pick(l.targets) });
+  }
+  // 5. Vet a suspect with a Ferret.
+  for (const a of me.filter((x) => x.archetype === 'ferret')) {
+    const l = legal(a, 'vet');
+    const t = l && l.targets.find((id) => suspects.has(id));
+    if (t) add({ agentId: a.id, type: 'vet', targetId: t });
+  }
+  // 6. Lamplighters surveil cities with enemies whose roles we don't know; otherwise move to one.
+  const unknownIn = (c) => view.enemies.filter((e) => e.alive && e.city === c && !lastRole(view.intel, e.id)).length;
+  for (const a of rng.shuffle(me.filter((x) => x.archetype === 'lamplighter'))) {
+    if (unknownIn(a.city)) add({ agentId: a.id, type: 'surveil' });
     else {
-      const target = [...guardedCities][0] || rng.pick(view.cities.filter((c) => c !== l.city));
-      add({ agentId: l.id, type: 'move', city: target, text: `${l.name}: go to ${target}.` });
+      const best = [...view.cities].sort((x, y) => unknownIn(y) - unknownIn(x))[0];
+      if (best !== a.city && unknownIn(best)) add({ agentId: a.id, type: 'move', city: best });
     }
   }
-  // 4. Idle Scalphunters move toward known soft targets.
-  for (const s of me.filter((a) => a.archetype === 'scalphunter')) {
-    if (!free(s)) continue;
-    const soft = recent.filter((t) => latestClaim(t) && latestClaim(t) !== 'ferret' && !guardedCities.has(t.lastCity) && t.lastCity !== s.city);
-    if (soft.length) {
-      const t = rng.pick(soft);
-      add({ agentId: s.id, type: 'move', city: t.lastCity, text: `${s.name}: get to ${t.lastCity}.` });
-    }
+  // 7. Prepare a strike on a known target, sometimes.
+  for (const a of rng.shuffle(me.filter((x) => x.archetype === 'lamplighter' || x.archetype === 'ferret'))) {
+    const l = legal(a, 'prepare');
+    const t = l && l.targets.find((id) => ['lamplighter', 'talentspotter', 'scalphunter'].includes(lastRole(view.intel, id)));
+    if (t && !a.prep && rng() < 0.5) add({ agentId: a.id, type: 'prepare', targetId: t });
   }
-  // 5. Any remaining watch slots: someone in an unscouted city looks around.
-  for (const a of rng.shuffle(me)) {
-    if (!free(a) || watches >= RULES.watchesPerWeek) continue;
-    if (!watched[a.city] || watched[a.city] < week - 2) { add({ agentId: a.id, type: 'watch', text: `${a.name}: what do you see?` }); watches++; }
+  // 8. Scalphunters hunt where soft targets are known.
+  for (const a of me.filter((x) => x.archetype === 'scalphunter')) {
+    const soft = view.enemies.filter((e) => e.alive && !e.asset && ['lamplighter', 'talentspotter'].includes(lastRole(view.intel, e.id)) && e.city !== a.city);
+    if (soft.length) add({ agentId: a.id, type: 'move', city: rng.pick(soft).city });
   }
-  // 6. Spread out into cities we don't cover.
-  const uncovered = view.cities.filter((c) => !myCities.has(c));
+  // 9. Remaining orders: surveil or reposition.
   for (const a of rng.shuffle(me)) {
-    if (!free(a) || !uncovered.length || a.archetype === 'ferret') continue;
-    const c = uncovered.shift();
-    add({ agentId: a.id, type: 'move', city: c, text: `${a.name}: relocate to ${c}.` });
+    if (orders.length >= RULES.ordersPerWeek) break;
+    if (unknownIn(a.city)) add({ agentId: a.id, type: 'surveil' });
+    else add({ agentId: a.id, type: 'move', city: rng.pick(view.cities.filter((c) => c !== a.city)) });
   }
   return orders;
 }

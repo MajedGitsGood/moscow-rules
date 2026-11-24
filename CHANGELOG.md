@@ -4,6 +4,29 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 
 ## [Unreleased]
 
+### Changed: v2, a different game
+- Orders are clicks, not typed cables. Click an agent on the map, pick one of their orders, pick a
+  target or a city. Five orders a week.
+- Everyone's position is public; roles and loyalty are hidden, like Stratego.
+- New roles: Scalphunters interrogate, Lamplighters surveil, Ferrets trap and vet, Talent-spotters
+  turn agents over three approaches (no per-game cap).
+- Strikes must be prepared (except by Scalphunters) and are countered by traps; preparing, trapping
+  and approaching can be seen by the other side; lying low hides an agent completely.
+- Moles: your orders to a turned agent reach the other side; you choose the lies an enemy mole
+  reports home; Brief feeds a plan to a suspect; Vet tests one; Execute removes one.
+- Scoring: every dead enemy agent is a point, plus every enemy agent you turned who's still alive.
+- Surrender button for human players.
+
+### Added
+- The war room: an illustrated map of Europe (Natural Earth) with territories tinted by who holds
+  each city, landmark medallions, generated noir portraits for every agent, a strategy-game HUD,
+  drag-and-drop setup, grouped and attributed morning traffic, a visual Field Manual, and a debrief
+  with every agent's true role and loyalty.
+
+### Removed
+- Free-text cables, the cable interpreter, and its eval set.
+
+
 ### Fixed
 - Agents read cables generously. Questions ("Who's in your city?"), coded phrasing ("Paris. Usual
   arrangement.") and cables asking for several things now become orders instead of "unclear". When a

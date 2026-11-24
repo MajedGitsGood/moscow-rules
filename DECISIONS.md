@@ -4,6 +4,29 @@ Why-this-not-that for this project, newest first. Companion to [CHANGELOG.md](CH
 
 ---
 
+## 2026-11-24: v2: clicks instead of cables; information decides fights
+**Decision:** Replace the v1 game. Orders are clicks; positions are public and roles hidden; the
+roles become ways of knowing (interrogate, surveil, trap/vet, recruit); a strike succeeds unless a
+trap is ready or the target is lying low; preparation and traps are "loud" so each side can read the
+other; moles are steered through order choices (Brief, pick-the-lie) rather than text. Claude's job
+is the reports and Karla's mind, not interpretation.
+**Why:** Playtest 1: free text "was effectively useless" (it collapsed to five verbs and only
+mattered on rare leaks), the game "felt like chess, not a spy role-play", and dead ends appeared when
+pieces ran out. The reports were the fun part, so v2 is built around them. The user rejected codes
+(typing to an AI is a chore), relationships ("not a relationship simulator") and reinforcements.
+**Rejected:** *Codebooks for leaked cables* (complex, still typing). *A cover/heat meter* (replaced by
+loud/quiet: one fact per order, no bookkeeping). *Ferret-only traps* (too scarce to fear).
+*Rank-based combat* (less spy-like than information-based). *New agents mid-game* (user preference).
+**Affects:** everything under `js/`, `style.css`, `index.html`, tests and simulation.
+
+## 2026-11-24: Real coastlines, generated portraits, no image assets
+**Decision:** The map is Natural Earth (public domain) projected once by `tools/build-map.js` into
+`js/mapdata.js`; territories are Voronoi cells clipped to land, computed at runtime; portraits and
+landmarks are procedural SVG.
+**Why:** The user wanted a Risk/Bonaparte-style map and characterful agents. Generated SVG keeps the
+repo asset-free and the game a static site, like Hall of Mirrors.
+**Rejected:** *Hand-drawn coastlines* (look wrong). *d3 at runtime* (a dependency for a one-time projection). *Bitmap art* (needs sourcing and licensing).
+
 ## 2026-11-24: Read cables generously; "unclear" only when there is no reasonable reading
 **Decision:** The interpreter now looks for the most plausible order given the agent's role and city.
 Questions count as instructions, coded language is expected, and a cable asking for several things

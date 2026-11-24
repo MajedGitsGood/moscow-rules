@@ -1,72 +1,38 @@
-// World generation and static game data: cities, archetypes, rosters.
+// Static game data and world generation: cities, roles, rules, rosters.
 export const SIDES = ['control', 'karla'];
 export const other = (side) => (side === 'control' ? 'karla' : 'control');
 export const SIDE_LABEL = { control: 'Control', karla: 'Karla' };
 
-// x/y are positions on the 1000x620 SVG map (rough Europe projection).
-export const CITY_DATA = {
-  London:   { x: 250, y: 250, home: 'control' },
-  Moscow:   { x: 900, y: 205, home: 'karla' },
-  Berlin:   { x: 495, y: 245 },
-  Vienna:   { x: 545, y: 340 },
-  Prague:   { x: 515, y: 295 },
-  Budapest: { x: 600, y: 360 },
-  Bern:     { x: 410, y: 370 },
-  Istanbul: { x: 760, y: 500 },
-  Helsinki: { x: 680, y: 95 },
-  Lisbon:   { x: 70,  y: 520 },
-  Paris:    { x: 315, y: 320 },
-  Athens:   { x: 650, y: 560 },
+export const HOME = { London: 'control', Moscow: 'karla' };
+// Spread-out pool so cities never crowd each other on the map.
+const CONTESTED_POOL = ['Paris', 'Lisbon', 'Bern', 'Berlin', 'Vienna', 'Helsinki', 'Athens', 'Istanbul'];
+
+export const LANDMARK = {
+  London: 'clock', Moscow: 'onion', Paris: 'tower', Lisbon: 'tram', Bern: 'peak', Berlin: 'gate',
+  Vienna: 'wheel', Helsinki: 'cathedral', Athens: 'columns', Istanbul: 'minaret',
 };
-const CONTESTED_POOL = ['Berlin', 'Vienna', 'Prague', 'Budapest', 'Bern', 'Istanbul', 'Helsinki', 'Lisbon', 'Paris', 'Athens'];
 
 export const ARCHETYPES = {
-  scalphunter: {
-    label: 'Scalphunter',
-    short: 'SH',
-    does: 'Strike: assassinate an enemy agent in the same city.',
-    beats: ['lamplighter', 'talentspotter'],
-    losesTo: 'ferret',
-  },
-  lamplighter: {
-    label: 'Lamplighter',
-    short: 'LL',
-    does: 'Watch reveals archetypes. Expose: burn an enemy Ferret in the same city.',
-    beats: ['ferret'],
-    losesTo: 'scalphunter',
-  },
-  ferret: {
-    label: 'Ferret',
-    short: 'FE',
-    does: 'Guards the city: enemy Strikes there fail and the Scalphunter is caught. Blocks Recruits. Notices anyone who Watches the city.',
-    beats: ['scalphunter'],
-    losesTo: 'lamplighter',
-  },
-  talentspotter: {
-    label: 'Talent-spotter',
-    short: 'TS',
-    does: 'Recruit: try to turn an enemy agent in the same city.',
-    beats: [],
-    losesTo: 'everyone',
-  },
+  scalphunter: { label: 'Scalphunter', short: 'SH', power: 'Strikes without preparing. Interrogates whoever it kills.' },
+  lamplighter: { label: 'Lamplighter', short: 'LL', power: 'Surveillance reveals every role in the city. Always notices preparations and traps.' },
+  ferret: { label: 'Ferret', short: 'FE', power: 'Traps work the same night. Notices surveillance and approaches. Vets your own agents.' },
+  talentspotter: { label: 'Talent-spotter', short: 'TS', power: 'Turns an enemy agent after three approaches. Cannot kill or set traps.' },
 };
 export const ARCHETYPE_KEYS = Object.keys(ARCHETYPES);
 
 export const RULES = {
   weeks: 12,
-  perArchetype: 2,          // 8 agents per side
+  perArchetype: 2,        // 8 agents per side
   maxPerCityAtSetup: 3,
-  cablesPerWeek: 3,
-  watchesPerWeek: 2,
-  recruitsPerWeek: 1,
-  recruitsPerGame: 3,
-  recruitChance: 0.5,
-  sleeperChance: 0.5,       // chance each side starts with one agent already turned by the other
+  ordersPerWeek: 5,
+  approachesToTurn: 3,
+  sleeperChance: 0.5,     // chance each side starts with one agent already working for the other
+  noticeChance: 0.5,      // chance a non-Lamplighter notices a loud enemy in its city
+  approachReportChance: 0.5,
+  seenWithChance: 0.3,    // chance a loyal agent notices a co-located mole meeting its handlers
   contestedCities: 4,
 };
 
-// Field-agent names. Control runs a mixed bag of British and European joes; Karla's are drawn
-// from across the Eastern bloc. Names are generic, not taken from the novels.
 const NAMES = {
   control: ['Hale', 'Ashby', 'Wren', 'Corder', 'Pell', 'Marsh', 'Tilley', 'Brandt', 'Fenwick', 'Osgood',
     'Lacey', 'Draycott', 'Vance', 'Holloway', 'Kemble', 'Thorne', 'Rudd', 'Sefton', 'Quayle', 'Avery'],
@@ -77,11 +43,17 @@ const FIRST = {
   control: ['Peter', 'Anna', 'Jim', 'Connie', 'Toby', 'Sam', 'Ilse', 'Max', 'Ruth', 'Ben', 'Clara', 'Guy'],
   karla: ['Ivan', 'Olga', 'Lev', 'Marta', 'Pavel', 'Irina', 'Jiri', 'Eva', 'Tibor', 'Nadia', 'Oleg', 'Vera'],
 };
+const FEMALE = new Set(['Anna', 'Connie', 'Ilse', 'Ruth', 'Clara', 'Olga', 'Marta', 'Irina', 'Eva', 'Nadia', 'Vera']);
+const COVERS = ['trade attaché', 'journalist', 'professor', 'chauffeur', 'banker', 'translator', 'photographer',
+  'cultural attaché', 'chess coach', 'wine merchant', 'priest', 'nurse', 'engineer', 'art dealer', 'embassy clerk',
+  'pianist', 'travel agent', 'film critic', 'airline steward', 'shipping clerk'];
 
 export function generateWorld(rng) {
   const contested = rng.shuffle(CONTESTED_POOL).slice(0, RULES.contestedCities);
   const cities = ['London', ...contested, 'Moscow'];
+  const covers = rng.shuffle(COVERS);
   const agents = {};
+  let c = 0;
   for (const side of SIDES) {
     const surnames = rng.shuffle(NAMES[side]);
     const firsts = rng.shuffle(FIRST[side]);
@@ -89,17 +61,13 @@ export function generateWorld(rng) {
     for (const arch of ARCHETYPE_KEYS) {
       for (let k = 0; k < RULES.perArchetype; k++) {
         const id = `${side[0]}${i}`;
+        const first = firsts[i % firsts.length];
         agents[id] = {
-          id,
-          side,
-          name: surnames[i],
-          first: firsts[i % firsts.length],
-          archetype: arch,
-          city: null,
-          alive: true,
-          turnedBy: null,
-          eliminated: null, // {week, how, by}
-          history: [],
+          id, side, name: surnames[i], first, archetype: arch,
+          cover: covers[c++ % covers.length],
+          look: { seed: rng.int(1e9), female: FEMALE.has(first) },
+          city: null, alive: true, turnedBy: null, sleeper: false,
+          prep: null, eliminated: null, history: [],
         };
         i++;
       }

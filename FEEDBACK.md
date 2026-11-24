@@ -54,3 +54,10 @@ Running notes from playthroughs. Raw feedback first; it becomes work items once 
 - **Free-form text is effectively useless.** Whatever you write collapses to one of a handful of verbs, so it never felt as if the words mattered.
 - **It feels like chess, not a spy role-play.** Abstract pieces in a rock-paper-scissors fight, rather than people, trust and information.
 - Clara Vance's "Istanbul is quiet on my side, London" is the same invented-facts bug. That reply was written before the fix loaded (the current check rejects this exact text). Reload the page after updates; a reply already in a saved game stays as written.
+
+### Addressed in v2 (2026-11-24)
+Typing removed (click orders); map-first war room with landmarks, territories and portraits;
+drag-and-drop setup; role icons; who-beats-who replaced by the visual "exchange" in the Field Manual;
+grouped, attributed traffic (events, sources, reports); clear causes for every event; vet and
+execute for moles; no dead ends from depleted pieces (anyone but Talent-spotters can strike;
+recruitment has no per-game cap).
