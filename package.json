@@ -1,0 +1,13 @@
+{
+  "name": "moscow-rules",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^1.13.0"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "simulate": "node tools/simulate.js",
+    "test": "node tools/test.js"
+  }
+}
