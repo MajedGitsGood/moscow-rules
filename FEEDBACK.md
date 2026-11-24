@@ -47,4 +47,10 @@ Running notes from playthroughs. Raw feedback first; it becomes work items once 
     - **Scoring.** Suggested: killing a loyal agent counts as an elimination *for the other side* (the risk), and killing a turned agent takes away the other side's end-of-game credit for them (the payoff).
     - **Who carries it out.** Options: a "Station" order that doesn't go through the agent; one of your own Scalphunters in the same city; or a cable to the suspect themselves, which, if they're turned, leaks to Karla, so he learns you're onto them.
     - **What the other side learns.** Does Karla see that the agent is gone, or only notice the leaks stopping?
+- **Dead end:** with every Scalphunter dead and all Recruit attempts used, there was no way left to move the game forward. Pieces only ever run out; nothing replenishes.
+
+### Overall verdict (end of playtest 1)
+- **Not fun as it stands.** A clearer UI would help, but the mechanics need revisiting.
+- **Free-form text is effectively useless.** Whatever you write collapses to one of a handful of verbs, so it never felt as if the words mattered.
+- **It feels like chess, not a spy role-play.** Abstract pieces in a rock-paper-scissors fight, rather than people, trust and information.
 - Clara Vance's "Istanbul is quiet on my side, London" is the same invented-facts bug. That reply was written before the fix loaded (the current check rejects this exact text). Reload the page after updates; a reply already in a saved game stays as written.
