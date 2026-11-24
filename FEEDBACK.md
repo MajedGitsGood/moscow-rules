@@ -29,3 +29,10 @@ Running notes from playthroughs. Raw feedback first; it becomes work items once 
   - "Report on persona in the city" to a Lamplighter became Watch. Correct.
   - "Anyone worth talking to?" to a Talent-spotter came back unclear. A reasonable reading is: scout the city for someone to approach (Watch), or make an approach (Recruit).
   - "Who's in your city?" to a Scalphunter came back unclear. That is plainly a Watch. The interpreter seems to treat questions as "not an instruction", which is too strict.
+
+### Morning traffic (week 2)
+- Reading the traffic is the most fun part so far.
+- It isn't clear **why** each message arrived, or whether last week's orders caused anything. A player can't tell a reply to their own cable from something that happened to them.
+- Agents sometimes report without being asked, which is good, but then what is Watch for? (As designed: Watch is the only way to learn who is in a city and what they are. Unprompted messages are only about things that *happen to* your agents: a Ferret noticing a watcher, an approach, a loss, a kill, a source's report. The UI doesn't make that difference visible.)
+- The message types look too alike. The effort should go into the puzzle of the information, not into working out mechanics, who sent something, or how it's categorised.
+- **Bug found while tracing this:** the "unclear" replies invent facts. Toby Marsh is in **Moscow** but wrote "London is quiet as far as I can tell", and Guy Holloway wrote "London is quiet on my side". Neither of them watched anything. That is false intelligence, and the engine never produced it; it came from the interpreter's reply or the voice rewrite. Replies must only ever state facts the engine supplied.
