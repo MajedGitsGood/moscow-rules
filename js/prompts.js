@@ -17,7 +17,7 @@ ${ROLES}
 - Preparations, traps and attacks are noticed by enemy agents in the same city (Lamplighters always, others half the time): a witness names who prepared, who set something up, or who killed whom.
 - ${RULES.approachesToTurn} approaches turn an enemy agent. Approaches are never reported; a loyal Ferret in the target's city blocks them. A turned agent still takes orders from its own side, but every order it receives is copied to the side that turned it; its reports home are lies chosen by that side (all quiet, framing a colleague, or a false alarm about a strike). The side that turned it gives it a standing instruction: carry out its own side's orders (to keep its cover) or quietly make its strikes, traps, approaches and vetting fail (the default).
 - Briefing a loyal agent does nothing; briefing a turned one hands the plan to the other side, so briefs are a tool for feeding lies to suspected moles.
-- A side may execute one of its own agents at any time (free). Every dead agent is a point for the other side; every agent still alive and turned at the end is a point for the side that turned it. ${RULES.weeks} weeks; most points wins.`;
+- A side may execute one of its own agents at any time (free). ${RULES.weeks} weeks. The winner is the side with the most agents still alive and still loyal at the end: every agent of yours killed, executed or turned is one fewer standing.`;
 
 export const VOICE = `${WORLD}
 
@@ -49,3 +49,21 @@ export const KARLA_PLACEMENT = `${WORLD}
 
 You are KARLA, head of Moscow Centre, placing your 8 agents before the game. At most ${RULES.maxPerCityAtSetup} per city. \
 Positions become public once play begins, so think about what your placement tells Control. Write a short private journal entry about your thinking.`;
+
+export const DEBRIEF = `${WORLD}
+
+You are the analyst writing the after-action report on a finished game, for the human who played it. You are given the full \
+truth: every agent's real role and loyalty, both sides' orders each week, and what each side was told the next morning \
+(including the lies moles told). Find the story: the moments that decided who ended with more agents standing.
+
+Write:
+- headline: one line, under 10 words.
+- summary: 2 or 3 sentences on how the game was won or lost.
+- moments: 4 to 8 key moments in week order. Each: week, which side it favoured (or both), kind (recruitment, intel, mistake, \
+turning-point, strike), a title under 8 words, a detail of 1 or 2 sentences, and the city. Prefer moments that explain the result: \
+when and where agents were turned (and whether the other side ever noticed), information that changed a decision, and critical \
+mistakes: strikes into traps a side had been warned about, agents left exposed after a warning, moles trusted or loyal agents executed.
+- pivotal: the single week and city where the game turned, why, and what each side knew about that city that week \
+before giving its orders that week (quote or paraphrase the reports each side received that morning or the week before; leave the list empty if a side knew nothing).
+
+Use only facts in the record. Plain, dry prose; name agents by surname.`;

@@ -25,7 +25,7 @@ for (let i = 0; i < N; i++) {
   const g = playBotGame(BASE + i);
   st.winner[g.outcome.winner || 'draw']++;
   st.endWeek[g.week] = (st.endWeek[g.week] || 0) + 1;
-  st.points += g.outcome.score.control.total + g.outcome.score.karla.total;
+  st.points += g.outcome.score.control.standing + g.outcome.score.karla.standing;
   st.turned += g.outcome.score.control.turned + g.outcome.score.karla.turned;
   for (const ag of Object.values(g.agents)) if (ag.eliminated) { st.how[ag.eliminated.how] = (st.how[ag.eliminated.how] || 0) + 1; st.arch[ag.archetype] = (st.arch[ag.archetype] || 0) + 1; }
   for (const o of g.orderLog) st.orders[o.type] = (st.orders[o.type] || 0) + 1;
@@ -34,7 +34,7 @@ for (let i = 0; i < N; i++) {
 const per = (o) => Object.fromEntries(Object.entries(o).map(([k, v]) => [k, +(v / N).toFixed(2)]));
 console.log(`games: ${N}`);
 console.log('winner:', st.winner, ' ended at week:', st.endWeek);
-console.log('points/game:', (st.points / N).toFixed(2), ' turned-at-end/game:', (st.turned / N).toFixed(2), ' messages/game (both sides):', (st.reports / N).toFixed(1));
+console.log('standing at end/game (both sides):', (st.points / N).toFixed(2), ' turned-at-end/game:', (st.turned / N).toFixed(2), ' messages/game (both sides):', (st.reports / N).toFixed(1));
 console.log('deaths/game by how:', per(st.how));
 console.log('deaths/game by role:', per(st.arch));
 console.log('orders/game by type:', per(st.orders));

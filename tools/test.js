@@ -112,13 +112,13 @@ const inbox = (g, side) => viewFor(g, side).inbox.map((m) => m.text).join(' | ')
 { const { g, get } = setup();
   const loyalOne = get('control', 'ferret');
   executeAgent(g, 'control', loyalOne.id);
-  ok(!loyalOne.alive && viewFor(g, 'karla').score.us === 1, 'executing your own agent gives the other side a point');
+  ok(!loyalOne.alive && viewFor(g, 'control').score.ours === 9, 'an executed agent no longer stands for you');
 }
 { const { g, get } = setup();
   ok(Object.values(g.agents).filter((a) => a.side === 'control').length === 10, 'each side has ten agents');
   get('control', 'ferret').turnedBy = 'karla';
   for (let i = 0; i < 12; i++) week(g);
-  ok(g.phase === 'over' && g.outcome.score.karla.total === 1 && g.outcome.winner === 'karla', 'a mole alive at the end scores for the side that turned it');
+  ok(g.phase === 'over' && g.outcome.score.control.standing === 9 && g.outcome.score.control.turned === 1 && g.outcome.winner === 'karla', 'a mole alive at the end does not stand for its own side');
 }
 { const { g } = setup();
   surrender(g, 'control');

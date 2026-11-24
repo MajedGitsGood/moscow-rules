@@ -4,6 +4,14 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 
 ## [Unreleased]
 
+### Changed
+- Winning is now about agents standing: the most agents still alive and still loyal at the end.
+  Lost and turned are shown as substats. The HUD shows how many of each side are still alive.
+- The debrief tells the story: Claude's analysis of the key moments (recruitments, intelligence that
+  mattered, mistakes) pinned to the week-by-week chart, and the pivotal battleground with what each
+  side knew there. The rosters list who's standing first. The replay map and order strip are gone.
+
+
 ### Added
 - Order bar: the week's five orders across the bottom of the screen, each cancellable with ✕.
 - Arrow-key navigation: move between cities, the people in a city, an agent's orders and targets;

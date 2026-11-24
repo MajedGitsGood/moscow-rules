@@ -15,6 +15,7 @@ import { portrait, SPYMASTER } from './ui/portraits.js';
 import { ROLE_ICON, ORDER_ICON, UI_ICON, LANDMARK_ICON } from './ui/icons.js';
 import { manualHTML } from './ui/manual.js';
 import { debriefHTML } from './ui/debrief.js';
+import { analyze } from './analysis.js';
 
 const SAVE = 'mr-save-v2';
 const $ = (s, r = document) => r.querySelector(s);
@@ -206,7 +207,7 @@ function hudTop(v, setup) {
   const st = llmStatus();
   return `<header class="hud-top">
     <div class="plate who ${side}"><span class="crest">${side === 'control' ? 'C' : 'K'}</span><div><b>${SIDE_LABEL[side].toUpperCase()}</b><small>${side === 'control' ? 'The Circus, London' : 'Moscow Centre'}</small></div>
-      ${setup ? '' : `<div class="tally" title="Agents eliminated"><span class="us">${UI_ICON.skull}${v.score.us}</span><span class="them">${UI_ICON.skull}${v.score.them}</span></div>`}</div>
+      ${setup ? '' : `<div class="tally"><span class="us" title="Our agents still alive">${v.score.ours}<small>ours</small></span><span class="them" title="Their agents still alive">${v.score.theirs}<small>theirs</small></span></div>`}</div>
     <div class="plate week">${setup ? '<b>PLACE YOUR NETWORKS</b><small>Pick an agent, then a city · three per city</small>' : `<b>WEEK ${Math.min(g.week, RULES.weeks)} <span>/ ${RULES.weeks}</span></b><div class="pips" title="Orders this week">${pips}<small>${RULES.ordersPerWeek - used} orders left</small></div>`}</div>
     <div class="plate tools">
       ${setup ? '' : `<button class="icon-btn ${app.traffic ? 'on' : ''}" data-act="traffic" title="Traffic">${UI_ICON.traffic}</button>`}
@@ -405,14 +406,18 @@ function endTurn() {
 }
 
 // ----- debrief -----
-function debriefScreen() { return debriefHTML(app.game, app.dbWeek); }
+let analyzing = false;
+function debriefScreen() {
+  // The analyst runs once per game; the page shows the facts at once and the story when it's ready.
+  if (!app.story && !analyzing) {
+    analyzing = true;
+    analyze(app.game).then((story) => { app.story = story; analyzing = false; save(); if (app.screen === 'debrief') render(); });
+  }
+  return debriefHTML(app.game, app.story);
+}
 
 // ---------- interaction ----------
-let replayTimer = null;
-function stopReplay() { clearInterval(replayTimer); replayTimer = null; }
-// Re-render the debrief without jumping back to the top.
-function renderKeepScroll() { const sc = $('.debrief2'); const y = sc ? sc.scrollTop : 0; render(); const n = $('.debrief2'); if (n) n.scrollTop = y; }
-document.addEventListener('input', (ev) => { if (ev.target.id === 'db-slider') { stopReplay(); app.dbWeek = Number(ev.target.value); renderKeepScroll(); } });
+
 function queue(order) {
   const side = app.active;
   app.queued[side] = app.queued[side].filter((o) => o.agentId !== order.agentId);
@@ -512,14 +517,7 @@ function onAct(el, ev) {
     case 'goto': if (el.dataset.city) { app.sel.city = el.dataset.city; app.sel.agent = null; render(); } return;
     case 'end': return endWeek();
     case 'again': clearSave(); app = null; return render();
-    case 'db-week': stopReplay(); app.dbWeek = Number(el.dataset.week); return renderKeepScroll();
-    case 'db-play': {
-      if (replayTimer) return stopReplay();
-      const last = Math.max(1, ...g.orderLog.map((x) => x.week));
-      app.dbWeek = 1; renderKeepScroll();
-      replayTimer = setInterval(() => { if (app.dbWeek >= last) return stopReplay(); app.dbWeek++; renderKeepScroll(); }, 1400);
-      return;
-    }
+
   }
 }
 
@@ -637,6 +635,12 @@ document.addEventListener('input', (ev) => {
   save();
 });
 window.addEventListener('resize', () => { if (app?.screen === 'play') placePop(); });
+// Debrief: a pin on the chart and its moment card light up together.
+document.addEventListener('pointerover', (ev) => {
+  const p = ev.target.closest?.('[data-pin]');
+  document.querySelectorAll('.lit').forEach((x) => x.classList.remove('lit'));
+  if (p) document.querySelectorAll(`[data-pin="${p.dataset.pin}"]`).forEach((x) => x.classList.add('lit'));
+});
 // Territory highlight follows the hovered city.
 document.addEventListener('pointerover', (ev) => {
   const c = ev.target.closest?.('.city, .cell, .msg');

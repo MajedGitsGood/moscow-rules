@@ -407,16 +407,17 @@ function moleReport(game, side, m, lie) {
 }
 
 // ---------- end ----------
+// You win by having the most agents still alive and still yours at the end.
 function score(game, side) {
-  const enemy = other(side);
-  const dead = Object.values(game.agents).filter((a) => a.side === enemy && !a.alive).length;
-  const turned = alive(game, enemy).filter((a) => a.turnedBy === side).length;
-  return { dead, turned, total: dead + turned };
+  const mine = Object.values(game.agents).filter((a) => a.side === side);
+  const lost = mine.filter((a) => !a.alive).length;
+  const turned = mine.filter((a) => a.alive && a.turnedBy).length;
+  return { standing: mine.length - lost - turned, lost, turned, total: mine.length - lost - turned };
 }
 function finish(game, reason) {
   game.phase = 'over';
   const s = { control: score(game, 'control'), karla: score(game, 'karla') };
-  let winner = s.control.total > s.karla.total ? 'control' : s.karla.total > s.control.total ? 'karla' : null;
+  let winner = s.control.standing > s.karla.standing ? 'control' : s.karla.standing > s.control.standing ? 'karla' : null;
   if (game.surrendered) winner = other(game.surrendered);
   game.outcome = { reason, score: s, winner };
 }
@@ -444,7 +445,8 @@ export function viewFor(game, side) {
     traps: game.traps.filter((t) => t.side === side).map((t) => ({ city: t.city, setterId: t.setterId, active: t.activeFrom <= game.week })),
     approachProgress: Object.fromEntries(Object.entries(game.approaches).filter(([, r]) => r.side === side).map(([id, r]) => [id, r.count])),
     submitted: !!game.pending[side],
-    score: { us: score(game, side).total - score(game, side).turned, them: score(game, enemy).dead },
+    // What a side can see: how many of each side are still alive (not who is loyal).
+    score: { ours: alive(game, side).length, theirs: alive(game, enemy).length },
     outcome: game.outcome,
   };
 }

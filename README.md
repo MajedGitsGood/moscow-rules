@@ -25,6 +25,7 @@ Modes: **Against Karla** (Claude Opus 5.5), **Against the bot** (offline), **Two
 | Job | Model |
 | --- | --- |
 | Karla's placement, orders and private journal | `claude-opus-5-5` |
+| The after-action analysis in the debrief | `claude-opus-5-5` |
 | Agents' voices in the morning traffic | `claude-haiku-5-5` |
 
 The rules engine decides everything that is true. Karla sees only his own fog-of-war view, and

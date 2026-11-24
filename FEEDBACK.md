@@ -111,3 +111,20 @@ the order popover beside it.
 - **Arrow keys:** move a highlight through cities, the people in a city, their orders, then targets. Enter chooses, Escape steps back.
 - **Dragging:** drag a token onto a city to move it; drag it onto an enemy for the obvious action (strike, approach or prepare).
 - **New debrief:** a momentum chart marking where the game turned, a week-by-week replay map showing true roles, moles and moves, and both sides' orders for each week.
+
+### Follow-up 4: debrief
+- Much better, but the structure is scattered: it reads as snapshots, not as one story. Use the LLM to
+  synthesize the key points: where agents were recruited, whether particular information swayed the
+  outcome, and the critical mistakes (attacking, or failing to defend, despite what was known). Show
+  that on the week-by-week chart.
+- The replay map shows only movements, which nobody needs. A map only makes sense for one pivotal
+  week: the battleground, and what information each side had.
+- Both sides' orders, week by week, are too much noise after half an hour of play.
+- Keep the two rosters, ordered alive first, then killed.
+- The score should be agents left alive and on your side, with lost and turned as substats.
+
+**Addressed (2026-11-24):** Claude (Opus) writes the after-action analysis: headline, summary, 4–8
+key moments pinned to the week-by-week chart, and the pivotal battleground (a zoomed map with true
+roles and moles, plus what each side knew). A rules engine does the same if Claude is unavailable.
+The replay and order strip are gone, and the rosters are ordered standing, then turned, then lost.
+Scoring is now agents standing.

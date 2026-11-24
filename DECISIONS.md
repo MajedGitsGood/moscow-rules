@@ -4,6 +4,19 @@ Why-this-not-that for this project, newest first. Companion to [CHANGELOG.md](CH
 
 ---
 
+## 2026-11-24: An analyst writes the debrief; score is agents standing
+**Decision:** On reaching the debrief, Opus reads the full game record (true roles, moles, both
+sides' orders, what each side was told) plus rule-detected moments (recruitments, strikes into
+warned traps, warned-but-undefended victims, executions) and returns a headline, a summary, 4 to 8
+moments and the pivotal battleground. Offline, the rule-detected moments are shown directly. The
+score shown is agents standing (alive and loyal); the ranking is the same as before, but it now
+names what you are playing for.
+**Why:** Playtest feedback: the debrief read as snapshots, not a story. Synthesis is what an LLM is
+good at, and it may use the truth freely, because the game is over.
+**Rejected:** *A full replay map* (shows movement, not meaning). *Both sides' orders per week* (noise).
+*Haiku for the analysis* (it's one call per game, and quality matters more than cost here).
+**Affects:** `js/analysis.js`, `js/ui/debrief.js`, `js/prompts.js` (`DEBRIEF`), `server.js` (`debrief` → Opus), `js/engine.js` (score).
+
 ## 2026-11-24: Debrief as a replay, not a report
 **Decision:** The debrief shows a momentum chart (points lead per week, biggest swing marked), a
 replay map per week with true roles, loyalties and moves, and both sides' orders per week. Karla's

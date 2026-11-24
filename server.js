@@ -25,10 +25,11 @@ const PORT = Number(process.argv[2] || process.env.PORT || 8643);
 
 const MODELS = {
   karla: 'claude-opus-5-5',      // Karla's decision-making
+  debrief: 'claude-opus-5-5',    // the after-action analysis
   voice: 'claude-haiku-5-5',     // agents' voices in the morning traffic
 };
-const MAX_TOKENS = { karla: 8000, voice: 2500 };
-const EFFORT = { karla: 'medium', voice: 'low' };
+const MAX_TOKENS = { karla: 8000, debrief: 6000, voice: 2500 };
+const EFFORT = { karla: 'medium', debrief: 'medium', voice: 'low' };
 const GUEST_BUDGET = Number(process.env.MR_GUEST_BUDGET || 300000);
 const OWNER_TOKEN = process.env.MR_OWNER_TOKEN || '';
 
@@ -51,7 +52,7 @@ async function callClaude(kind, system, user, schema, maxTokens) {
     messages: [{ role: 'user', content: user }],
     output_config: { effort: EFFORT[kind], format: { type: 'json_schema', schema } },
   };
-  if (kind !== 'karla') {
+  if (kind === 'voice') {
     // Haiku: fast structured answers, no extended thinking needed.
     return client.messages.create({ ...params, thinking: { type: 'disabled' } });
   }
