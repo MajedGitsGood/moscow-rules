@@ -80,3 +80,15 @@ recruitment has no per-game cap).
 
 ### Addressed (2026-11-24)
 All of the above. Balance watch: in bot games, about two agents per side end up turned. Two unseen approaches are strong; Ferrets now quietly block approaches in their city.
+
+### Follow-up notes (after playtest 2 changes)
+- Kills should reveal nothing, moles included.
+- Keep silent approaches: they push players to keep agents moving and get them vetted, which is how real espionage works. People get turned often, and trust is hard.
+- Remove the suspicion tags; the player should have to notice suspicion for themselves.
+- Moles should be able to frame other moles. When a mole is given orders, its handlers should decide how it responds, rather than it always failing.
+- Try 10 agents a side: one more Lamplighter and one more Ferret each.
+- Fewer clicks: arrow-key navigation? The scrollbar on the setup tray is annoying.
+
+**Addressed (2026-11-24):** all of the above. Keys: arrows cycle agents, letters give orders,
+number keys pick targets and cities, Backspace undoes, Enter ends the week, and the next idle agent
+is selected automatically. Setup is click-then-city or keys 1–6, with no scrolling.

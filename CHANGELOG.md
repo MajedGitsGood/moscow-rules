@@ -4,6 +4,19 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 
 ## [Unreleased]
 
+### Changed (playtest 2 follow-up)
+- Ten agents a side: three Lamplighters, three Ferrets, two Scalphunters, two Talent-spotters.
+- No suspicion tags anywhere: spotting moles is up to you.
+- Moles you run can frame anyone on their side, other moles included, and take a standing
+  instruction: carry out their own side's orders (to keep their cover) or quietly let them fail.
+  Every leaked order says which they're doing.
+- Faster controls: arrow keys cycle your agents, letter keys give orders (shown on each button),
+  number keys pick targets and cities, Backspace undoes, Enter ends the week, and the next idle
+  agent is selected automatically after each order.
+- Setup: click an agent then a city (or press 1–6), or drag; the tray is a compact grid with no
+  scrolling, and the map stays clear of it.
+
+
 ### Changed (after playtest 2)
 - No more sleepers: both sides start with clean networks.
 - Two approaches turn an agent, and approaches are never reported. A loyal Ferret in the target's

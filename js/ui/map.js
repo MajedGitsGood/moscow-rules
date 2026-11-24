@@ -65,7 +65,7 @@ export function mapBase(cities) {
 // Dynamic layer: cities, tokens, queued moves. `state` comes from the UI.
 //   view: viewFor(side); selected: city; orders: queued orders; moveTargets: Set of cities to
 //   highlight; roleOf(agent): the role to badge on a token (known for ours, the player's guess for theirs)
-export function mapOverlay({ view, selected, orders = [], moveTargets = null, roleOf }) {
+export function mapOverlay({ view, selected, orders = [], moveTargets = null, roleOf, numbers = null }) {
   const out = [];
   // Queued moves as arcs.
   for (const o of orders.filter((x) => x.type === 'move')) {
@@ -103,7 +103,7 @@ export function mapOverlay({ view, selected, orders = [], moveTargets = null, ro
         <circle r="21" class="medal-ring"/>
         <svg x="-14" y="-15" width="28" height="28" viewBox="0 0 40 40" class="landmark">${LANDMARK_ICON[LANDMARK[c]].replace(/^<svg[^>]*>/, '').replace(/<\/svg>$/, '')}</svg>
       </g>
-      <g class="plate" transform="translate(0,-33)"><rect x="${-c.length * 4.6 - 10}" y="-10" width="${c.length * 9.2 + 20}" height="18" rx="2"/><text y="3.5" text-anchor="middle">${c.toUpperCase()}</text></g>
+      <g class="plate" transform="translate(0,-33)"><rect x="${-c.length * 4.6 - 10}" y="-10" width="${c.length * 9.2 + 20}" height="18" rx="2"/><text y="3.5" text-anchor="middle">${c.toUpperCase()}</text>${numbers ? `<g class="keynum" transform="translate(${-c.length * 4.6 - 18},-1)"><circle r="8"/><text y="3.5" text-anchor="middle">${numbers[c]}</text></g>` : ''}</g>
       ${trap ? `<g class="trapmark ${trap.active ? 'armed' : ''}" transform="translate(-9,26)"><title>Our trap ${trap.active ? '(ready)' : '(ready next week)'}</title><circle r="8" cx="9" cy="0"/>${sized(ORDER_ICON.trap, 11, 3.5, -5.5)}</g>` : ''}
       ${ours.slice(0, 6).map((a, i) => tok(a, i, Math.min(ours.length, 6), 'ours')).join('')}
       ${theirs.slice(0, 6).map((a, i) => tok(a, i, Math.min(theirs.length, 6), 'theirs')).join('')}

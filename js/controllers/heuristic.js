@@ -33,7 +33,8 @@ export function heuristicOrders(game, view, seed = 1) {
   const fresh = view.inbox.filter((m) => m.week === view.week);
   const warnings = fresh.flatMap((m) => m.facts?.activities || []).filter((x) => x.kind === 'prepare' && me.some((a) => a.id === x.targetId));
   const trapCities = new Set(fresh.filter((m) => (m.facts?.activities || []).some((x) => x.kind === 'trap')).map((m) => m.city));
-  const suspects = new Set(Object.entries(view.intel).filter(([id, i]) => i.suspicions?.length && me.some((a) => a.id === id)).map(([id]) => id));
+  // The bot's own suspicion: anyone accused in recent reports or failed by a vet.
+  const suspects = new Set(view.inbox.filter((m) => m.week >= view.week - 3).flatMap((m) => [m.facts?.accused, m.facts?.verdict === 'turned' ? m.facts.vet : null]).filter(Boolean));
 
   // 1. Someone is preparing to kill one of ours: trap the city, or get the target out.
   for (const wn of warnings) {
@@ -68,7 +69,7 @@ export function heuristicOrders(game, view, seed = 1) {
   }
   // 3. Moles we run: tell a lie.
   for (const e of view.enemies.filter((x) => x.asset && x.alive)) {
-    const colleagues = view.enemies.filter((x) => x.alive && !x.asset && x.id !== e.id);
+    const colleagues = view.enemies.filter((x) => x.alive && x.id !== e.id);
     const kind = rng.pick(['hide', 'alarm', colleagues.length ? 'frame' : 'hide']);
     add({ agentId: e.id, type: 'lie', lie: kind === 'frame' ? { kind, targetId: rng.pick(colleagues).id } : { kind } });
   }

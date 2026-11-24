@@ -1,5 +1,5 @@
 // v2 rule checks.   node tools/test.js
-import { newGame, submitOrders, resolveWeek, viewFor, executeAgent, surrender, legalOrders } from '../js/engine.js';
+import { newGame, submitOrders, resolveWeek, viewFor, executeAgent, surrender, legalOrders, setStance } from '../js/engine.js';
 import { factsCheck } from '../js/voices.js';
 
 let fails = 0;
@@ -84,7 +84,22 @@ const inbox = (g, side) => viewFor(g, side).inbox.map((m) => m.text).join(' | ')
   week(g, [{ agentId: fe.id, type: 'vet', targetId: ll.id }], [{ agentId: ll.id, type: 'lie', lie: { kind: 'frame', targetId: sh.id } }]);
   const t = inbox(g, 'control');
   ok(t.includes(`They're working for Karla`), 'a loyal Ferret exposes a mole when vetting');
-  ok(viewFor(g, 'control').intel[sh.id]?.suspicions.some((s) => s.kind === 'accused'), "a mole's frame lie casts suspicion on a loyal colleague");
+  ok(inbox(g, 'control').includes(`from ${sh.name}`) || inbox(g, 'control').includes(sh.name), "a mole's frame lie accuses a colleague in its report");
+  ok(!('suspicions' in (viewFor(g, 'control').intel[sh.id] || {})), 'no suspicion tags are kept for the player');
+}
+{ const { g, get } = setup({ control: { scalphunter: 'A' }, karla: { lamplighter: 'A' } });
+  const sh = get('control', 'scalphunter'), ll = get('karla', 'lamplighter');
+  sh.turnedBy = 'karla';
+  setStance(g, 'karla', sh.id, 'obey');
+  week(g, [{ agentId: sh.id, type: 'strike', targetId: ll.id }]);
+  ok(!ll.alive, 'a mole told to obey carries out its orders, even against the side that turned it');
+  ok(inbox(g, 'karla').includes('As you instructed, I am carrying them out'), 'the mole tells its handlers what it is doing with its orders');
+}
+{ const { g, get } = setup({ control: { ferret: 'A', lamplighter: 'A', lamplighter: 'A' } });
+  const ll0 = get('control', 'lamplighter', 0), ll1 = get('control', 'lamplighter', 1);
+  ll0.city = ll1.city = g.cities[1]; ll0.turnedBy = 'karla'; ll1.turnedBy = 'karla';
+  week(g, [], [{ agentId: ll0.id, type: 'lie', lie: { kind: 'frame', targetId: ll1.id } }]);
+  ok(inbox(g, 'control').includes(`I don't like what I'm seeing from ${ll1.name}`), 'a mole can frame another mole');
 }
 { const { g, get } = setup({ control: { lamplighter: 'A' } });
   const ll = get('control', 'lamplighter');
@@ -100,6 +115,7 @@ const inbox = (g, side) => viewFor(g, side).inbox.map((m) => m.text).join(' | ')
   ok(!loyalOne.alive && viewFor(g, 'karla').score.us === 1, 'executing your own agent gives the other side a point');
 }
 { const { g, get } = setup();
+  ok(Object.values(g.agents).filter((a) => a.side === 'control').length === 10, 'each side has ten agents');
   get('control', 'ferret').turnedBy = 'karla';
   for (let i = 0; i < 12; i++) week(g);
   ok(g.phase === 'over' && g.outcome.score.karla.total === 1 && g.outcome.winner === 'karla', 'a mole alive at the end scores for the side that turned it');

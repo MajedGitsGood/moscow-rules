@@ -23,10 +23,7 @@ function summarize(game, view) {
     const i = view.intel[id];
     if (!i) return {};
     const r = i.roles.at(-1);
-    return {
-      reportedRole: r ? `${label(r.archetype)} (per ${r.source}, wk ${r.week})` : undefined,
-      suspicions: i.suspicions.length ? i.suspicions.map((s) => `${s.kind} by ${s.source}, wk ${s.week}`) : undefined,
-    };
+    return { reportedRole: r ? `${label(r.archetype)} (per ${r.source}, wk ${r.week})` : undefined };
   };
   return {
     week: view.week, weeksTotal: RULES.weeks, ordersAllowed: RULES.ordersPerWeek, cities: view.cities,
@@ -42,7 +39,7 @@ function summarize(game, view) {
     yourApproaches: Object.entries(view.approachProgress).map(([id, n]) => `${name(id)}: ${n}/${RULES.approachesToTurn}`),
     britishAgents: view.enemies.filter((e) => e.alive).map((e) => ({
       name: e.name, cover: e.cover, city: e.city,
-      ...(e.asset ? { workingForYou: true, role: label(e.archetype) } : intelOn(e.id)),
+      ...(e.asset ? { workingForYou: true, role: label(e.archetype), standingInstruction: e.stance === 'obey' ? 'carry out British orders' : 'make British orders fail' } : intelOn(e.id)),
       seenDoing: seen[e.id],
     })),
     britishLosses: view.enemies.filter((e) => !e.alive).map((e) => e.name),
@@ -74,9 +71,10 @@ const ORDER_SCHEMA = {
       },
     },
     execute: { type: 'array', items: { type: 'string' } },
+    instructions: { type: 'array', description: 'Standing instructions for British agents working for you', items: { type: 'object', properties: { agent: { type: 'string' }, stance: { type: 'string', enum: ['obey', 'sabotage'] } }, required: ['agent', 'stance'], additionalProperties: false } },
     journal: { type: 'string' },
   },
-  required: ['orders', 'execute', 'journal'],
+  required: ['orders', 'execute', 'instructions', 'journal'],
   additionalProperties: false,
 };
 
@@ -96,7 +94,8 @@ function toOrders(game, side, r) {
     if (valid.length >= RULES.ordersPerWeek) break;
   }
   const executions = (r.execute || []).map(byName).filter((a) => a && a.side === side && a.alive).map((a) => a.id);
-  return { orders: valid, executions };
+  const stances = (r.instructions || []).map((x) => ({ id: byName(x.agent)?.id, stance: x.stance })).filter((x) => x.id && game.agents[x.id].turnedBy === side);
+  return { orders: valid, executions, stances };
 }
 
 export async function claudeOrders(game, side, view) {
@@ -106,7 +105,7 @@ export async function claudeOrders(game, side, view) {
   } catch (e) {
     console.warn('Karla fell back to the offline bot:', e.message);
     // Leave a trace in the debrief, so a passive week can be explained.
-    return { orders: heuristicOrders(game, view, game.seed), executions: [], journal: `(This week's orders came from the offline bot: ${e.message})`, via: 'bot' };
+    return { orders: heuristicOrders(game, view, game.seed), executions: [], stances: [], journal: `(This week's orders came from the offline bot: ${e.message})`, via: 'bot' };
   }
 }
 

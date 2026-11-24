@@ -31,15 +31,14 @@ function send(game, side, msg) {
   game.msgSeq = (game.msgSeq || 0) + 1;
   game.inbox[side].push({ id: `m${game.msgSeq}`, week: game.phase === 'setup' ? 1 : game.week + 1, ...msg });
 }
-// Intel: what a side has been told about an agent's role (true or not) or loyalty.
+// Intel: roles a side has been told about (by its Lamplighters). Loyalty is never tracked for the
+// player: suspicion is something they have to notice in the traffic themselves.
 function claim(game, side, agentId, archetype, source) {
-  const i = (game.intel[side][agentId] ||= { roles: [], suspicions: [] });
+  const i = (game.intel[side][agentId] ||= { roles: [] });
   i.roles.push({ archetype, source, week: game.week + 1 });
 }
-function suspect(game, side, agentId, kind, source) {
-  const i = (game.intel[side][agentId] ||= { roles: [], suspicions: [] });
-  i.suspicions.push({ kind, source, week: game.week + 1 });
-}
+// A mole follows its owner's orders only if the side that turned it says so (a standing instruction).
+const obeys = (game, a) => loyal(a) || game.stance?.[a.id] === 'obey';
 function eliminate(game, agent, how, bySide) {
   agent.alive = false;
   agent.prep = null;
@@ -194,6 +193,14 @@ export function executeAgent(game, side, agentId) {
   checkEnd(game);
 }
 
+// Free standing instruction to an enemy agent you have turned: carry out their own side's orders
+// (to keep their cover) or quietly make them fail (the default).
+export function setStance(game, side, agentId, stance) {
+  const a = game.agents[agentId];
+  if (!a || !a.alive || a.side === side || a.turnedBy !== side || !['obey', 'sabotage'].includes(stance)) throw new Error('Cannot instruct.');
+  (game.stance ||= {})[agentId] = stance;
+}
+
 export function surrender(game, side) {
   if (game.phase === 'over') return;
   game.surrendered = side;
@@ -239,7 +246,7 @@ export function resolveWeek(game) {
         kind: 'source', from: a.id, city: a.city,
         text: o.type === 'brief'
           ? `${SIDE_LABEL[o.side]} has briefed me: there will be a ${o.plan.kind} in ${o.plan.city}.`
-          : `My orders from ${SIDE_LABEL[o.side]} this week: ${describeOrder(o, game)}.`,
+          : `My orders from ${SIDE_LABEL[o.side]} this week: ${describeOrder(o, game)}. ${['strike', 'trap', 'approach', 'vet'].includes(o.type) ? (game.stance?.[a.id] === 'obey' ? 'As you instructed, I am carrying them out. Tell me if you want them to fail.' : 'As you instructed, I will see they come to nothing. Tell me if you would rather I carry them out.') : ''}`.trim(),
         facts: { order: o.type, plan: o.plan || null, targetId: o.targetId || null, city: o.city || null },
       });
     }
@@ -264,7 +271,7 @@ export function resolveWeek(game) {
   for (const o of of('trap')) {
     const a = game.agents[o.agentId];
     game.traps = game.traps.filter((t) => t.setterId !== a.id);
-    game.traps.push({ side: o.side, city: a.city, setterId: a.id, activeFrom: a.archetype === 'ferret' ? w : w + 1, dud: !loyal(a) });
+    game.traps.push({ side: o.side, city: a.city, setterId: a.id, activeFrom: a.archetype === 'ferret' ? w : w + 1, dud: !obeys(game, a) });
   }
 
   // 3. Strikes, in random order.
@@ -277,7 +284,7 @@ export function resolveWeek(game) {
       continue;
     }
     s.prep = null;
-    if (!loyal(s)) {
+    if (!obeys(game, s)) {
       send(game, o.side, { kind: 'report', from: s.id, city: s.city, text: `${t.name} slipped away from me. I'll keep looking.` });
       send(game, s.turnedBy, { kind: 'source', from: s.id, city: s.city, text: `I was sent to kill ${t.name}. I let it lapse, as instructed.` });
       continue;
@@ -307,7 +314,7 @@ export function resolveWeek(game) {
   //    catch a mole is to notice it in the traffic. A turned Talent-spotter's pitches quietly go nowhere.
   for (const o of withRng(game, (r) => r.shuffle(of('approach')))) {
     const ts = game.agents[o.agentId], t = game.agents[o.targetId];
-    if (!t.alive || t.city !== ts.city || !loyal(ts)) continue;
+    if (!t.alive || t.city !== ts.city || !obeys(game, ts)) continue;
     // A loyal Ferret on the target's side keeps its people out of reach, silently.
     if (inCity(game, t.side, t.city).some((f) => f.archetype === 'ferret' && loyal(f) && f.id !== t.id)) {
       send(game, o.side, { kind: 'report', from: ts.id, city: ts.city, text: `I couldn't get near ${t.name}. Someone on their side is keeping their people close.` });
@@ -331,8 +338,7 @@ export function resolveWeek(game) {
   for (const o of of('vet')) {
     const f = game.agents[o.agentId], v = game.agents[o.targetId];
     if (!v.alive) continue;
-    const verdict = loyal(f) ? (loyal(v) ? 'loyal' : 'turned') : 'loyal';
-    if (verdict === 'turned') suspect(game, o.side, v.id, 'vetted', `${f.name} (Ferret)`);
+    const verdict = obeys(game, f) ? (loyal(v) ? 'loyal' : 'turned') : 'loyal';
     send(game, o.side, { kind: 'report', from: f.id, city: f.city, text: verdict === 'turned' ? `I've been through ${v.name}'s life. They're working for ${SIDE_LABEL[other(o.side)]}.` : `I've been through ${v.name}'s life. Clean, as far as I can tell.`, facts: { vet: v.id, verdict } });
   }
 
@@ -342,7 +348,7 @@ export function resolveWeek(game) {
     for (const a of alive(game, side)) {
       if (!loyal(a)) { moleReport(game, side, a, lieFor[a.id] || { kind: 'hide' }); continue; }
       const notes = [];
-      const facts = { roles: [], activities: [], suspicions: [] };
+      const facts = { roles: [], activities: [] };
       const surveilling = orderOf[a.id]?.type === 'surveil'; // Lamplighters only
       const isLL = a.archetype === 'lamplighter';
       const visible = inCity(game, enemy, a.city).filter((e) => !quiet.has(e.id)); // lying low = invisible
@@ -380,11 +386,11 @@ export function resolveWeek(game) {
 // A turned agent's report home, shaped by the lie the turning side chose.
 function moleReport(game, side, m, lie) {
   const turner = other(side);
-  const facts = { roles: [], activities: [], suspicions: [] };
+  const facts = { roles: [], activities: [] };
   let text = null;
   if (lie.kind === 'frame') {
     const t = game.agents[lie.targetId];
-    if (t && t.alive) { text = `I don't like what I'm seeing from ${t.name}. Meetings I can't account for. I think they've been turned.`; suspect(game, side, t.id, 'accused', m.name); facts.suspicions.push({ id: t.id, kind: 'accused' }); }
+    if (t && t.alive) { text = `I don't like what I'm seeing from ${t.name}. Meetings I can't account for. I think they've been turned.`; facts.accused = t.id; }
   } else if (lie.kind === 'alarm') {
     const mine = inCity(game, side, m.city).filter((x) => x.id !== m.id);
     const them = inCity(game, turner, m.city);
@@ -428,7 +434,7 @@ export function viewFor(game, side) {
   const own = Object.values(game.agents).filter((a) => a.side === side).map((a) => ({ ...strip(a), archetype: a.archetype, prep: a.prep, eliminated: a.eliminated }));
   const enemies = Object.values(game.agents).filter((a) => a.side === enemy).map((a) => {
     const v = { ...strip(a), eliminated: a.eliminated ? { week: a.eliminated.week, city: a.eliminated.city } : null };
-    if (a.turnedBy === side) { v.asset = true; v.archetype = a.archetype; }
+    if (a.turnedBy === side) { v.asset = true; v.archetype = a.archetype; v.stance = game.stance?.[a.id] || 'sabotage'; }
     return v;
   });
   return {

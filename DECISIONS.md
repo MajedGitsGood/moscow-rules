@@ -4,6 +4,20 @@ Why-this-not-that for this project, newest first. Companion to [CHANGELOG.md](CH
 
 ---
 
+## 2026-11-24: Standing instructions for moles; ten agents; keyboard-first
+**Decision:** The side that turned an agent sets a standing instruction (obey or sabotage their own
+side's orders) instead of moles always failing; leaked orders state which. Suspicion is never
+tracked for the player. Ten agents a side (+1 Lamplighter, +1 Ferret). Orders can be given entirely
+from the keyboard, with auto-advance to the next idle agent.
+**Why:** Playtest 2 follow-up. Always-failing moles were easy to spot and gave handlers no choice; a
+mole that sometimes obeys makes trust genuinely hard, which the user called realistic. Suspicion
+tags did the player's thinking for them. The extra Lamplighter and Ferret give more eyes and more
+defence against silent recruitment, which runs at about five turned agents a game in bot play.
+**Rejected:** *Asking the handler per order* (orders resolve the same night they're given, so the
+handler would always be a week late; a standing instruction answers in advance). *A cap on
+recruitment* (the user wants pervasive turning, countered by vetting and movement).
+**Affects:** `js/engine.js` (`setStance`, `obeys`), `js/world.js`, `js/main.js`, Karla's prompt and schema.
+
 ## 2026-11-24: Roles are learned only by watching
 **Decision:** Only Lamplighters surveil; other agents report only preparations, traps and attacks
 (naming the actor, never the role); kills reveal nothing; approaches are never reported and take two;

@@ -38,7 +38,7 @@ export function manualHTML() {
 
   <div class="man-h">Moles</div>
   <div class="man-orders">
-    <div class="man-order">${ORDER_ICON.lie}<div><b>Their mole, your voice</b>Pick the lie they report home: all quiet, a false alarm, or framing a loyal colleague.</div></div>
+    <div class="man-order">${ORDER_ICON.lie}<div><b>Their mole, your voice</b>Pick the lie they report home: all quiet, a false alarm, or framing a colleague (even another mole). Tell them whether to carry out their own side's orders or quietly let them fail.</div></div>
     <div class="man-order">${ORDER_ICON.vet}<div><b>Your mole, their ears</b>Every order you give a mole reaches the other side. A Ferret can vet them.</div></div>
     <div class="man-order">${ORDER_ICON.execute}<div><b>Execute</b>Free. The other side scores either way. You'll know if you were right at the debrief.</div></div>
   </div>

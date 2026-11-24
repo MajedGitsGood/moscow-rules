@@ -13,7 +13,7 @@ Roles and loyalty are hidden. Moving to any city takes one week. Setup is secret
 at most three per city.
 
 ## Roster
-Eight agents a side, two of each role, no reinforcements.
+Ten agents a side (2 Scalphunters, 3 Lamplighters, 3 Ferrets, 2 Talent-spotters), no reinforcements.
 - Scalphunter: strikes without preparing, so there's no warning.
 - Lamplighter: the only one who can surveil (reveals every role in the city); always notices
   preparations, traps and attacks.
@@ -33,7 +33,9 @@ attacker dies) or the target is lying low (nothing happens). Preparations, traps
 noticed by enemies in the city (Lamplighters always, others half the time); a witness names the actor
 but never the role. Roles are learned only from Lamplighters. No sleepers. Lying low is quiet:
 invisible to reports and strikes. Turned agents leak, lie (all quiet, false alarm, frame a
-colleague), and quietly fail at strikes, traps and vetting.
+colleague, other moles included), and follow a standing instruction from the side that turned
+them: carry out their own side's orders, or quietly let strikes, traps, approaches and vetting fail.
+The player is never shown suspicion tags.
 
 ## Scoring
 Every enemy agent who dies is a point, however they die (including executions). Every enemy agent

@@ -22,7 +22,7 @@ export const ARCHETYPE_KEYS = Object.keys(ARCHETYPES);
 
 export const RULES = {
   weeks: 12,
-  perArchetype: 2,        // 8 agents per side
+  roster: { scalphunter: 2, lamplighter: 3, ferret: 3, talentspotter: 2 }, // 10 agents per side
   maxPerCityAtSetup: 3,
   ordersPerWeek: 5,
   approachesToTurn: 2,
@@ -56,7 +56,7 @@ export function generateWorld(rng) {
     const firsts = rng.shuffle(FIRST[side]);
     let i = 0;
     for (const arch of ARCHETYPE_KEYS) {
-      for (let k = 0; k < RULES.perArchetype; k++) {
+      for (let k = 0; k < RULES.roster[arch]; k++) {
         const id = `${side[0]}${i}`;
         const first = firsts[i % firsts.length];
         agents[id] = {
