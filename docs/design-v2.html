@@ -1,0 +1,506 @@
+<title>Moscow Rules v2</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Layout: a case file. One narrow reading column of dossier sheets; diagrams break wider. */
+:root {
+  --bg: #e9e3d3;          /* desk blotter, light */
+  --sheet: #f6f1e3;       /* paper */
+  --ink: #221f19;
+  --ink-soft: #5d5749;
+  --rule: #cfc4a6;
+  --stamp: #a3261d;       /* red stamp: Karla, danger */
+  --control: #1f4e85;     /* Control blue */
+  --ok: #2e6a3c;
+  --amber: #a26d12;
+  --chip: #ece4cf;
+  --display: 'Special Elite', 'Courier New', monospace;
+  --type: 'Courier Prime', 'Courier New', monospace;
+  --ui: 'IBM Plex Sans', system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #15161a; --sheet: #1e2026; --ink: #e9e4d6; --ink-soft: #a8a291; --rule: #3a3c44;
+    --stamp: #e0675c; --control: #7fa8e0; --ok: #79b98a; --amber: #e0aa4f; --chip: #2a2d35;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #15161a; --sheet: #1e2026; --ink: #e9e4d6; --ink-soft: #a8a291; --rule: #3a3c44;
+  --stamp: #e0675c; --control: #7fa8e0; --ok: #79b98a; --amber: #e0aa4f; --chip: #2a2d35;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--ui); font-size: 15.5px; line-height: 1.55;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 28px 60px;
+}
+main { max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; gap: 22px; }
+h1, h2, h3 { font-family: var(--display); font-weight: normal; letter-spacing: .03em; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(30px, 6vw, 46px); line-height: 1.05; }
+h2 { font-size: 24px; }
+h3 { font-size: 18px; }
+p { margin: 0; max-width: 68ch; }
+.sheet { background: var(--sheet); border: 1px solid var(--rule); padding: 22px clamp(16px, 4vw, 30px); display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.eyebrow { font-family: var(--type); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-soft); }
+.stamp { display: inline-block; font-family: var(--display); color: var(--stamp); border: 2px solid var(--stamp); padding: 2px 10px; transform: rotate(-2deg); letter-spacing: .12em; font-size: 13px; align-self: flex-start; }
+.mono { font-family: var(--type); }
+.muted { color: var(--ink-soft); }
+.small { font-size: 13.5px; }
+
+/* header */
+.cover { gap: 18px; }
+.cover-row { display: flex; gap: 22px; align-items: flex-end; flex-wrap: wrap; justify-content: space-between; }
+.duo { display: flex; gap: 14px; }
+.duo figure { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; font-family: var(--type); font-size: 12px; letter-spacing: .1em; text-transform: uppercase; }
+.duo svg { width: 84px; height: 104px; }
+
+/* status lists */
+.status { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+.status > div { min-width: 0; }
+.status ul { margin: 6px 0 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; }
+.tag { font-family: var(--type); font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; padding: 1px 7px; border: 1px solid currentColor; border-radius: 2px; }
+.tag.decided { color: var(--ok); } .tag.open { color: var(--amber); } .tag.dropped { color: var(--stamp); }
+
+/* roles */
+.roles { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
+.role { border: 1px solid var(--rule); padding: 14px; display: flex; flex-direction: column; gap: 8px; min-width: 0; background: var(--sheet); }
+.role .head { display: flex; align-items: center; gap: 10px; }
+.role svg { width: 38px; height: 38px; flex: none; color: var(--ink); }
+.role dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 3px 10px; font-size: 13.5px; }
+.role dt { font-family: var(--type); color: var(--ink-soft); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; padding-top: 2px; }
+.role dd { margin: 0; }
+
+/* tables */
+.scroll { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; min-width: 620px; }
+th { text-align: left; font-family: var(--type); font-weight: normal; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft); border-bottom: 1px solid var(--rule); padding: 6px 8px; }
+td { border-bottom: 1px dotted var(--rule); padding: 7px 8px; vertical-align: top; }
+td:first-child { font-weight: 600; white-space: nowrap; }
+.freq { font-family: var(--type); font-size: 12px; }
+.freq.every { color: var(--control); } .freq.rare { color: var(--stamp); }
+.pips { font-family: var(--type); letter-spacing: 2px; color: var(--stamp); white-space: nowrap; }
+.pips .off { color: var(--rule); }
+
+/* diagrams */
+.diagram { overflow-x: auto; }
+.diagram svg { display: block; width: 100%; height: auto; min-width: 600px; }
+svg text { font-family: var(--type); fill: var(--ink); }
+svg .soft { fill: var(--ink-soft); }
+svg .c { fill: var(--control); } svg .k { fill: var(--stamp); } svg .g { fill: var(--ok); } svg .a { fill: var(--amber); }
+svg .line { stroke: var(--rule); stroke-width: 1.5; fill: none; }
+svg .ink-stroke { stroke: var(--ink); fill: none; }
+svg .box { fill: var(--sheet); stroke: var(--rule); stroke-width: 1.5; }
+svg .box-c { fill: var(--sheet); stroke: var(--control); stroke-width: 2; }
+svg .box-k { fill: var(--sheet); stroke: var(--stamp); stroke-width: 2; }
+svg .arrow-c { stroke: var(--control); stroke-width: 2; fill: none; }
+svg .arrow-k { stroke: var(--stamp); stroke-width: 2; fill: none; }
+svg .dash { stroke-dasharray: 5 4; }
+
+/* stepper */
+.stepper { display: flex; gap: 8px; flex-wrap: wrap; }
+.stepper button { font-family: var(--type); font-size: 13px; background: var(--chip); color: var(--ink); border: 1px solid var(--rule); padding: 6px 12px; cursor: pointer; }
+.stepper button[aria-pressed="true"] { background: var(--ink); color: var(--sheet); border-color: var(--ink); }
+.stepper button:focus-visible { outline: 2px solid var(--control); outline-offset: 2px; }
+.step-text { min-height: 3.2em; }
+.tl-step { transition: opacity .25s; }
+@media (prefers-reduced-motion: reduce) { .tl-step { transition: none; } }
+
+/* cover meter */
+.meter { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; border: 1px solid var(--rule); }
+.meter > div { padding: 10px 12px; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.meter > div + div { border-left: 1px solid var(--rule); }
+.meter b { font-family: var(--display); font-weight: normal; font-size: 18px; }
+.meter .bar { height: 6px; }
+.m1 .bar { background: var(--ok); } .m2 .bar { background: var(--amber); } .m3 .bar { background: var(--stamp); }
+@media (max-width: 520px) { .meter { grid-template-columns: 1fr; } .meter > div + div { border-left: none; border-top: 1px solid var(--rule); } }
+
+/* reports */
+.cables { display: flex; flex-direction: column; gap: 8px; }
+.cable { border: 1px solid var(--rule); border-left: 4px solid var(--control); padding: 8px 12px; font-family: var(--type); font-size: 14px; background: var(--sheet); }
+.cable .meta { font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft); display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.cable.lie { border-left-color: var(--stamp); }
+.cable .why { font-family: var(--ui); font-size: 12.5px; color: var(--stamp); margin-top: 4px; }
+
+.two { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+.two > * { min-width: 0; }
+.qs { display: flex; flex-direction: column; gap: 12px; margin: 0; padding: 0; list-style: none; }
+.qs li { border-top: 1px dotted var(--rule); padding-top: 10px; display: flex; flex-direction: column; gap: 4px; }
+.qs b { font-weight: 600; }
+footer { text-align: center; }
+</style>
+
+<main>
+
+<!-- ===================== COVER ===================== -->
+<section class="sheet cover">
+  <span class="stamp">REDESIGN · DRAFT FOR DISCUSSION</span>
+  <div class="cover-row">
+    <div style="display:flex;flex-direction:column;gap:10px;min-width:0;flex:1 1 360px">
+      <span class="eyebrow">Moscow Rules · design board · after playtest 1</span>
+      <h1>Stratego, with the reports doing the talking</h1>
+      <p>Playtest 1 felt like chess with a typing tax. Version 2 removes the typing and makes the board readable. Most of a week goes on gathering intelligence. Attacks and traps become rare, slow, visible plays that each side can see coming, if it is paying attention.</p>
+    </div>
+    <div class="duo" aria-hidden="true">
+      <figure>
+        <svg viewBox="0 0 84 104"><defs><linearGradient id="lampL" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="var(--control)" stop-opacity=".35"/><stop offset="1" stop-color="var(--control)" stop-opacity="0"/></linearGradient></defs>
+          <rect x="0" y="0" width="84" height="104" fill="url(#lampL)"/>
+          <path d="M42 16c-9 0-15 6-15 15 0 6 3 10 6 13-10 4-17 12-19 24l-2 36h60l-2-36c-2-12-9-20-19-24 3-3 6-7 6-13 0-9-6-15-15-15z" fill="var(--ink)"/>
+          <path d="M22 26h40l-4-8H26z" fill="var(--ink)"/><rect x="18" y="25" width="48" height="3" fill="var(--ink)"/>
+        </svg>
+        <span style="color:var(--control)">Control</span>
+      </figure>
+      <figure>
+        <svg viewBox="0 0 84 104"><defs><linearGradient id="lampK" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="var(--stamp)" stop-opacity=".35"/><stop offset="1" stop-color="var(--stamp)" stop-opacity="0"/></linearGradient></defs>
+          <rect x="0" y="0" width="84" height="104" fill="url(#lampK)"/>
+          <path d="M42 18c-8 0-14 6-14 14 0 6 3 10 6 12-11 3-19 12-21 25l-2 35h62l-2-35c-2-13-10-22-21-25 3-2 6-6 6-12 0-8-6-14-14-14z" fill="var(--ink)"/>
+          <rect x="33" y="22" width="18" height="2" fill="var(--sheet)" opacity=".5"/>
+          <circle cx="58" cy="30" r="2.5" fill="var(--stamp)"/><path d="M58 32c2 4 4 6 9 6" stroke="var(--ink-soft)" stroke-width="1.2" fill="none"/>
+        </svg>
+        <span style="color:var(--stamp)">Karla</span>
+      </figure>
+    </div>
+  </div>
+  <div class="status">
+    <div><span class="tag decided">Decided</span>
+      <ul class="small">
+        <li>No typing: click an agent, pick an order</li>
+        <li>Everyone's position is visible; roles and loyalty are hidden</li>
+        <li>Claude writes the reports, for both sides</li>
+        <li>Five orders a week; any city is one week away</li>
+        <li>Anyone but a Talent-spotter can kill</li>
+        <li>Attacks are prepared in the open; traps counter them</li>
+        <li>Recruiting takes three approaches, with no per-game cap</li>
+        <li>Fixed rosters: no new agents</li>
+        <li>Karla is an opponent who makes moves</li>
+      </ul></div>
+    <div><span class="tag dropped">Dropped from v1</span>
+      <ul class="small">
+        <li>Free-text cables and the cable interpreter</li>
+        <li>Codes and codebooks</li>
+        <li>The rock-paper-scissors combat cycle</li>
+        <li>Three recruit attempts per game</li>
+        <li>Watch as the only way to see anyone</li>
+      </ul></div>
+    <div><span class="tag open">Still open</span>
+      <ul class="small">
+        <li>Who can set traps</li>
+        <li>Exact cover costs</li>
+        <li>Scoring and how to win</li>
+        <li>Retiring your own suspected moles</li>
+      </ul></div>
+  </div>
+</section>
+
+<!-- ===================== WEEK LOOP ===================== -->
+<section class="sheet">
+  <span class="eyebrow">The loop</span>
+  <h2>One week, three beats</h2>
+  <div class="diagram">
+    <svg viewBox="0 0 860 210" role="img" aria-label="Weekly loop: morning reports, five orders, night resolution, then back to morning">
+      <defs>
+        <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="var(--ink-soft)"/></marker>
+      </defs>
+      <rect class="box" x="20" y="40" width="240" height="120"/>
+      <text x="40" y="72" style="font-family:var(--display);font-size:20px">Morning</text>
+      <text x="40" y="98" class="soft" font-size="13">Reports from every agent</text>
+      <text x="40" y="118" class="soft" font-size="13">on their city and each other.</text>
+      <text x="40" y="142" font-size="13">The puzzle lives here.</text>
+
+      <rect class="box-c" x="310" y="40" width="240" height="120"/>
+      <text x="330" y="72" style="font-family:var(--display);font-size:20px">Orders</text>
+      <text x="330" y="98" class="soft" font-size="13">Click an agent on the map.</text>
+      <text x="330" y="118" class="soft" font-size="13">Five orders a week.</text>
+      <g transform="translate(330,132)">
+        <rect width="16" height="16" class="c"/><rect x="22" width="16" height="16" class="c"/><rect x="44" width="16" height="16" class="c"/>
+        <rect x="66" width="16" height="16" fill="none" stroke="var(--control)" stroke-width="1.5"/><rect x="88" width="16" height="16" fill="none" stroke="var(--control)" stroke-width="1.5"/>
+        <text x="114" y="13" font-size="12" class="soft">2 left</text>
+      </g>
+
+      <rect class="box-k" x="600" y="40" width="240" height="120"/>
+      <text x="620" y="72" style="font-family:var(--display);font-size:20px">Night</text>
+      <text x="620" y="98" class="soft" font-size="13">Both sides' orders resolve</text>
+      <text x="620" y="118" class="soft" font-size="13">together. Cover wears down.</text>
+      <text x="620" y="142" font-size="13">Agents notice things.</text>
+
+      <path class="line" d="M262 100H306" marker-end="url(#ah)"/>
+      <path class="line" d="M552 100H596" marker-end="url(#ah)"/>
+      <path class="line dash" d="M720 162V190H140V164" marker-end="url(#ah)"/>
+      <text x="380" y="205" class="soft" font-size="12">next morning · 12 weeks</text>
+    </svg>
+  </div>
+</section>
+
+<!-- ===================== BOARD ===================== -->
+<section class="sheet">
+  <span class="eyebrow">The board</span>
+  <h2>See everyone. Know no one.</h2>
+  <p>As in Stratego, you can see every piece and you can't see what any of them are. The map shows every agent in every city, yours and theirs, by name and cover. Whether they are a Scalphunter or a Ferret, and whether they are still loyal, is what the reports help you work out.</p>
+  <div class="diagram">
+    <svg viewBox="0 0 860 250" role="img" aria-label="Three example cities showing visible agents with hidden roles">
+      <g>
+        <rect class="box" x="20" y="20" width="260" height="210"/>
+        <text x="38" y="50" style="font-family:var(--display);font-size:20px">Vienna</text>
+        <text x="38" y="84" class="c" font-size="14">● Hale</text><text x="160" y="84" class="soft" font-size="12">Scalphunter</text>
+        <text x="38" y="108" class="c" font-size="14">● Wren</text><text x="160" y="108" class="soft" font-size="12">Lamplighter</text>
+        <text x="38" y="144" class="k" font-size="14">● Novak</text><text x="160" y="144" class="soft" font-size="12">trade attaché · ?</text>
+        <text x="38" y="168" class="k" font-size="14">● Kral</text><text x="160" y="168" class="soft" font-size="12">journalist · <tspan class="k">LL</tspan></text>
+        <text x="38" y="208" class="soft" font-size="11.5">Wren surveilled: Kral's role is known</text>
+      </g>
+      <g>
+        <rect class="box" x="300" y="20" width="260" height="210"/>
+        <text x="318" y="50" style="font-family:var(--display);font-size:20px">Istanbul</text>
+        <text x="318" y="84" class="c" font-size="14">● Ashby</text><text x="440" y="84" class="soft" font-size="12">Ferret · <tspan class="a">thin</tspan></text>
+        <text x="318" y="120" class="k" font-size="14">● Strasky</text><text x="440" y="120" class="soft" font-size="12">professor · ?</text>
+        <text x="318" y="144" class="k" font-size="14">● Molnar</text><text x="440" y="144" class="soft" font-size="12">driver · ?</text>
+        <text x="318" y="168" class="k" font-size="14">◌ Orlov</text><text x="440" y="168" class="soft" font-size="12">arriving</text>
+        <text x="318" y="208" class="soft" font-size="11.5">Ashby's cover is wearing thin</text>
+      </g>
+      <g>
+        <rect class="box" x="580" y="20" width="260" height="210"/>
+        <text x="598" y="50" style="font-family:var(--display);font-size:20px">Lisbon</text>
+        <text x="598" y="84" class="c" font-size="14">● Pell</text><text x="720" y="84" class="soft" font-size="12">Talent-spotter</text>
+        <text x="598" y="108" class="c" font-size="14">● Marsh</text><text x="720" y="108" class="soft" font-size="12">Scalphunter · <tspan class="a">suspect</tspan></text>
+        <text x="598" y="144" class="k" font-size="14">● Dvorak</text><text x="720" y="144" class="soft" font-size="12">banker · ?</text>
+        <text x="598" y="208" class="soft" font-size="11.5">Pell's pitch to Dvorak: 2 of 3</text>
+      </g>
+    </svg>
+  </div>
+  <p class="small muted">Blue: your agents, roles known to you. Red: theirs, with cover identity and any role you've confirmed. A hollow dot means an agent is on their way in. Moves happen in plain sight.</p>
+</section>
+
+<!-- ===================== ROLES ===================== -->
+<section class="sheet">
+  <span class="eyebrow">Player roles</span>
+  <h2>Four specialists, each with its own way of knowing</h2>
+  <p>The combat cycle is gone. Anyone except a Talent-spotter can kill, and whether a strike succeeds depends on information (is a trap waiting?), not on rank. Each role adds a different way of finding things out.</p>
+  <div class="roles">
+    <article class="role">
+      <div class="head">
+        <svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="13" fill="none" stroke="currentColor" stroke-width="2.5"/><circle cx="20" cy="20" r="4" fill="var(--stamp)"/><path d="M20 2v10M20 28v10M2 20h10M28 20h10" stroke="currentColor" stroke-width="2.5"/></svg>
+        <h3>Scalphunter</h3>
+      </div>
+      <dl>
+        <dt>Power</dt><dd><b>Interrogates.</b> Whoever it takes down gives up their role and the name of anyone they were handling on your side.</dd>
+        <dt>Strike</dt><dd>Can strike with no preparation, so harder to see coming.</dd>
+        <dt>Risk</dt><dd>Walks into traps like anyone else.</dd>
+      </dl>
+    </article>
+    <article class="role">
+      <div class="head">
+        <svg viewBox="0 0 40 40" aria-hidden="true"><path d="M3 20c5-8 11-12 17-12s12 4 17 12c-5 8-11 12-17 12S8 28 3 20z" fill="none" stroke="currentColor" stroke-width="2.5"/><circle cx="20" cy="20" r="5" fill="var(--control)"/></svg>
+        <h3>Lamplighter</h3>
+      </div>
+      <dl>
+        <dt>Power</dt><dd><b>Surveillance.</b> Learns the roles of everyone in its city. Reliably spots strikes being prepared and traps being set.</dd>
+        <dt>Strike</dt><dd>Needs a week of preparation.</dd>
+        <dt>Risk</dt><dd>Surveillance wears down its own cover.</dd>
+      </dl>
+    </article>
+    <article class="role">
+      <div class="head">
+        <svg viewBox="0 0 40 40" aria-hidden="true"><path d="M6 26l4-12 5 8 5-10 5 10 5-8 4 12z" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><path d="M4 30h32" stroke="currentColor" stroke-width="2.5"/><circle cx="20" cy="12" r="2.5" fill="var(--amber)"/></svg>
+        <h3>Ferret</h3>
+      </div>
+      <dl>
+        <dt>Power</dt><dd><b>Counter-intelligence.</b> Notices anyone surveilling or approaching your people in its city. Can <b>vet</b> one of your own agents for loyalty.</dd>
+        <dt>Trap</dt><dd>Sets traps faster than anyone (open question).</dd>
+        <dt>Risk</dt><dd>Vetting takes the week.</dd>
+      </dl>
+    </article>
+    <article class="role">
+      <div class="head">
+        <svg viewBox="0 0 40 40" aria-hidden="true"><path d="M24 4v18a8 8 0 1 1-16 0v-3" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><path d="M5 22l3-4 3 4" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><circle cx="24" cy="5" r="3" fill="var(--ok)"/></svg>
+        <h3>Talent-spotter</h3>
+      </div>
+      <dl>
+        <dt>Power</dt><dd><b>Recruits.</b> Three approaches over separate weeks turn an enemy agent.</dd>
+        <dt>Strike</dt><dd>Cannot kill.</dd>
+        <dt>Risk</dt><dd>Every approach might be reported to the other side.</dd>
+      </dl>
+    </article>
+  </div>
+  <p class="small muted">Each side has 8 agents, 2 per role, and no reinforcements. Icons appear with role names only where a role is explained; on the map, roles show as small codes.</p>
+</section>
+
+<!-- ===================== ACTIONS ===================== -->
+<section class="sheet">
+  <span class="eyebrow">Action types</span>
+  <h2>Mostly intelligence, occasionally violence</h2>
+  <p>Five orders a week across eight agents. The everyday actions are cheap. The rare ones are slow, visible and hard on cover, so you can't overuse them.</p>
+  <div class="scroll">
+    <table>
+      <thead><tr><th>Order</th><th>Who</th><th>Frequency</th><th>Cover cost</th><th>Who might notice</th><th>Takes</th></tr></thead>
+      <tbody>
+        <tr><td>Move</td><td>Anyone</td><td><span class="freq every">every week</span></td><td><span class="pips">●<span class="off">●●</span></span></td><td>Everyone. Arrivals are public.</td><td>1 week, any city</td></tr>
+        <tr><td>Surveil</td><td>Anyone (Lamplighters see roles)</td><td><span class="freq every">every week</span></td><td><span class="pips">●<span class="off">●●</span></span></td><td>Enemy Ferrets in the city</td><td>Report next morning</td></tr>
+        <tr><td>Lie low</td><td>Anyone</td><td><span class="freq every">as needed</span></td><td>restores cover</td><td>No one</td><td>The week</td></tr>
+        <tr><td>Prepare strike</td><td>Anyone but Talent-spotters (Scalphunters skip it)</td><td><span class="freq rare">rare</span></td><td><span class="pips">●●<span class="off">●</span></span> per week held</td><td>Anyone in the city, Lamplighters reliably</td><td>1 week, then held</td></tr>
+        <tr><td>Strike</td><td>Prepared agent, or a Scalphunter</td><td><span class="freq rare">rare</span></td><td><span class="pips">●●●</span></td><td>Everyone (the result)</td><td>That night</td></tr>
+        <tr><td>Set trap</td><td>Open: Ferrets only, or anyone</td><td><span class="freq rare">rare</span></td><td><span class="pips">●●<span class="off">●</span></span></td><td>Anyone in the city, Lamplighters reliably</td><td>1 week to set; lasts until sprung or abandoned</td></tr>
+        <tr><td>Approach</td><td>Talent-spotter</td><td><span class="freq rare">rare</span></td><td><span class="pips">●●<span class="off">●</span></span></td><td>The target may report it; Ferrets notice</td><td>3 approaches, separate weeks</td></tr>
+        <tr><td>Vet</td><td>Ferret, on your own agent</td><td><span class="freq rare">rare</span></td><td><span class="pips">●<span class="off">●●</span></span></td><td>The agent being vetted, if turned</td><td>Report next morning</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div>
+    <h3 style="margin-bottom:8px">Cover: the one risk measure</h3>
+    <div class="meter">
+      <div class="m1"><div class="bar"></div><b>Intact</b><span class="small">Role unknown to the enemy. Acts freely.</span></div>
+      <div class="m2"><div class="bar"></div><b>Thin</b><span class="small">Rumours circulate. Enemy reports start hinting at the role.</span></div>
+      <div class="m3"><div class="bar"></div><b>Blown</b><span class="small">Role known to the other side: the obvious target. Lie low to recover.</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== ATTACK / TRAP ===================== -->
+<section class="sheet">
+  <span class="eyebrow">Attacks and traps</span>
+  <h2>The play and the counter-play</h2>
+  <p>A strike needs a week of preparation in the target's city, and preparation can be seen. That gives each side a turn to read the other. Step through it:</p>
+  <div class="stepper" role="group" aria-label="Timeline steps">
+    <button type="button" data-step="1" aria-pressed="true">Week N</button>
+    <button type="button" data-step="2" aria-pressed="false">Week N+1</button>
+    <button type="button" data-step="3" aria-pressed="false">Week N+2</button>
+    <button type="button" data-step="4" aria-pressed="false">All</button>
+  </div>
+  <p class="step-text small" id="step-text">Control orders Hale to prepare a strike on Novak in Vienna. Karla's people in Vienna may notice someone studying Novak's routine.</p>
+  <div class="diagram">
+    <svg viewBox="0 0 860 300" role="img" aria-label="Swimlane timeline of a strike, a trap and a call-off across three weeks">
+      <defs>
+        <marker id="ac" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="var(--control)"/></marker>
+        <marker id="ak" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="var(--stamp)"/></marker>
+      </defs>
+      <text x="20" y="70" class="c" style="font-family:var(--display);font-size:17px">Control</text>
+      <text x="20" y="232" class="k" style="font-family:var(--display);font-size:17px">Karla</text>
+      <path class="line" d="M110 64H840M110 226H840"/>
+      <text x="200" y="22" class="soft" font-size="13">Week N</text>
+      <text x="440" y="22" class="soft" font-size="13">Week N+1</text>
+      <text x="680" y="22" class="soft" font-size="13">Week N+2</text>
+      <path class="line dash" d="M360 30V280M600 30V280"/>
+
+      <g class="tl-step" data-show="1">
+        <rect class="box-c" x="130" y="40" width="210" height="48"/>
+        <text x="142" y="60" font-size="13">Hale: prepare strike</text>
+        <text x="142" y="78" class="soft" font-size="12">on Novak, Vienna</text>
+        <path class="arrow-c dash" d="M290 90C330 140 380 170 400 200" marker-end="url(#ac)"/>
+        <text x="300" y="150" class="soft" font-size="11.5">seen by his people</text>
+      </g>
+      <g class="tl-step" data-show="2">
+        <rect class="box-k" x="380" y="202" width="210" height="48"/>
+        <text x="392" y="222" font-size="13">Report: "someone is</text>
+        <text x="392" y="240" font-size="13">studying Novak"</text>
+        <rect class="box-k" x="380" y="256" width="210" height="34"/>
+        <text x="392" y="278" font-size="13">Order: set trap, Vienna</text>
+        <path class="arrow-k dash" d="M560 200C590 150 620 120 640 92" marker-end="url(#ak)"/>
+        <text x="600" y="150" class="soft" font-size="11.5">seen by Wren</text>
+      </g>
+      <g class="tl-step" data-show="3">
+        <rect class="box-c" x="620" y="40" width="210" height="48"/>
+        <text x="632" y="60" font-size="13">Report: "their people are</text>
+        <text x="632" y="78" font-size="13">rearranging the ministry"</text>
+        <rect class="box" x="620" y="96" width="100" height="34"/>
+        <text x="632" y="118" font-size="13" class="g">Call off</text>
+        <rect class="box" x="730" y="96" width="100" height="34"/>
+        <text x="742" y="118" font-size="13" class="k">Strike</text>
+        <text x="632" y="150" class="soft" font-size="11.5">or wait, at a cover cost</text>
+      </g>
+    </svg>
+  </div>
+  <div class="two">
+    <div>
+      <h3 style="margin-bottom:6px">How a strike resolves</h3>
+      <div class="scroll">
+        <table style="min-width:0">
+          <thead><tr><th></th><th>No trap</th><th>Trap set</th></tr></thead>
+          <tbody>
+            <tr><td>Strike</td><td>Target dies</td><td style="color:var(--stamp)">Attacker dies</td></tr>
+            <tr><td>Call off</td><td>Nothing happens</td><td>Trap stays; it took a week to set</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div>
+      <h3 style="margin-bottom:6px">Why put a plan in motion at all</h3>
+      <p class="small">Strikes are the only way to win, and preparation is the only way to strike, apart from Scalphunters. Holding a prepared strike wears the attacker's cover down each week. Waiting has a price, and so does a trap set against an attack that never comes.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== RECRUITMENT ===================== -->
+<section class="sheet">
+  <span class="eyebrow">Recruitment</span>
+  <h2>A slow seduction, not a coin flip</h2>
+  <div class="diagram">
+    <svg viewBox="0 0 860 150" role="img" aria-label="Three approaches over separate weeks turn an agent; each approach risks being reported">
+      <g font-size="13">
+        <circle cx="120" cy="60" r="26" class="box-c"/><text x="111" y="66" style="font-family:var(--display);font-size:18px">1</text>
+        <circle cx="340" cy="60" r="26" class="box-c"/><text x="331" y="66" style="font-family:var(--display);font-size:18px">2</text>
+        <circle cx="560" cy="60" r="26" class="box-c"/><text x="551" y="66" style="font-family:var(--display);font-size:18px">3</text>
+        <path class="line" d="M148 60H312M368 60H532M588 60H700"/>
+        <rect x="700" y="36" width="140" height="48" fill="var(--ok)" opacity=".15" stroke="var(--ok)" stroke-width="2"/>
+        <text x="716" y="66" class="g" style="font-family:var(--display);font-size:17px">Turned</text>
+        <text x="64" y="118" class="soft">first approach</text>
+        <text x="282" y="118" class="soft">any later week</text>
+        <text x="500" y="118" class="soft">any later week</text>
+        <text x="64" y="140" class="k" font-size="12">each approach: the target may tell their side · a Ferret in the city notices</text>
+      </g>
+    </svg>
+  </div>
+  <p class="small">There's no per-game limit, so Talent-spotters matter all game. Progress is never lost, but an exposed approach tells the other side who your Talent-spotter is and whom they're working on. A turned agent stays on the other side's board and still takes their orders, but reports to you: their orders reach you, their reports home are lies, and their strikes fail.</p>
+</section>
+
+<!-- ===================== REPORTS ===================== -->
+<section class="sheet">
+  <span class="eyebrow">The reports</span>
+  <h2>Where the game is actually played</h2>
+  <p>Every agent reports every week. The engine decides what each agent could have seen, from their role, their city and their cover, and Claude writes it up. Claude can't add facts. Agents report on the enemy, on events, and on each other.</p>
+  <div class="cables">
+    <div class="cable"><div class="meta"><span>Wren · Lamplighter · Vienna</span><span>wk 5</span></div>Kral is theirs, a Lamplighter. He's been in the café opposite the ministry every afternoon this week.</div>
+    <div class="cable"><div class="meta"><span>Hale · Scalphunter · Vienna</span><span>wk 5</span></div>Novak changed his route twice. Either he's careful or he's been warned.</div>
+    <div class="cable"><div class="meta"><span>Ashby · Ferret · Istanbul</span><span>wk 5</span></div>Someone has been asking questions about Pell's movements. Professional work.</div>
+    <div class="cable lie"><div class="meta"><span>Marsh · Scalphunter · Lisbon</span><span>wk 5</span></div>Dvorak is a nobody, a banker with gambling debts. Lisbon is ours.
+      <div class="why">Shown here for illustration: Marsh was turned in week 3. Karla chose this lie to draw Pell in. You'd only find out at the debrief, or from a Ferret's vetting.</div></div>
+  </div>
+</section>
+
+<!-- ===================== OPEN QUESTIONS ===================== -->
+<section class="sheet">
+  <span class="eyebrow">Open questions</span>
+  <h2>Still to decide</h2>
+  <ul class="qs">
+    <li><b>Who can set traps?</b><span class="small">Ferrets only keeps the roles distinct but makes traps scarce (two per side). Anyone except Talent-spotters, with Ferrets faster, makes traps common enough to fear.</span></li>
+    <li><b>How hard each action is on cover.</b><span class="small">The pips above are a first guess. The balance simulation will tune them, aiming for most agents to reach "thin" once or twice a game, and for "blown" to be rare and costly.</span></li>
+    <li><b>Scoring and how to win.</b><span class="small">Keep "most eliminations after 12 weeks, or wipe the other side out"? A turned agent could count toward the side that turned it, as now.</span></li>
+    <li><b>Retiring your own suspected moles.</b><span class="small">From playtest 1. With Ferret vetting, is a separate "kill your own" order still needed? If so: does killing a loyal agent count as a kill for Karla?</span></li>
+    <li><b>Can the side that turned an agent direct its lies?</b><span class="small">Choose from a few lies by clicking (hide a trap, frame a loyal agent, call a city empty), or let the engine choose plausible ones?</span></li>
+  </ul>
+</section>
+
+<footer class="small muted mono">Moscow Rules · design board v2 · draft · from playtest 1 feedback</footer>
+</main>
+
+<script>
+(() => {
+  const texts = {
+    1: "Control orders Hale to prepare a strike on Novak in Vienna. Karla's people in Vienna may notice someone studying Novak's routine.",
+    2: "Karla's morning reports mention the surveillance on Novak. He orders a trap in Vienna. Setting it is visible too, and Control's Lamplighter Wren is watching.",
+    3: "Wren reports the trap being set. Control can strike anyway, call it off, or wait, while Hale's cover wears thinner every week he stays prepared.",
+    4: "The whole exchange: three weeks, two reports, and each side reading the other's preparation.",
+  };
+  const buttons = document.querySelectorAll('.stepper button');
+  const groups = document.querySelectorAll('.tl-step');
+  const text = document.getElementById('step-text');
+  function show(n) {
+    buttons.forEach((b) => b.setAttribute('aria-pressed', String(Number(b.dataset.step) === n)));
+    groups.forEach((g) => { const s = Number(g.dataset.show); g.style.opacity = (n === 4 || s <= n) ? (n === 4 || s === n ? 1 : 0.35) : 0.08; });
+    text.textContent = texts[n];
+  }
+  buttons.forEach((b) => b.addEventListener('click', () => show(Number(b.dataset.step))));
+  show(4);
+  document.querySelector('.stepper button[data-step="4"]').setAttribute('aria-pressed', 'true');
+})();
+</script>
