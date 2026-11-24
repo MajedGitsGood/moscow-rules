@@ -57,7 +57,7 @@ const inbox = (g, side) => viewFor(g, side).inbox.map((m) => m.text).join(' | ')
 { const { g, get } = setup({ control: { talentspotter: 'A' }, karla: { lamplighter: 'A' } });
   const ts = get('control', 'talentspotter'), ll = get('karla', 'lamplighter');
   week(g, [{ agentId: ts.id, type: 'approach', targetId: ll.id }]);
-  ok(!ll.turnedBy && !inbox(g, 'karla').includes(ts.name), 'an approach is never reported to the other side');
+  ok(!ll.turnedBy && !/approach|pitch/i.test(inbox(g, 'karla')), 'an approach is never reported to the other side');
   week(g, [{ agentId: ts.id, type: 'approach', targetId: ll.id }]);
   ok(ll.turnedBy === 'control', 'two approaches turn an agent');
   ok(viewFor(g, 'control').enemies.find((e) => e.id === ll.id).asset, 'the turning side sees its new asset');
@@ -124,6 +124,61 @@ const inbox = (g, side) => viewFor(g, side).inbox.map((m) => m.text).join(' | ')
   surrender(g, 'control');
   ok(g.phase === 'over' && g.outcome.winner === 'karla', 'surrendering hands the game to the other side');
 }
+// ---- footprints and one-night traps ----
+const reports = (g, side, id) => g.inbox[side].filter((m) => m.week === g.week);
+const signsOn = (g, side, id) => reports(g, side).flatMap((m) => m.facts?.signs || []).filter((x) => x.id === id);
+const truthsOn = (g, side, id) => reports(g, side).flatMap((m) => m.facts?.activities || []).filter((x) => x.id === id);
+{ const { g, get } = setup({ control: { scalphunter: 'A' }, karla: { ferret: 'A' } });
+  const sh = get('control', 'scalphunter'), fe = get('karla', 'ferret');
+  week(g, [{ agentId: sh.id, type: 'strike', targetId: fe.id }], [{ agentId: fe.id, type: 'trap', when: 'tonight' }]);
+  ok(!sh.alive, "a Ferret's trap for tonight catches the same night");
+  ok(!g.traps.length, 'a trap is spent after its one night');
+}
+{ const { g, get } = setup({ control: { scalphunter: 'A' }, karla: { lamplighter: 'A', talentspotter: 'A' } });
+  const sh0 = get('control', 'scalphunter'), ll = get('karla', 'lamplighter'), ts = get('karla', 'talentspotter');
+  week(g, [], [{ agentId: ll.id, type: 'trap', when: 'next' }]);
+  ok(signsOn(g, 'control', ll.id).length > 0, 'setting a trap for next week is always noticed');
+  week(g, [{ agentId: sh0.id, type: 'strike', targetId: ts.id }]);
+  ok(!sh0.alive && ts.alive, 'a next-week trap catches on the following night');
+  const { g: g2, get: get2 } = setup({ control: { scalphunter: 'A' }, karla: { lamplighter: 'A', talentspotter: 'A' } });
+  const s2 = get2('control', 'scalphunter'), l2 = get2('karla', 'lamplighter'), t2 = get2('karla', 'talentspotter');
+  week(g2, [], [{ agentId: l2.id, type: 'trap' }]);
+  week(g2);
+  week(g2, [{ agentId: s2.id, type: 'strike', targetId: t2.id }]);
+  ok(!t2.alive && s2.alive, 'an unrenewed trap has expired after its night');
+  ok(!legalOrders(g2, 'karla', l2.id).find((l) => l.type === 'trap').when.includes('tonight'), 'only Ferrets can trap tonight');
+}
+{ const { g, get } = setup({ control: { lamplighter: 'A' }, karla: { ferret: 'A' } });
+  const ll = get('control', 'lamplighter'), fe = get('karla', 'ferret');
+  week(g, [], [{ agentId: fe.id, type: 'prepare', targetId: ll.id }]);
+  ok(inbox(g, 'control').includes(`${fe.name} is preparing to strike ${ll.name}`), 'a Lamplighter sees a preparation for what it is');
+}
+{ let leak = false, perAgent = true;
+  for (let i = 0; i < 40; i++) {
+    const { g, get } = setup({ control: { lamplighter: 'A', ferret: 'A', scalphunter: 'A' }, karla: { talentspotter: 'A', ferret: 'A' } });
+    g.rngState = 1000 + i * 7919;
+    const ts = get('karla', 'talentspotter'), kf = get('karla', 'ferret');
+    week(g, [], [{ agentId: ts.id, type: 'approach', targetId: get('control', 'scalphunter').id }, { agentId: kf.id, type: 'lielow' }]);
+    if (signsOn(g, 'control', ts.id).some((x) => !['routine', 'courier', 'asking'].includes(x.sign)) || truthsOn(g, 'control', ts.id).length) leak = true;
+    if (signsOn(g, 'control', kf.id).length || truthsOn(g, 'control', kf.id).length) leak = true;
+    const senders = reports(g, 'control').filter((m) => m.kind === 'report').map((m) => m.from);
+    if (new Set(senders).size !== senders.length) perAgent = false;
+  }
+  ok(!leak, 'approaches look like doing nothing, even to a Lamplighter, and lying low leaves no footprint');
+  ok(perAgent, 'each agent sends at most one report a week');
+}
+{ // An instant Scalphunter strike and a prepared strike look the same on the night.
+  const run = (prepared) => {
+    const { g, get } = setup({ control: { scalphunter: 'A', ferret: 'A' }, karla: { scalphunter: 'A', lamplighter: 'A' } });
+    const ksh = get('karla', 'scalphunter'), cf = get('control', 'ferret');
+    if (prepared) week(g, [{ agentId: cf.id, type: 'lielow' }], [{ agentId: ksh.id, type: 'prepare', targetId: get('control', 'scalphunter').id }]);
+    else week(g, [{ agentId: cf.id, type: 'lielow' }]);
+    g.rngState = 4242;
+    week(g, [], [{ agentId: ksh.id, type: 'strike', targetId: get('control', 'scalphunter').id }]);
+    return reports(g, 'control').map((m) => m.text).join(' | ');
+  };
+  ok(run(false) && run(false) === run(true), 'an instant strike and a prepared one produce the same messages');
+}
 { // Fact check on Claude-written report text.
   const g = newGame(3, { sleepers: false });
   g.cities = ['London', 'Lisbon', 'Istanbul', 'Paris', 'Vienna', 'Moscow'];
@@ -132,6 +187,8 @@ const inbox = (g, side) => viewFor(g, side).inbox.map((m) => m.text).join(' | ')
   ok(!factsCheck(g, 'Nothing worth reporting in Istanbul.', 'London is quiet as far as I can tell.'), 'rewrite naming a city its source never mentioned is rejected');
   ok(factsCheck(g, src, `In Istanbul, ${k.name} (a Scalphunter) keeps watching Hale's routine.`, { preserve: true }), 'faithful rewrite passes');
   ok(!factsCheck(g, src, `In Istanbul, ${k.name} looks like a Lamplighter to me.`, { preserve: true }), 'rewrite changing a role is rejected');
+  ok(!factsCheck(g, `${k.name} has been asking about Hale.`, `${k.name} is preparing to hit Hale.`), 'rewrite turning a footprint into a verdict is rejected');
+  ok(factsCheck(g, `${k.name} has taken a room overlooking the Riesenrad.`, `${k.name} has a room above the Riesenrad now.`), 'faithful footprint rewrite passes');
 }
 console.log(fails ? `\n${fails} FAILED` : '\nall passed');
 process.exit(fails ? 1 : 0);

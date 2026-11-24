@@ -2,7 +2,7 @@
 // The engine owns the rules; this file owns who is at the desk and what they may see.
 import {
   newGame, placeAgents, validatePlacement, submitOrders, validateOrders, resolveWeek, viewFor, revealAll,
-  addJournal, legalOrders, executeAgent, surrender, describeOrder, setStance,
+  addJournal, legalOrders, executeAgent, surrender, describeOrder, setStance, trapWhen,
 } from './engine.js';
 import { SIDES, other, SIDE_LABEL, ARCHETYPES, ARCHETYPE_KEYS, RULES, HOME, LANDMARK } from './world.js';
 import { randomSeed } from './rng.js';
@@ -26,10 +26,11 @@ const ORDER_HINT = {
   move: 'Any city, arriving tomorrow. Everyone sees the move.',
   surveil: 'Report on this city. Lamplighters learn every role.',
   lielow: "Disappear for a week. Can't be found or reported on.",
-  prepare: 'Study a target. Loud: their people may notice.',
+  prepare: 'Study a target, so you can strike next week. Leaves footprints.',
   strike: 'Kill the target. Fails, fatally, if they have a trap here.',
-  trap: 'Ready for anyone who strikes here. Loud.',
-  approach: 'One of three pitches needed to turn them. Loud.',
+  trap: 'Catches anyone who strikes here next week, one night only. Loud while it is set up.',
+  trapTonight: 'Ferrets: catches anyone who strikes here tonight, one night only.',
+  approach: 'One of two pitches needed to turn them. Unseen: looks like doing nothing.',
   vet: 'Find out if one of ours here is working for them.',
   brief: 'Tell this agent a plan. Only matters if they are a mole.',
   lie: 'Decide what this source tells their masters this week.',
@@ -251,7 +252,7 @@ function cityPanel(v) {
       ${q ? `<span class="cp-q" title="${esc(describeOrder(q, app.game))}">${ORDER_ICON[q.type]}</span>` : ''}</button>`;
   };
   return `<aside class="panel city-panel">
-    <div class="cp-head"><div class="cp-landmark">${LANDMARK_ICON[LANDMARK[c]]}</div><div><h2>${c}</h2><small>${HOME[c] ? (HOME[c] === 'control' ? 'Home of the Circus' : 'Home of Moscow Centre') : 'Open city'}${trap ? ` · our trap ${trap.active ? 'is ready' : 'ready next week'}` : ''}</small></div>
+    <div class="cp-head"><div class="cp-landmark">${LANDMARK_ICON[LANDMARK[c]]}</div><div><h2>${c}</h2><small>${HOME[c] ? (HOME[c] === 'control' ? 'Home of the Circus' : 'Home of Moscow Centre') : 'Open city'}${trap ? ` · our trap catches ${trap.active ? 'this week' : 'next week'}` : ''}</small></div>
       <button class="icon-btn" data-act="close-city">${UI_ICON.close}</button></div>
     <div class="cp-list">
       <h3 class="ours">Ours · ${ours.length}</h3>${ours.map(row).join('') || '<p class="empty">No one here.</p>'}
@@ -288,7 +289,14 @@ function orderPop(v) {
   }
   const legal = legalOrders(g, side, a.id);
   const full = app.queued[side].length >= RULES.ordersPerWeek && !q;
-  const btns = legal.map((l) => `<button class="ob ${q?.type === l.type ? 'on' : ''} ${app.pick?.type === l.type ? 'picking' : ''}" data-act="order" data-type="${l.type}" ${full ? 'disabled' : ''} title="${esc(ORDER_HINT[l.type])}">${ORDER_ICON[l.type]}<span>${ORDER_LABEL[l.type]}</span></button>`).join('');
+  const btn = (l, when) => {
+    const on = q?.type === l.type && (!when || trapWhen(q, g) === when);
+    const label = when ? (when === 'tonight' ? 'Trap tonight' : 'Trap next week') : ORDER_LABEL[l.type];
+    const hint = when === 'tonight' ? ORDER_HINT.trapTonight : ORDER_HINT[l.type];
+    return `<button class="ob ${on ? 'on' : ''} ${app.pick?.type === l.type ? 'picking' : ''}" data-act="order" data-type="${l.type}" ${when ? `data-when="${when}"` : ''} ${full ? 'disabled' : ''} title="${esc(hint)}">${ORDER_ICON[l.type]}<span>${label}</span></button>`;
+  };
+  // A Ferret's trap comes in two timings; everyone else's is for next week.
+  const btns = legal.flatMap((l) => (l.when ? l.when.map((w) => btn(l, w)) : [btn(l)])).join('');
   let sub = '';
   if (app.pick?.targets && app.pick.agentId === a.id) {
     sub = `<div class="pop-label">${ORDER_LABEL[app.pick.type]}: who?</div><div class="targets">${app.pick.targets.map((id) => {
@@ -489,6 +497,7 @@ function onAct(el, ev) {
       if (type === 'move') { app.pick = { type, agentId: a.id }; return render(); }
       if (l.targets) { app.pick = { type, agentId: a.id, targets: l.targets }; app.sel.city = a.city; return render(); }
       if (type === 'brief' || type === 'lie') { app.pick = { type, agentId: a.id }; return render(); }
+      if (type === 'trap') return queue({ agentId: a.id, type, when: el.dataset.when || 'next' });
       return queue({ agentId: a.id, type });
     }
     case 'brief-ok': return queue({ agentId: app.pick.agentId, type: 'brief', plan: { kind: $('#brief-kind').value, city: $('#brief-city').value } });

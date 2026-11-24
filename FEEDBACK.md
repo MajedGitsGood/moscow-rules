@@ -138,3 +138,17 @@ Scoring is now agents standing.
 **Addressed (2026-11-24):** colour-coded moments and pins with one-line details; the decisive
 exchange (heard → acted → result, with planted/leaked/report marked); icon fates; "Ask the analyst"
 to redo a rules-engine debrief.
+
+### Follow-up 6: tells, traps and traffic
+- Signs of preparation are too straightforward. Make behaviours sound alike (setting a trap,
+  surveillance, preparing), so they are easier to miss or misread.
+- Traps are called loud but an unsprung trap produces nothing.
+- Agents commenting on each other is interesting; sometimes too much, sometimes too little. More
+  ambient observation from agents just sitting in cities.
+- Strikes shouldn't give much away: a Scalphunter's strike and a prepared one should look the same
+  once they land; only the footprints before differ.
+- Put the odds where players can see them.
+
+**Addressed (2026-11-24):** shared footprints with published odds (Field Manual), Lamplighters see
+the truth, one-night traps (Ferrets tonight or next week, others next week and loud), Scalphunters
+may prepare, identical news for every strike, about 7 messages a morning.

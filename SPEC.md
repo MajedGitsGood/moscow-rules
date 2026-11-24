@@ -14,10 +14,10 @@ at most three per city.
 
 ## Roster
 Ten agents a side (2 Scalphunters, 3 Lamplighters, 3 Ferrets, 2 Talent-spotters), no reinforcements.
-- Scalphunter: strikes without preparing, so there's no warning.
-- Lamplighter: the only one who can surveil (reveals every role in the city); always notices
-  preparations, traps and attacks.
-- Ferret: traps work the same night; silently blocks approaches on its side's agents in its city;
+- Scalphunter: may strike without preparing (no footprints beforehand), or prepare like anyone.
+- Lamplighter: the only one who can surveil (reveals every role in the city); sees preparations,
+  traps and surveillance in its city for what they are, and always witnesses attacks.
+- Ferret: can trap the same night; silently blocks approaches on its side's agents in its city;
   notices surveillance; vets your own agents.
 - Talent-spotter: turns an enemy after two approaches, never reported; cannot kill or trap.
 
@@ -28,10 +28,17 @@ have turned, choose their lie. Executing one of your own agents is free.
 
 ## Resolution
 Leaks (orders to turned agents reach the turner), moves, traps, strikes, preparations, approaches,
-vetting, then reports. A strike kills unless the target's side has a ready trap in the city (the
-attacker dies) or the target is lying low (nothing happens). Preparations, traps and attacks are
-noticed by enemies in the city (Lamplighters always, others half the time); a witness names the actor
-but never the role. Roles are learned only from Lamplighters. No sleepers. Lying low is quiet:
+vetting, then reports. A strike kills unless the target's side has a trap in the city that night (the
+attacker dies) or the target is lying low (nothing happens). Traps catch on one night only: a
+Ferret's tonight, anyone's next week after a loud week of setting up.
+
+**Footprints.** Every order leaves a footprint that enemies in the same city may notice, drawn from
+one shared pool (asking about someone, turning up where someone goes, a room overlooking a landmark,
+unfamiliar faces, meeting someone off the night train, regular hours). Odds per order live in
+`TELLS` (js/world.js) and are shown in the Field Manual. Approaches look like doing nothing; lying
+low leaves nothing; a strike leaves no footprint, only witnesses (Lamplighters always, others half
+the time), who name the actor but never the role, the same for every kind of striker. Each agent
+sends at most one report a week, with up to three observations. Roles are learned only from Lamplighters. No sleepers. Lying low is quiet:
 invisible to reports and strikes. Turned agents leak, lie (all quiet, false alarm, frame a
 colleague, other moles included), and follow a standing instruction from the side that turned
 them: carry out their own side's orders, or quietly let strikes, traps, approaches and vetting fail.

@@ -8,6 +8,9 @@ import { ARCHETYPES } from './world.js';
 // and agents that appear in its source (the cable, or the engine's template), and may not describe
 // a place as quiet/empty/etc. unless the source already does. Anything else falls back to template.
 const OBSERVATION = /\b(quiet|calm|empty|deserted|nothing (to report|stirring|doing)|no sign|no one|nobody|all clear|clean|no opposition|nothing here)\b/i;
+// Footprints are ambiguous on purpose: a rewrite may not turn one into a verdict (a strike, a trap,
+// surveillance) unless the source already names it.
+const VERDICT = /\b(prepar\w*|trap\w*|strik\w*|surveil\w*|hunt\w*|kill\w*|target\w*|assassin\w*|ambush\w*|stak\w* out|casing)\b/i;
 // With `preserve`, every name, city and role in the source must also survive into the candidate.
 export function factsCheck(game, source, candidate, { preserve = false } = {}) {
   if (!candidate) return false;
@@ -21,6 +24,7 @@ export function factsCheck(game, source, candidate, { preserve = false } = {}) {
   for (const w of firsts) if (has(candidate, w, '') && !has(source, w, '')) return false;
   if (preserve) for (const w of key) if (has(source, w) && !has(candidate, w)) return false;
   if (OBSERVATION.test(candidate) && !OBSERVATION.test(source)) return false;
+  if (VERDICT.test(candidate) && !VERDICT.test(source)) return false;
   return true;
 }
 

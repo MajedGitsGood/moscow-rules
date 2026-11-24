@@ -3,14 +3,13 @@
 // whose state lives on the game, so seed + placements + orders always replay identically.
 //
 // v2 in one paragraph: every agent's position is public; roles and loyalty are hidden. Each side
-// gives up to five orders a week. Most orders gather information; strikes must be prepared
-// (except by Scalphunters) and are countered by traps. Preparing, trapping and approaching are
-// "loud" (likely to be reported by enemies in the same city); lying low is "quiet" (not reported).
-// Talent-spotters turn an enemy agent after three approaches. Turned agents leak every order they
-// receive, tell lies chosen by the side that turned them, and quietly sabotage. Every dead enemy is
-// a point; every enemy still alive and turned at the end is a point.
+// gives up to five orders a week. Strikes must be prepared (except by Scalphunters, who may) and are
+// countered by traps, which catch on one night only. Every order leaves footprints that enemies in
+// the same city may notice; the same footprints come from different orders, so they are clues, not
+// verdicts. Lamplighters see loud work for what it is. Talent-spotters turn an enemy agent after two
+// unseen approaches; turned agents leak orders and report lies. Most agents standing wins.
 import { makeRng } from './rng.js';
-import { generateWorld, RULES, SIDES, other, ARCHETYPES, SIDE_LABEL } from './world.js';
+import { generateWorld, RULES, SIDES, other, ARCHETYPES, SIDE_LABEL, FOOTPRINTS, TELLS, PLACE } from './world.js';
 
 // ---------- helpers ----------
 const withRng = (game, fn) => {
@@ -55,7 +54,7 @@ export function newGame(seed, { sleepers = false } = {}) {
     placed: { control: false, karla: false },
     pending: { control: null, karla: null },
     approaches: {},   // targetId -> { side, count }
-    traps: [],        // { side, city, setterId, activeFrom, dud }
+    traps: [],        // { side, city, setterId, night, dud }: a trap catches on one night only
     inbox: { control: [], karla: [] },
     intel: { control: {}, karla: {} },
     orderLog: [], journal: { control: [], karla: [] },
@@ -135,7 +134,7 @@ export function legalOrders(game, side, agentId) {
     if (enemies.length) out.push({ type: 'prepare', targets: enemies.map((e) => e.id) });
     const strikeable = a.archetype === 'scalphunter' ? enemies : enemies.filter((e) => a.prep && a.prep.targetId === e.id && a.prep.week < game.week);
     if (strikeable.length) out.push({ type: 'strike', targets: strikeable.map((e) => e.id) });
-    out.push({ type: 'trap' });
+    out.push({ type: 'trap', when: a.archetype === 'ferret' ? ['tonight', 'next'] : ['next'] });
   } else {
     const pitchable = enemies.filter((e) => e.turnedBy !== side);
     if (pitchable.length) out.push({ type: 'approach', targets: pitchable.map((e) => e.id) });
@@ -161,6 +160,7 @@ export function validateOrders(game, side, orders) {
     if (!legal) { errors.push(`${a.name} can't ${o.type} now.`); continue; }
     if (legal.targets && !legal.targets.includes(o.targetId)) errors.push(`${a.name}: invalid target.`);
     if (legal.cities && !legal.cities.includes(o.city)) errors.push(`${a.name}: invalid city.`);
+    if (o.type === 'trap' && o.when && !legal.when.includes(o.when)) errors.push(`${a.name} can't trap ${o.when === 'tonight' ? 'tonight' : 'for next week'}.`);
     if (o.type === 'brief' && !(o.plan && ['strike', 'trap'].includes(o.plan.kind) && game.cities.includes(o.plan.city))) errors.push(`${a.name}: brief needs a plan.`);
     if (o.type === 'lie') {
       if (!o.lie || !['hide', 'frame', 'alarm'].includes(o.lie.kind)) errors.push(`${a.name}: choose a lie.`);
@@ -209,6 +209,9 @@ export function surrender(game, side) {
 
 export function addJournal(game, side, text) { if (text) game.journal[side].push({ week: game.week, text }); }
 
+// A Ferret traps tonight unless told otherwise; anyone else's trap is ready next week.
+export const trapWhen = (o, game) => o.when || (game.agents[o.agentId]?.archetype === 'ferret' ? 'tonight' : 'next');
+
 export function describeOrder(o, game) {
   const n = (id) => (id ? game.agents[id]?.name : '');
   switch (o.type) {
@@ -217,7 +220,7 @@ export function describeOrder(o, game) {
     case 'lielow': return 'lie low';
     case 'prepare': return `prepare a strike on ${n(o.targetId)}`;
     case 'strike': return `strike ${n(o.targetId)}`;
-    case 'trap': return 'set a trap';
+    case 'trap': return trapWhen(o, game) === 'tonight' ? 'set a trap for tonight' : 'set a trap for next week';
     case 'approach': return `approach ${n(o.targetId)}`;
     case 'vet': return `vet ${n(o.targetId)}`;
     case 'brief': return `be ready for our ${o.plan.kind} in ${o.plan.city}`;
@@ -263,15 +266,17 @@ export function resolveWeek(game) {
     a.history.push({ week: w, city: a.city });
     if (a.prep && (!game.agents[a.prep.targetId].alive || game.agents[a.prep.targetId].city !== a.city)) a.prep = null;
   }
-  const loud = new Set(all.filter((o) => ['prepare', 'trap'].includes(o.type)).map((o) => o.agentId));
+  const arrived = new Set(of('move').map((o) => o.agentId));
   const attacks = []; // { city, attacker, target, result } for witnesses
   const quiet = new Set(of('lielow').map((o) => o.agentId));
 
-  // 2. Traps. A Ferret's trap works tonight; anyone else's from next week. A turned setter's trap is a dud.
+  // 2. Traps catch on one night only: tonight (Ferrets) or next week (anyone, after a loud week of
+  //    setting up). A turned setter's trap is a dud.
   for (const o of of('trap')) {
     const a = game.agents[o.agentId];
-    game.traps = game.traps.filter((t) => t.setterId !== a.id);
-    game.traps.push({ side: o.side, city: a.city, setterId: a.id, activeFrom: a.archetype === 'ferret' ? w : w + 1, dud: !obeys(game, a) });
+    const night = trapWhen(o, game) === 'tonight' ? w : w + 1;
+    game.traps = game.traps.filter((t) => !(t.setterId === a.id && t.night === night));
+    game.traps.push({ side: o.side, city: a.city, setterId: a.id, night, dud: !obeys(game, a) });
   }
 
   // 3. Strikes, in random order.
@@ -289,7 +294,7 @@ export function resolveWeek(game) {
       send(game, s.turnedBy, { kind: 'source', from: s.id, city: s.city, text: `I was sent to kill ${t.name}. I let it lapse, as instructed.` });
       continue;
     }
-    const trap = game.traps.find((x) => x.side === t.side && x.city === s.city && x.activeFrom <= w && !x.dud);
+    const trap = game.traps.find((x) => x.side === t.side && x.city === s.city && x.night === w && !x.dud);
     if (trap) {
       eliminate(game, s, 'trapped', t.side);
       game.traps = game.traps.filter((x) => x !== trap);
@@ -343,51 +348,95 @@ export function resolveWeek(game) {
     send(game, o.side, { kind: 'report', from: f.id, city: f.city, text: verdict === 'turned' ? `I've been through ${v.name}'s life. They're working for ${SIDE_LABEL[other(o.side)]}.` : `I've been through ${v.name}'s life. Clean, as far as I can tell.`, facts: { vet: v.id, verdict } });
   }
 
-  // 7. What every agent saw this week becomes a report home.
+  // 7. What every agent saw this week becomes a report home: roles (from surveillance), the truth
+  //    about loud work (Lamplighters), attacks witnessed, and footprints, at most a few per report.
+  const tellOf = (e) => {
+    const o = orderOf[e.id];
+    if (o?.type === 'strike') return null; // the strike itself is the only trace: same for every striker
+    if (o?.type === 'trap') return trapWhen(o, game) === 'tonight' ? 'trapTonight' : 'trapNext';
+    if (['prepare', 'surveil', 'vet', 'brief'].includes(o?.type)) return o.type;
+    if (arrived.has(e.id)) return 'arrive';
+    return 'idle'; // nothing, approaches (always unseen) and anything else
+  };
   for (const side of SIDES) {
     const enemy = other(side);
     for (const a of alive(game, side)) {
       if (!loyal(a)) { moleReport(game, side, a, lieFor[a.id] || { kind: 'hide' }); continue; }
-      const notes = [];
-      const facts = { roles: [], activities: [] };
+      const facts = { roles: [], activities: [], signs: [] };
       const surveilling = orderOf[a.id]?.type === 'surveil'; // Lamplighters only
       const isLL = a.archetype === 'lamplighter';
       const visible = inCity(game, enemy, a.city).filter((e) => !quiet.has(e.id)); // lying low = invisible
+      const head = [], seen = []; // head: roles, truths and witnesses; seen: footprints (capped, shuffled)
       if (surveilling) for (const e of visible) { claim(game, side, e.id, e.archetype, `${a.name} (Lamplighter)`); facts.roles.push({ id: e.id, archetype: e.archetype }); }
-      if (facts.roles.length) notes.push(facts.roles.map((r) => `${game.agents[r.id].name} is a ${role(r.archetype)}.`).join(' '));
-      // Preparations and traps are loud: Lamplighters always notice, anyone else may.
-      for (const e of visible.filter((x) => loud.has(x.id))) {
-        if (!(isLL || roll(game, RULES.noticeChance))) continue;
+      if (facts.roles.length) head.push(facts.roles.map((r) => `${game.agents[r.id].name} is a ${role(r.archetype)}.`).join(' '));
+      for (const e of visible) {
+        const tell = tellOf(e);
+        if (!tell) continue;
         const eo = orderOf[e.id];
-        if (eo.type === 'prepare') { notes.push(`${e.name} has been studying ${game.agents[eo.targetId].name}'s routine.`); facts.activities.push({ id: e.id, kind: 'prepare', targetId: eo.targetId }); }
-        if (eo.type === 'trap') { notes.push(`${e.name}'s people are setting something up in ${a.city}.`); facts.activities.push({ id: e.id, kind: 'trap' }); }
+        // A Lamplighter sees loud work for what it is.
+        if (isLL && ['prepare', 'trapNext', 'trapTonight', 'surveil'].includes(tell)) {
+          if (tell === 'prepare') head.push(`${e.name} is preparing to strike ${game.agents[eo.targetId].name}.`);
+          if (tell === 'trapNext') head.push(`${e.name} is setting a trap here, ready this coming week.`);
+          if (tell === 'trapTonight') head.push(`${e.name} had a trap waiting here last night.`);
+          if (tell === 'surveil') head.push(`${e.name} has been surveilling us.`);
+          facts.activities.push({ id: e.id, kind: tell === 'prepare' ? 'prepare' : tell === 'surveil' ? 'surveil' : 'trap', targetId: eo.targetId || null });
+          continue;
+        }
+        if (!roll(game, TELLS[tell].notice)) continue;
+        const fp = footprint(game, tell, e, a, eo);
+        if (fp) seen.push({ text: fp.text, sign: { id: e.id, sign: fp.sign, targetId: fp.targetId || null }, hostile: ['prepare', 'trapNext', 'trapTonight'].includes(tell) });
       }
-      // Attacks by the other side in this city: who went for whom.
+      // Attacks by the other side in this city: who went for whom. Identical for every kind of striker.
       for (const at of attacks.filter((x) => x.city === a.city && x.attacker.side === enemy && x.target.id !== a.id)) {
         if (!(isLL || roll(game, RULES.noticeChance))) continue;
-        notes.push(at.result === 'killed' ? `It was ${at.attacker.name} who killed ${at.target.name}.` : `${at.attacker.name} was the one who went for ${at.target.name}.`);
+        head.push(at.result === 'killed' ? `It was ${at.attacker.name} who killed ${at.target.name}.` : `${at.attacker.name} was the one who went for ${at.target.name}.`);
         facts.activities.push({ id: at.attacker.id, kind: 'strike', targetId: at.target.id });
       }
       // Ferrets notice enemy surveillance in their city.
       if (a.archetype === 'ferret') {
         for (const o of all.filter((x) => x.side === enemy && x.type === 'surveil' && game.agents[x.agentId].alive && game.agents[x.agentId].city === a.city)) {
           const e = game.agents[o.agentId];
-          notes.push(`${e.name} has been watching us here.`); facts.activities.push({ id: e.id, kind: 'surveil' });
+          head.push(`${e.name} has been watching us here.`); facts.activities.push({ id: e.id, kind: 'surveil' });
         }
       }
+      // Keep the most telling footprints, then shuffle them so their order gives nothing away.
+      const room = Math.max(0, RULES.notesPerReport - head.length);
+      const kept = withRng(game, (r) => r.shuffle([...r.shuffle(seen.filter((x) => x.hostile)), ...r.shuffle(seen.filter((x) => !x.hostile))].slice(0, room)));
+      for (const k of kept) facts.signs.push(k.sign);
+      const notes = [...head, ...kept.map((k) => k.text)];
       if (notes.length || surveilling) send(game, side, { kind: 'report', from: a.id, city: a.city, text: notes.join(' ') || `Nothing worth reporting in ${a.city}.`, facts });
     }
   }
 
+  game.traps = game.traps.filter((t) => t.night > w); // tonight's traps are spent
   game.pending = { control: null, karla: null };
   game.week = w + 1;
   checkEnd(game);
 }
 
+// Draw one footprint for what enemy e did, as observer a would report it.
+function footprint(game, tell, e, a, eo) {
+  const weights = Object.entries(TELLS[tell].signs);
+  let sign = withRng(game, (r) => { let x = r() * weights.reduce((n, [, v]) => n + v, 0); for (const [k, v] of weights) { if ((x -= v) < 0) return k; } return weights[0][0]; });
+  let t = null;
+  if (sign === 'asking' || sign === 'shadowing') {
+    if (tell === 'prepare') t = game.agents[eo.targetId];
+    else if (tell === 'vet') t = game.agents[eo.targetId]; // their own colleague: looks like hunting
+    else {
+      const ours = inCity(game, a.side, a.city);
+      const others = ours.filter((x) => x.id !== a.id);
+      t = withRng(game, (r) => r.pick(others.length ? others : ours));
+    }
+    if (!t || !t.alive) sign = 'routine';
+  }
+  return { sign, targetId: t?.id, text: fillFootprint(sign, e.name, t?.name, a.city) };
+}
+const fillFootprint = (sign, e, t, city) => FOOTPRINTS[sign].replace('{e}', e).replace('{t}', t || '').replace('{place}', PLACE[city] || `the station in ${city}`);
+
 // A turned agent's report home, shaped by the lie the turning side chose.
 function moleReport(game, side, m, lie) {
   const turner = other(side);
-  const facts = { roles: [], activities: [] };
+  const facts = { roles: [], activities: [], signs: [] };
   let text = null;
   if (lie.kind === 'frame') {
     const t = game.agents[lie.targetId];
@@ -397,12 +446,20 @@ function moleReport(game, side, m, lie) {
     const them = inCity(game, turner, m.city);
     if (mine.length && them.length) {
       const [victim, hunter] = withRng(game, (r) => [r.pick(mine), r.pick(them)]);
-      text = `${hunter.name} has been studying ${victim.name}'s routine.`;
-      facts.activities.push({ id: hunter.id, kind: 'prepare', targetId: victim.id });
+      const sign = roll(game, 0.5) ? 'asking' : 'shadowing';
+      text = fillFootprint(sign, hunter.name, victim.name, m.city);
+      facts.signs.push({ id: hunter.id, sign, targetId: victim.id });
     }
   }
-  // 'hide', or a lie that couldn't apply: a calm report that conceals what's going on.
-  if (!text && roll(game, 0.5)) text = `${m.city} is calm this week. Nothing to report.`;
+  // 'hide', or a lie that couldn't apply: a harmless footprint, sometimes, so the mole blends into the chatter.
+  if (!text && roll(game, 0.4)) {
+    const them = inCity(game, turner, m.city);
+    if (them.length) {
+      const [e, sign] = withRng(game, (r) => [r.pick(them), r() < 0.6 ? 'routine' : 'courier']);
+      text = fillFootprint(sign, e.name, null, m.city);
+      facts.signs.push({ id: e.id, sign });
+    } else text = `Nothing worth reporting in ${m.city}.`;
+  }
   if (text) send(game, side, { kind: 'report', from: m.id, city: m.city, text, facts, lie: true });
 }
 
@@ -442,7 +499,7 @@ export function viewFor(game, side) {
   return {
     side, enemy, week: game.week, phase: game.phase, cities: game.cities, rules: RULES,
     own, enemies, intel: game.intel[side], inbox: game.inbox[side],
-    traps: game.traps.filter((t) => t.side === side).map((t) => ({ city: t.city, setterId: t.setterId, active: t.activeFrom <= game.week })),
+    traps: game.traps.filter((t) => t.side === side).map((t) => ({ city: t.city, setterId: t.setterId, night: t.night, active: t.night === game.week })),
     approachProgress: Object.fromEntries(Object.entries(game.approaches).filter(([, r]) => r.side === side).map(([id, r]) => [id, r.count])),
     submitted: !!game.pending[side],
     // What a side can see: how many of each side are still alive (not who is loyal).

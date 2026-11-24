@@ -44,15 +44,19 @@ export function findMoments(game) {
     if (!e) continue;
     const by = e.by;
     if (e.how === 'trapped') {
-      const warn = inboxAt(a.side, e.week).find((m) => m.city === e.city && (m.facts?.activities || []).some((x) => x.kind === 'trap'));
-      moments.push({ week: e.week, side: by, kind: warn ? 'mistake' : 'strike', city: e.city, title: warn ? `${a.name} ignored a trap warning` : `${SIDE_LABEL[by]}'s trap catches ${a.name}`,
-        detail: warn ? `${SIDE_LABEL[a.side]} had been told something was being set up in ${e.city}, and sent ${a.name} in anyway.` : `${a.first} ${a.name} (${role(a.archetype)}) struck into a ready trap in ${e.city}.`,
+      // Warned: a Lamplighter saw the trap being set, or footprints that could mean one.
+      const warn = inboxAt(a.side, e.week).find((m) => m.city === e.city && ((m.facts?.activities || []).some((x) => x.kind === 'trap')
+        || (m.facts?.signs || []).some((x) => ['room', 'faces'].includes(x.sign))));
+      moments.push({ week: e.week, side: by, kind: warn ? 'mistake' : 'strike', city: e.city, title: warn ? `${a.name} ignored the signs of a trap` : `${SIDE_LABEL[by]}'s trap catches ${a.name}`,
+        detail: warn ? `There were signs of a trap in ${e.city}, and ${SIDE_LABEL[a.side]} sent ${a.name} in anyway.` : `${a.first} ${a.name} (${role(a.archetype)}) struck into a ready trap in ${e.city}.`,
         chain: warn ? { receiver: a.side, source: 'true', told: warn.text, did: `Sent ${a.name} to strike in ${e.city} anyway.`, result: `${a.name} caught in the trap.`, favoured: by }
           : leakAbout(by, e.week, e.city, a.id) && { receiver: by, source: 'leaked', told: leakAbout(by, e.week, e.city, a.id).text, did: `Set a trap in ${e.city}.`, result: `${a.name} walked into it.`, favoured: by } });
     } else if (e.how === 'killed') {
-      const warn = inboxAt(a.side, e.week).find((m) => (m.facts?.activities || []).some((x) => x.kind === 'prepare' && x.targetId === a.id));
-      moments.push({ week: e.week, side: by, kind: warn ? 'mistake' : 'strike', city: e.city, title: warn ? `${a.name} was warned, and still died` : `${SIDE_LABEL[by]} kills ${a.name}`,
-        detail: warn ? `${SIDE_LABEL[a.side]}'s reports showed someone studying ${a.name}'s routine; no trap, no lying low.` : `${a.first} ${a.name} (${role(a.archetype)}) killed in ${e.city}.`,
+      // Warned: a Lamplighter saw the preparation, or someone was seen asking about or shadowing the victim.
+      const warn = inboxAt(a.side, e.week).find((m) => (m.facts?.activities || []).some((x) => x.kind === 'prepare' && x.targetId === a.id)
+        || (m.facts?.signs || []).some((x) => ['asking', 'shadowing'].includes(x.sign) && x.targetId === a.id));
+      moments.push({ week: e.week, side: by, kind: warn ? 'mistake' : 'strike', city: e.city, title: warn ? `${a.name} ignored the signs, and died` : `${SIDE_LABEL[by]} kills ${a.name}`,
+        detail: warn ? `There were signs someone was after ${a.name}; no trap, no lying low.` : `${a.first} ${a.name} (${role(a.archetype)}) killed in ${e.city}.`,
         chain: warn ? { receiver: a.side, source: warn.lie ? 'planted' : 'true', told: warn.text, did: `Left ${a.name} in place: no trap, no lying low.`, result: `${a.name} killed in ${e.city}.`, favoured: by }
           : (() => { const m = intelOn(by, e.week, a.id); return m && { receiver: by, source: m.lie ? 'planted' : m.kind === 'source' ? 'leaked' : 'true', told: m.text, did: `Struck ${a.name} in ${e.city}.`, result: `${a.name} killed.`, favoured: by }; })() });
     } else if (e.how === 'executed') {

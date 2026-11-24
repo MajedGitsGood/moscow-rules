@@ -4,6 +4,26 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 
 ## [Unreleased]
 
+### Changed (footprints)
+- Every order leaves footprints, drawn from one shared pool: "asking about Ashby", "keeps turning up
+  where Ashby goes", "a room overlooking the Riesenrad", "unfamiliar faces", "met someone off the
+  night train", "keeps regular hours". A preparation, a vet and surveillance can all look alike, so
+  a footprint is a clue, not a verdict. Approaches look like doing nothing.
+- Lamplighters see preparations, traps and surveillance in their city for what they are.
+- Traps catch on one night only. Ferrets can trap tonight or next week; anyone else's trap is set up
+  over a loud week (always noticed) and catches the following night.
+- Scalphunters may prepare first, so their strike doesn't come out of nowhere. Once a strike lands,
+  a prepared strike and an instant one produce the same news.
+- More traffic: about 7 messages a morning, mostly footprints, one report per agent at most.
+- Mole cover stories blend in: "all quiet" becomes a harmless footprint, a false alarm becomes
+  someone asking about a colleague.
+- Claude's rewrites of reports can't turn a footprint into a verdict ("preparing", "trap").
+
+### Added (footprints)
+- Field Manual: a footprint table with the odds of noticing each order and what it can look like,
+  told through one recurring example (Pell watching Halas in Vienna).
+- The simulator reports traffic per morning by kind.
+
 ### Changed
 - Winning is now about agents standing: the most agents still alive and still loyal at the end.
   Lost and turned are shown as substats. The HUD shows how many of each side are still alive.

@@ -4,6 +4,23 @@ Why-this-not-that for this project, newest first. Companion to [CHANGELOG.md](CH
 
 ---
 
+## 2026-11-24: Footprints from a shared pool; one-night traps
+**Decision:** Every order produces footprints from one shared pool of six sentences, with
+per-order odds of being noticed and of each sentence (`TELLS` in world.js, shown to players in the
+Field Manual). Lamplighters read preparations, traps and surveillance truthfully. Traps catch on one
+night: Ferrets can trap tonight; a next-week trap (anyone) is always noticed while being set.
+Scalphunters may prepare as a disguise; a strike itself leaves no footprint, so on the night every
+strike looks the same and only the week before differs. One report per agent, up to three notes.
+**Why:** Signs read as verdicts ("studying X's routine" = strike), standing traps were silent after
+the first week, and traffic was uneven. Shared footprints make reading the morning a deduction;
+innocent orders supply the ambient chatter.
+**Rejected:** *Verdict-style signs made vaguer* (still only hostile acts leave signs). *Standing
+traps with a weekly faint sign* (user preferred one-night traps). *Instant-only specialists* (a
+strike from nowhere would always reveal a Scalphunter). *A bonus for the slow route* (more rules;
+disguise is enough). *Capping the morning at ~3 reports* (the user wanted more chatter).
+**Affects:** `js/world.js` (FOOTPRINTS, TELLS, PLACE), `js/engine.js` (reports, traps), bots, Karla's
+summary and prompts, `js/analysis.js`, `js/voices.js`, `js/ui/manual.js`.
+
 ## 2026-11-24: The pivotal section is one information exchange
 **Decision:** The debrief's map section shows one chain: what a side heard, what it did because of
 it, and the result. Planted lies and mole leaks are preferred, so it answers "what did I feed Karla

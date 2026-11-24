@@ -11,12 +11,17 @@ const label = (k) => ARCHETYPES[k].label;
 
 function summarize(game, view) {
   const name = (id) => game.agents[id]?.name;
-  // What each British agent has been seen doing in the last few weeks (witness reports).
+  // What each British agent has been seen doing in the last few weeks: certain sightings (a
+  // Lamplighter's word, a witness, a Ferret) and footprints, which are only clues.
   const seen = {};
   const verb = { prepare: 'prepared a strike on', strike: 'attacked', trap: 'set a trap', surveil: 'surveilled' };
+  const FP = { asking: 'asking about', shadowing: 'turning up where this agent goes:', room: 'took a room overlooking a landmark', faces: 'unfamiliar faces around them', courier: 'met someone off the night train', routine: 'keeping regular hours' };
   for (const m of view.inbox.filter((x) => x.week >= view.week - 3)) {
     for (const act of m.facts?.activities || []) {
-      (seen[act.id] ||= []).push(`wk ${m.week}: ${verb[act.kind] || act.kind}${act.targetId ? ' ' + name(act.targetId) : ''} in ${m.city}`);
+      (seen[act.id] ||= []).push(`wk ${m.week}, certain: ${verb[act.kind] || act.kind}${act.targetId ? ' ' + name(act.targetId) : ''} in ${m.city}`);
+    }
+    for (const fp of m.facts?.signs || []) {
+      (seen[fp.id] ||= []).push(`wk ${m.week}, footprint: ${FP[fp.sign] || fp.sign}${fp.targetId ? ' ' + name(fp.targetId) : ''} in ${m.city}`);
     }
   }
   const intelOn = (id) => {
@@ -31,11 +36,11 @@ function summarize(game, view) {
     yourAgents: view.own.filter((a) => a.alive).map((a) => ({
       name: a.name, role: label(a.archetype), city: a.city,
       preparedStrikeOn: a.prep ? name(a.prep.targetId) : undefined,
-      canDo: legalOrders(game, view.side, a.id).map((l) => l.targets ? `${l.type} [${l.targets.map(name).join(', ')}]` : l.type),
+      canDo: legalOrders(game, view.side, a.id).map((l) => l.targets ? `${l.type} [${l.targets.map(name).join(', ')}]` : l.when ? `${l.type} [${l.when.join(', ')}]` : l.type),
       ...intelOn(a.id),
     })),
     yourLosses: view.own.filter((a) => !a.alive).map((a) => `${a.name} (${label(a.archetype)}), ${a.eliminated.how}, wk ${a.eliminated.week}`),
-    yourTraps: view.traps.map((t) => `${t.city} (${t.active ? 'ready' : 'ready next week'})`),
+    yourTraps: view.traps.map((t) => `${t.city} (catches ${t.active ? 'tonight' : 'next week'} only)`),
     yourApproaches: Object.entries(view.approachProgress).map(([id, n]) => `${name(id)}: ${n}/${RULES.approachesToTurn}`),
     britishAgents: view.enemies.filter((e) => e.alive).map((e) => ({
       name: e.name, cover: e.cover, city: e.city,
@@ -61,12 +66,13 @@ const ORDER_SCHEMA = {
           type: { type: 'string', enum: ['move', 'surveil', 'lielow', 'prepare', 'strike', 'trap', 'approach', 'vet', 'brief', 'lie'] },
           city: { type: ['string', 'null'], description: 'move: destination' },
           target: { type: ['string', 'null'], description: 'prepare/strike/approach/vet: agent name' },
+          when: { type: ['string', 'null'], enum: ['tonight', 'next', null], description: 'trap only: tonight (Ferrets only) or next week' },
           planKind: { type: ['string', 'null'], enum: ['strike', 'trap', null], description: 'brief only' },
           planCity: { type: ['string', 'null'], description: 'brief only' },
           lieKind: { type: ['string', 'null'], enum: ['hide', 'frame', 'alarm', null], description: 'lie only (British agents working for you)' },
           lieTarget: { type: ['string', 'null'], description: 'lie frame: which British agent to frame' },
         },
-        required: ['agent', 'type', 'city', 'target', 'planKind', 'planCity', 'lieKind', 'lieTarget'],
+        required: ['agent', 'type', 'city', 'target', 'when', 'planKind', 'planCity', 'lieKind', 'lieTarget'],
         additionalProperties: false,
       },
     },
@@ -88,6 +94,7 @@ function toOrders(game, side, r) {
     const o = { agentId: a.id, type: c.type };
     if (c.type === 'move') o.city = city(c.city);
     if (['prepare', 'strike', 'approach', 'vet'].includes(c.type)) o.targetId = byName(c.target)?.id;
+    if (c.type === 'trap') o.when = c.when === 'tonight' && a.archetype === 'ferret' ? 'tonight' : 'next';
     if (c.type === 'brief') o.plan = { kind: c.planKind || 'strike', city: city(c.planCity) };
     if (c.type === 'lie') o.lie = { kind: c.lieKind || 'hide', targetId: byName(c.lieTarget)?.id };
     if (!validateOrders(game, side, [...valid, o]).length) valid.push(o);

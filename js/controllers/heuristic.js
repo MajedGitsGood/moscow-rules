@@ -31,8 +31,14 @@ export function heuristicOrders(game, view, seed = 1) {
   const add = (o) => { if (orders.length < RULES.ordersPerWeek && !used.has(o.agentId)) { orders.push(o); used.add(o.agentId); } };
   const legal = (a, type) => legalOrders(game, side, a.id).find((l) => l.type === type);
   const fresh = view.inbox.filter((m) => m.week === view.week);
-  const warnings = fresh.flatMap((m) => m.facts?.activities || []).filter((x) => x.kind === 'prepare' && me.some((a) => a.id === x.targetId));
-  const trapCities = new Set(fresh.filter((m) => (m.facts?.activities || []).some((x) => x.kind === 'trap')).map((m) => m.city));
+  // Warnings: a Lamplighter's word is certain; a footprint near one of ours is taken seriously half the time.
+  const mine = (id) => me.some((a) => a.id === id);
+  const warnings = [
+    ...fresh.flatMap((m) => m.facts?.activities || []).filter((x) => x.kind === 'prepare' && mine(x.targetId)),
+    ...fresh.flatMap((m) => m.facts?.signs || []).filter((x) => ['asking', 'shadowing'].includes(x.sign) && mine(x.targetId) && rng() < 0.5),
+  ].filter((x, i, all) => all.findIndex((y) => y.targetId === x.targetId) === i);
+  const trapCities = new Set(fresh.filter((m) => (m.facts?.activities || []).some((x) => x.kind === 'trap')
+    || (m.facts?.signs || []).some((x) => ['room', 'faces'].includes(x.sign))).map((m) => m.city));
   // The bot's own suspicion: anyone accused in recent reports or failed by a vet.
   const suspects = new Set(view.inbox.filter((m) => m.week >= view.week - 3).flatMap((m) => [m.facts?.accused, m.facts?.verdict === 'turned' ? m.facts.vet : null]).filter(Boolean));
 
@@ -54,9 +60,9 @@ export function heuristicOrders(game, view, seed = 1) {
     const trapper = me.find((a) => a.city === c && a.archetype !== 'talentspotter' && !used.has(a.id) && !view.traps.some((t) => t.city === c));
     if (trapper) add({ agentId: trapper.id, type: 'trap' });
   }
-  // 1b. Ferrets keep a standing trap in their city.
+  // 1b. Ferrets often trap their city: usually tonight, sometimes for next week.
   for (const a of me.filter((x) => x.archetype === 'ferret')) {
-    if (!view.traps.some((t) => t.city === a.city) && rng() < 0.6) add({ agentId: a.id, type: 'trap' });
+    if (!view.traps.some((t) => t.city === a.city) && rng() < 0.5) add({ agentId: a.id, type: 'trap', when: rng() < 0.75 ? 'tonight' : 'next' });
   }
   // 2. Strike: a prepared or Scalphunter attacker, avoiding cities where a trap was reported.
   for (const a of rng.shuffle(me)) {
@@ -65,7 +71,10 @@ export function heuristicOrders(game, view, seed = 1) {
     const t = l.targets.find((id) => ['lamplighter', 'talentspotter'].includes(lastRole(view.intel, id)))
       || (a.archetype === 'scalphunter' && rng() < 0.12 ? rng.pick(l.targets) : null)
       || (a.prep ? a.prep.targetId : null);
-    if (t && l.targets.includes(t)) add({ agentId: a.id, type: 'strike', targetId: t });
+    if (!t || !l.targets.includes(t)) continue;
+    // A Scalphunter sometimes prepares first, so the strike doesn't come out of nowhere.
+    if (a.archetype === 'scalphunter' && !a.prep && rng() < 0.25) add({ agentId: a.id, type: 'prepare', targetId: t });
+    else add({ agentId: a.id, type: 'strike', targetId: t });
   }
   // 3. Moles we run: tell a lie.
   for (const e of view.enemies.filter((x) => x.asset && x.alive)) {
