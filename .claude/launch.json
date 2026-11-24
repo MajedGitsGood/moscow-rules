@@ -5,6 +5,7 @@
       "name": "moscow-rules",
       "runtimeExecutable": "node",
       "runtimeArgs": [
+        "--env-file-if-exists=.env",
         "server.js"
       ],
       "port": 8643

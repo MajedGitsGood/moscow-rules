@@ -1,7 +1,7 @@
 # CLAUDE.md: working conventions for this repo
 
 Moscow Rules, a le Carré-inspired spy duel. Vanilla HTML/CSS/JS with ES modules, no build step.
-Run with `node server.js` (port 8643; static files plus the `/api/claude` proxy).
+Run with `npm start` (port 8643; static files plus the `/api/claude` proxy). Secrets live in `.env` (gitignored; see `.env.example`).
 
 ## Architecture rules
 - `js/engine.js` is the single source of truth and must stay pure: no DOM, no LLM, all randomness

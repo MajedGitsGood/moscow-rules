@@ -7,10 +7,9 @@
 // shape is deliberately tiny so a Cloudflare Worker can replace this file at deploy time.
 //
 //   npm install
-//   export ANTHROPIC_API_KEY=...          # or `ant auth login`
-//   export MR_OWNER_TOKEN=some-secret     # optional: paste the same value into the game's "Owner token"
-//   export MR_GUEST_BUDGET=300000         # optional: tokens per guest session
-//   node server.js [port]                 # default 8643
+//   cp .env.example .env                  # then put your ANTHROPIC_API_KEY in .env
+//   npm start                             # = node --env-file-if-exists=.env server.js, port 8643
+// Settings (in .env or the environment): ANTHROPIC_API_KEY, MR_OWNER_TOKEN, MR_GUEST_BUDGET.
 //
 // Without credentials the game still runs: /api/status reports llm:false and the game uses its
 // offline interpreter, template text and the heuristic bot.
@@ -127,6 +126,10 @@ const server = http.createServer(async (req, res) => {
   res.writeHead(405); res.end();
 });
 
+server.on('error', (e) => {
+  if (e.code === 'EADDRINUSE') { console.error(`Port ${PORT} is already in use (is the game already running?). Try: node server.js ${PORT + 1}`); process.exit(1); }
+  throw e;
+});
 server.listen(PORT, () => {
   console.log(`Moscow Rules on http://localhost:${PORT}  (Claude: ${client ? 'on' : 'off - ' + offlineReason})`);
 });

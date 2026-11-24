@@ -6,7 +6,7 @@
     "@anthropic-ai/sdk": "^1.13.0"
   },
   "scripts": {
-    "start": "node server.js",
+    "start": "node --env-file-if-exists=.env server.js",
     "simulate": "node tools/simulate.js",
     "test": "node tools/test.js"
   }

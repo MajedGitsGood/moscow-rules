@@ -10,8 +10,8 @@ other capital.
 
 ```sh
 npm install
-export ANTHROPIC_API_KEY=...        # optional: without it the game runs fully offline
-node server.js                      # http://localhost:8643
+cp .env.example .env                # put your ANTHROPIC_API_KEY in .env (optional: offline without it)
+npm start                           # http://localhost:8643
 ```
 
 Modes: **Against Karla** (Claude, Opus 5.5), **Against the bot** (offline), **Two players** (hot-seat).

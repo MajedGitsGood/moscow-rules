@@ -5,6 +5,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 ## [Unreleased]
 
 ### Added
+- `.env` support: put your API key in `.env` (copy `.env.example`) and run `npm start`.
 - First playable build: setup on six cities, eight agents a side (Scalphunter, Lamplighter, Ferret,
   Talent-spotter) in a rock-paper-scissors cycle, free-text cables, Watch / Move / Strike / Expose /
   Recruit / Lie low, turned agents that leak, lie and sabotage, a 12-week end with an elimination count.
