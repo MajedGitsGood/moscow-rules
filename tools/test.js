@@ -23,7 +23,7 @@ const inbox = (g, side) => viewFor(g, side).inbox.map((m) => m.text).join(' | ')
   const sh = get('control', 'scalphunter'), ll = get('karla', 'lamplighter');
   week(g, [{ agentId: sh.id, type: 'strike', targetId: ll.id }]);
   ok(!ll.alive && sh.alive, 'Scalphunter strikes without preparing');
-  ok(viewFor(g, 'control').intel[ll.id]?.roles.at(-1).archetype === 'lamplighter', 'interrogation reveals the dead agent\'s role');
+  ok(!viewFor(g, 'control').intel[ll.id], 'a kill reveals nothing about the dead agent\'s role');
 }
 { const { g, get } = setup({ control: { lamplighter: 'A' }, karla: { talentspotter: 'A' } });
   const ll = get('control', 'lamplighter'), ts = get('karla', 'talentspotter');
@@ -56,11 +56,21 @@ const inbox = (g, side) => viewFor(g, side).inbox.map((m) => m.text).join(' | ')
 }
 { const { g, get } = setup({ control: { talentspotter: 'A' }, karla: { lamplighter: 'A' } });
   const ts = get('control', 'talentspotter'), ll = get('karla', 'lamplighter');
-  for (let i = 0; i < 3; i++) week(g, [{ agentId: ts.id, type: 'approach', targetId: ll.id }]);
-  ok(ll.turnedBy === 'control', 'three approaches turn an agent');
+  week(g, [{ agentId: ts.id, type: 'approach', targetId: ll.id }]);
+  ok(!ll.turnedBy && !inbox(g, 'karla').includes(ts.name), 'an approach is never reported to the other side');
+  week(g, [{ agentId: ts.id, type: 'approach', targetId: ll.id }]);
+  ok(ll.turnedBy === 'control', 'two approaches turn an agent');
   ok(viewFor(g, 'control').enemies.find((e) => e.id === ll.id).asset, 'the turning side sees its new asset');
   week(g, [{ agentId: ll.id, type: 'lie', lie: { kind: 'hide' } }], [{ agentId: ll.id, type: 'move', city: 'Moscow' }]);
   ok(inbox(g, 'control').includes('My orders from Karla this week: go to Moscow'), 'every order to a turned agent leaks');
+}
+{ const { g, get } = setup({ control: { scalphunter: 'A', ferret: 'A' }, karla: { lamplighter: 'A', scalphunter: 'A' } });
+  const fe = get('control', 'ferret');
+  ok(!legalOrders(g, 'control', fe.id).some((l) => l.type === 'surveil'), 'only Lamplighters can surveil');
+  const ksh = get('karla', 'scalphunter'), ll = get('karla', 'lamplighter');
+  week(g, [], [{ agentId: ksh.id, type: 'strike', targetId: get('control', 'scalphunter').id }, { agentId: ll.id, type: 'lielow' }]);
+  // Witnesses on the victim's side may name the attacker (Ferret: 50% chance), never the role.
+  ok(!viewFor(g, 'control').intel[ksh.id], 'witnessing an attack never reveals the attacker\'s role');
 }
 { const { g, get } = setup({ control: { scalphunter: 'A' }, karla: { lamplighter: 'A' } });
   const sh = get('control', 'scalphunter'), ll = get('karla', 'lamplighter');

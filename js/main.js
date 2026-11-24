@@ -113,7 +113,7 @@ function render() {
   if (!app) { root.innerHTML = titleScreen(); return; }
   const screens = { setup: playScreen, play: playScreen, handoff: handoffScreen, busy: busyScreen, debrief: debriefScreen };
   root.innerHTML = (screens[app.screen] || playScreen)();
-  if (app.screen === 'play') tintCells(root, viewFor(app.game, app.active));
+  if (app.screen === 'play') { tintCells(root, viewFor(app.game, app.active)); placePop(); }
   if (app.screen === 'setup') tintCells(root, setupView());
 }
 function busy(text) { app.screen = 'busy'; app.busyText = text; render(); }
@@ -178,11 +178,10 @@ function playScreen() {
     </svg>
     ${hudTop(v, setup)}
     ${setup ? setupTray(v) : ''}
-    ${!setup && app.sel.city && app.pick?.type !== 'move' ? cityPanel(v) : ''}
-    ${!setup && app.traffic ? trafficPanel(v) : ''}
-    ${!setup && app.sel.agent && app.pick?.type !== 'move' ? actionDock(v) : ''}
+    ${!setup && app.traffic ? sidePanel(v) : ''}
+    ${!setup && app.sel.agent ? orderPop(v) : ''}
     ${!setup ? endTurn(v) : ''}
-    ${app.pick ? `<div class="pick-hint">${pickHint()}<button class="btn small ghost" data-act="cancel-pick">Cancel</button></div>` : ''}
+    ${app.pick?.type === 'move' ? `<div class="pick-hint">${pickHint()}<button class="btn small ghost" data-act="cancel-pick">Cancel</button></div>` : ''}
     <div id="toast" class="toast" hidden></div>
   </div>`;
 }
@@ -229,89 +228,97 @@ function setupTray(v) {
   </div>`;
 }
 
-// ----- city panel -----
+// ----- the order popover: anchored beside the selected token -----
 function chip(text, cls = '') { return `<span class="chip ${cls}">${text}</span>`; }
-function agentCard(v, a) {
-  const side = v.side, mine = a.side === side;
-  const q = app.queued[side].find((o) => o.agentId === a.id);
-  const intel = v.intel[a.id];
-  const chips = [];
-  if (q) chips.push(chip(`${ORDER_ICON[q.type]}${esc(describeOrder(q, app.game))}`, 'queued'));
-  if (mine && a.prep) chips.push(chip(`${ORDER_ICON.prepare}Prepared on ${esc(app.game.agents[a.prep.targetId].name)}`));
-  if (!mine && v.approachProgress[a.id]) chips.push(chip(`${ORDER_ICON.approach}Pitched ${v.approachProgress[a.id]}/${RULES.approachesToTurn}`, 'good'));
-  if (a.asset) chips.push(chip('Our source', 'good'));
-  if (intel?.suspicions?.length) chips.push(chip(`${intel.suspicions.length} suspicion${intel.suspicions.length > 1 ? 's' : ''}`, 'warn'));
-  let roleBit;
-  if (mine || a.asset) roleBit = `<span class="role">${ROLE_ICON[a.archetype]}${roleLabel(a.archetype)}</span>`;
-  else {
-    const guess = app.notes[side].roles[a.id];
-    const last = intel?.roles?.at(-1);
-    roleBit = `<button class="role guess ${guess ? 'set' : ''}" data-act="guess" data-agent="${a.id}">${ROLE_ICON[guess || 'unknown']}${guess ? roleLabel(guess) : 'Role?'}</button>`;
-    if (last && last.archetype !== guess) roleBit += `<button class="claim" data-act="accept" data-agent="${a.id}" data-role="${last.archetype}" title="Accept this report">${ROLE_ICON[last.archetype]}${esc(last.source)} says ${roleLabel(last.archetype)}</button>`;
-  }
-  const trust = mine ? app.notes[side].trust[a.id] || 'trusted' : null;
-  const targetable = app.pick?.targets?.includes(a.id);
-  return `<div class="agent-card ${mine ? 'mine' : 'theirs'} ${app.sel.agent === a.id ? 'sel' : ''} ${targetable ? 'targetable' : ''} ${trust === 'suspect' ? 'suspect' : ''}" data-act="${targetable ? 'target' : 'agent'}" data-agent="${a.id}">
-    ${portrait(a, { size: 52 })}
-    <div class="ac-body"><div class="ac-name"><b>${esc(a.first)} ${esc(a.name)}</b>${mine ? `<button class="trust ${trust}" data-act="trust" data-agent="${a.id}" title="Your loyalty mark">${trust === 'suspect' ? 'Suspect' : 'Trusted'}</button>` : ''}</div>
-      <small>${esc(a.cover)}</small>${roleBit}<div class="chips">${chips.join('')}</div></div>
-  </div>`;
-}
-function cityPanel(v) {
-  const c = app.sel.city;
-  const ours = v.own.filter((a) => a.alive && a.city === c), theirs = v.enemies.filter((a) => a.alive && a.city === c);
-  const trap = v.traps.find((t) => t.city === c);
-  return `<aside class="panel city-panel">
-    <div class="cp-head"><div class="cp-landmark">${LANDMARK_ICON[LANDMARK[c]]}</div><div><h2>${c}</h2><small>${HOME[c] ? (HOME[c] === 'control' ? 'Home of the Circus' : 'Home of Moscow Centre') : 'Open city'}${trap ? ` · our trap ${trap.active ? 'is ready' : 'ready next week'}` : ''}</small></div>
-      <button class="icon-btn" data-act="close-city">${UI_ICON.close}</button></div>
-    <div class="cp-cols">
-      <section><h3 class="ours">Ours · ${ours.length}</h3>${ours.map((a) => agentCard(v, a)).join('') || '<p class="empty">No one here.</p>'}</section>
-      <section><h3 class="theirs">Theirs · ${theirs.length}</h3>${theirs.map((a) => agentCard(v, a)).join('') || '<p class="empty">No one here.</p>'}</section>
-    </div>
-  </aside>`;
-}
+const ROLE_PICKS = ['unknown', ...ARCHETYPE_KEYS];
 
-// ----- action dock -----
-function actionDock(v) {
+function orderPop(v) {
   const g = app.game, side = v.side, a = g.agents[app.sel.agent];
-  if (!a || !a.alive) return '';
-  const mine = a.side === side;
-  const legal = legalOrders(g, side, a.id);
+  if (!a || !a.alive || app.pick?.type === 'move') return '';
+  const mine = a.side === side, asset = !mine && a.turnedBy === side;
   const q = app.queued[side].find((o) => o.agentId === a.id);
+  const chips = [];
+  if (q) chips.push(chip(`${ORDER_ICON[q.type]}${esc(describeOrder(q, g))}`, 'queued'));
+  if (mine && a.prep) chips.push(chip(`${ORDER_ICON.prepare}Ready to strike ${esc(g.agents[a.prep.targetId].name)}`));
+  if (!mine && v.approachProgress[a.id]) chips.push(chip(`${ORDER_ICON.approach}Pitched ${v.approachProgress[a.id]}/${RULES.approachesToTurn}`, 'good'));
+  if (asset) chips.push(chip('Our source', 'good'));
+  const head = `<div class="pop-head">${portrait(a, { size: 40 })}<div class="pop-id"><b>${esc(a.first)} ${esc(a.name)}</b><small>${esc(a.cover)} · ${a.city}</small></div>
+    <button class="icon-btn" data-act="close-agent" title="Close">${UI_ICON.close}</button></div>`;
+  // An enemy agent: no orders, just your notes on who they are.
+  if (!mine && !asset) {
+    const guess = app.notes[side].roles[a.id] || 'unknown';
+    const last = v.intel[a.id]?.roles?.at(-1);
+    return `<div class="pop theirs" id="pop">${head}
+      <div class="pop-label">What are they?</div>
+      <div class="role-picks">${ROLE_PICKS.map((k) => `<button class="rp ${guess === k ? 'on' : ''}" data-act="setrole" data-agent="${a.id}" data-role="${k}" title="${k === 'unknown' ? 'No idea yet' : roleLabel(k)}">${ROLE_ICON[k]}</button>`).join('')}</div>
+      ${last ? `<div class="pop-note">${ROLE_ICON[last.archetype]} ${esc(last.source)} reported a ${roleLabel(last.archetype)}, wk ${last.week}</div>` : ''}
+      ${chips.length ? `<div class="chips">${chips.join('')}</div>` : ''}</div>`;
+  }
+  const legal = legalOrders(g, side, a.id);
   const full = app.queued[side].length >= RULES.ordersPerWeek && !q;
-  const buttons = legal.map((l) => `<button class="order ${q?.type === l.type ? 'on' : ''}" data-act="order" data-type="${l.type}" ${full ? 'disabled' : ''}>${ORDER_ICON[l.type]}<b>${ORDER_LABEL[l.type]}</b><small>${ORDER_HINT[l.type]}</small></button>`).join('');
+  const btns = legal.map((l) => `<button class="ob ${q?.type === l.type ? 'on' : ''} ${app.pick?.type === l.type ? 'picking' : ''}" data-act="order" data-type="${l.type}" ${full ? 'disabled' : ''} title="${esc(ORDER_HINT[l.type])}">${ORDER_ICON[l.type]}<span>${ORDER_LABEL[l.type]}</span></button>`).join('');
   let sub = '';
+  if (app.pick?.targets && app.pick.agentId === a.id) {
+    sub = `<div class="pop-label">${ORDER_LABEL[app.pick.type]}: who?</div><div class="targets">${app.pick.targets.map((id) => {
+      const t = g.agents[id]; const r = roleOf(side)({ ...t, asset: t.turnedBy === side && t.side !== side });
+      return `<button class="tg" data-act="target" data-agent="${id}">${portrait(t, { size: 38 })}<span>${esc(t.name)}</span>${r ? `<i>${ROLE_ICON[r]}</i>` : ''}</button>`;
+    }).join('')}</div>`;
+  }
   if (app.pick?.type === 'brief' && app.pick.agentId === a.id) {
-    sub = `<div class="sub">Brief ${esc(a.name)}: our <select id="brief-kind"><option value="strike">strike</option><option value="trap">trap</option></select> in <select id="brief-city">${g.cities.map((c) => `<option>${c}</option>`).join('')}</select> <button class="btn small gold" data-act="brief-ok">Brief</button></div>`;
+    sub = `<div class="pop-label">Tell ${esc(a.name)} about…</div><div class="inline">our <select id="brief-kind"><option value="strike">strike</option><option value="trap">trap</option></select> in <select id="brief-city">${g.cities.map((c) => `<option>${c}</option>`).join('')}</select><button class="btn small gold" data-act="brief-ok">Brief</button></div>`;
   }
   if (app.pick?.type === 'lie' && app.pick.agentId === a.id) {
     const colleagues = v.enemies.filter((x) => x.alive && !x.asset && x.id !== a.id);
-    sub = `<div class="sub lies">
-      <button class="btn small" data-act="lie-ok" data-kind="hide">All quiet<small>Report nothing</small></button>
-      <button class="btn small" data-act="lie-ok" data-kind="alarm">False alarm<small>"Someone's preparing a strike"</small></button>
-      <span class="frame">Frame <select id="lie-target">${colleagues.map((x) => `<option value="${x.id}">${esc(x.name)}</option>`).join('')}</select><button class="btn small" data-act="lie-ok" data-kind="frame" ${colleagues.length ? '' : 'disabled'}>Frame</button></span></div>`;
+    sub = `<div class="pop-label">What do they tell ${SIDE_LABEL[a.side]}?</div><div class="inline">
+      <button class="btn small" data-act="lie-ok" data-kind="hide">All quiet</button>
+      <button class="btn small" data-act="lie-ok" data-kind="alarm">False alarm</button>
+      <span>Frame <select id="lie-target">${colleagues.map((x) => `<option value="${x.id}">${esc(x.name)}</option>`).join('')}</select><button class="btn small" data-act="lie-ok" data-kind="frame" ${colleagues.length ? '' : 'disabled'}>Frame</button></span></div>`;
   }
   if (app.pick?.type === 'execute' && app.pick.agentId === a.id) {
-    sub = `<div class="sub danger">Execute ${esc(a.first)} ${esc(a.name)}? ${SIDE_LABEL[other(side)]} gets the point either way. You learn whether they were a mole only at the debrief. <button class="btn small red" data-act="execute-ok">Execute</button></div>`;
+    sub = `<div class="inline danger">${SIDE_LABEL[other(side)]} scores either way; you'll learn the truth at the debrief. <button class="btn small red" data-act="execute-ok">Execute</button></div>`;
   }
-  return `<div class="dock ${mine ? '' : 'asset'}">
-    <div class="dock-who">${portrait(a, { size: 72 })}<div><b>${esc(a.first)} ${esc(a.name)}</b><span class="role">${ROLE_ICON[a.archetype]}${mine ? roleLabel(a.archetype) : `Their ${roleLabel(a.archetype)}, our source`}</span><small>${esc(a.cover)} · ${a.city}</small>
-      ${q ? `<button class="link" data-act="unqueue">Cancel order</button>` : ''}
-      ${mine ? `<button class="link danger" data-act="execute">${ORDER_ICON.execute}Execute</button>` : ''}</div>
-      <button class="icon-btn close" data-act="close-agent">${UI_ICON.close}</button></div>
-    <div class="dock-orders">${buttons}</div>${sub}
-  </div>`;
+  return `<div class="pop ${asset ? 'asset' : ''}" id="pop">${head}
+    <div class="pop-role">${ROLE_ICON[a.archetype]}${asset ? `Their ${roleLabel(a.archetype)} · our source` : roleLabel(a.archetype)}
+      ${q ? `<button class="link" data-act="unqueue">Cancel order</button>` : ''}${mine ? `<button class="link danger" data-act="execute" title="Execute">${ORDER_ICON.execute}</button>` : ''}</div>
+    ${chips.length ? `<div class="chips">${chips.join('')}</div>` : ''}
+    <div class="obs">${btns}</div>${sub}</div>`;
+}
+// Keep the popover next to its token, inside the screen.
+function placePop() {
+  const pop = $('#pop'); if (!pop) return;
+  const tok = document.querySelector(`.token[data-agent="${app.sel.agent}"]`);
+  const stage = $('.stage').getBoundingClientRect();
+  const r = tok ? tok.getBoundingClientRect() : { left: stage.width / 2, right: stage.width / 2, top: stage.height / 2, bottom: stage.height / 2 };
+  const pw = pop.offsetWidth, ph = pop.offsetHeight, gap = 14, top = 80;
+  const limitR = stage.width - (app.traffic ? 404 : 12);
+  // Open away from the city (tokens sit to its left or right), else above or below the token.
+  const city = tok?.closest('.city')?.querySelector('.medal')?.getBoundingClientRect();
+  const awayLeft = city ? r.left < city.left : false;
+  const cx = (r.left + r.right) / 2;
+  const options = [
+    awayLeft ? [r.left - pw - gap, (r.top + r.bottom) / 2 - ph / 2] : [r.right + gap, (r.top + r.bottom) / 2 - ph / 2],
+    [cx - pw / 2, r.top - ph - gap],
+    [cx - pw / 2, r.bottom + gap],
+    awayLeft ? [r.right + gap, (r.top + r.bottom) / 2 - ph / 2] : [r.left - pw - gap, (r.top + r.bottom) / 2 - ph / 2],
+  ];
+  const fits = ([px, py]) => px >= 12 && px + pw <= limitR && py >= top && py + ph <= stage.height - 12;
+  let [x, y] = options.find(fits) || options[0];
+  x = Math.max(12, Math.min(x, limitR - pw)); y = Math.max(top, Math.min(y, stage.height - ph - 12));
+  pop.style.left = `${x}px`; pop.style.top = `${y}px`;
 }
 function pickHint() {
   const p = app.pick, a = app.game.agents[p.agentId];
-  if (p.type === 'move') return `Choose where ${a.name} goes`;
-  if (p.targets) return `Choose who ${a.name} will ${ORDER_LABEL[p.type].toLowerCase()}`;
-  return '';
+  return p.type === 'move' ? `Where does ${a.name} go? Click a city.` : '';
 }
 
-// ----- traffic -----
-const KIND = { event: 'Event', report: 'Report', source: 'Source', briefing: 'Briefing' };
-function trafficPanel(v) {
+// ----- right panel: traffic and notebook -----
+function sidePanel(v) {
+  const tab = app.tab || 'traffic';
+  return `<aside class="panel traffic">
+    <div class="tabs"><button class="${tab === 'traffic' ? 'on' : ''}" data-act="tab" data-tab="traffic">Traffic <small>wk ${v.week}</small></button><button class="${tab === 'notes' ? 'on' : ''}" data-act="tab" data-tab="notes">Notebook</button></div>
+    <div class="tp-body">${tab === 'notes' ? notebook(v) : traffic(v)}</div></aside>`;
+}
+function traffic(v) {
   const now = v.inbox.filter((m) => m.week === v.week);
   const earlier = v.inbox.filter((m) => m.week < v.week).reverse();
   const msg = (m) => {
@@ -323,15 +330,29 @@ function trafficPanel(v) {
       <p>${esc(m.voiced || m.text)}</p></article>`;
   };
   const group = (title, list, cls) => list.length ? `<h3 class="${cls}">${title}</h3>${list.map(msg).join('')}` : '';
-  return `<aside class="panel traffic">
-    <div class="tp-head"><h2>Morning traffic</h2><small>Week ${v.week}</small></div>
-    <div class="tp-body">
-      ${group('What happened', now.filter((m) => m.kind === 'event' || m.kind === 'briefing'), 'h-event')}
-      ${group('From our sources inside', now.filter((m) => m.kind === 'source'), 'h-source')}
-      ${group('Reports from our people', now.filter((m) => m.kind === 'report'), 'h-report')}
-      ${now.length ? '' : '<p class="empty">A quiet night. Nothing came in.</p>'}
-      ${earlier.length ? `<details><summary>Earlier traffic</summary>${earlier.map(msg).join('')}</details>` : ''}
-    </div></aside>`;
+  return `${group('What happened', now.filter((m) => m.kind === 'event' || m.kind === 'briefing'), 'h-event')}
+    ${group('From our sources inside', now.filter((m) => m.kind === 'source'), 'h-source')}
+    ${group('Reports from our people', now.filter((m) => m.kind === 'report'), 'h-report')}
+    ${now.length ? '' : '<p class="empty">A quiet night. Nothing came in.</p>'}
+    ${earlier.length ? `<details><summary>Earlier traffic</summary>${earlier.map(msg).join('')}</details>` : ''}`;
+}
+function notebook(v) {
+  const side = v.side, notes = app.notes[side];
+  notes.text ||= {};
+  const note = (id) => `<input class="nb-note" data-note="${id}" value="${esc(notes.text[id] || '')}" placeholder="note…" autocomplete="off">`;
+  const ours = v.own.slice().sort((a, b) => b.alive - a.alive).map((a) => {
+    const t = notes.trust[a.id] || 'trusted';
+    return `<div class="nb-row ${a.alive ? '' : 'dead'}"><button class="nb-who" data-act="select" data-agent="${a.id}">${portrait(a, { size: 30, mood: a.alive ? null : 'dead' })}<span><b>${esc(a.name)}</b><small>${ROLE_ICON[a.archetype]}${a.alive ? a.city : esc(a.eliminated?.how || 'lost')}</small></span></button>
+      ${a.alive ? `<button class="trust ${t}" data-act="trust" data-agent="${a.id}">${t === 'suspect' ? 'Suspect' : 'Trusted'}</button>` : ''}${note(a.id)}</div>`;
+  }).join('');
+  const theirs = v.enemies.slice().sort((a, b) => b.alive - a.alive).map((e) => {
+    const guess = e.asset ? e.archetype : notes.roles[e.id] || 'unknown';
+    const last = v.intel[e.id]?.roles?.at(-1);
+    return `<div class="nb-row ${e.alive ? '' : 'dead'}"><button class="nb-who" data-act="select" data-agent="${e.id}">${portrait(e, { size: 30, mood: e.alive ? null : 'dead' })}<span><b>${esc(e.name)}</b><small>${e.alive ? e.city : 'dead'}${e.asset ? ' · our source' : ''}</small></span></button>
+      <div class="role-picks small">${e.asset ? `<span class="rp on">${ROLE_ICON[e.archetype]}</span>` : ROLE_PICKS.map((k) => `<button class="rp ${guess === k ? 'on' : ''} ${last?.archetype === k && guess !== k ? 'hint' : ''}" data-act="setrole" data-agent="${e.id}" data-role="${k}" title="${k === 'unknown' ? 'No idea yet' : roleLabel(k)}${last?.archetype === k ? ` (reported by ${esc(last.source)})` : ''}">${ROLE_ICON[k]}</button>`).join('')}</div>${note(e.id)}</div>`;
+  }).join('');
+  return `<h3 class="h-report">Ours</h3><div class="nb">${ours}</div><h3 class="h-event">Theirs</h3><div class="nb">${theirs}</div>
+    <p class="empty">A dotted ring marks the role a report gave you. Your marks show on the map.</p>`;
 }
 
 function endTurn() {
@@ -342,14 +363,19 @@ function endTurn() {
 // ----- debrief -----
 function debriefScreen() {
   const r = revealAll(app.game), o = r.outcome;
-  const fate = (a) => a.alive ? (a.turnedBy ? `Alive, working for ${SIDE_LABEL[a.turnedBy]}` : 'Alive') : `${a.eliminated.how} in ${a.eliminated.city}, week ${a.eliminated.week}`;
+  const how = { killed: 'Killed', trapped: 'Caught in a trap', executed: 'Executed by their own side' };
+  const fate = (a) => {
+    if (a.alive) return a.turnedBy ? `Alive and working for ${SIDE_LABEL[a.turnedBy]}: a point for ${SIDE_LABEL[a.turnedBy]}` : 'Alive';
+    const d = `${how[a.eliminated.how] || a.eliminated.how} in ${a.eliminated.city}, week ${a.eliminated.week}`;
+    return a.turnedBy ? `${d}. Had been working for ${SIDE_LABEL[a.turnedBy]}; counted as a kill, not a turn.` : d;
+  };
   const roster = (side) => r.agents.filter((a) => a.side === side).map((a) => `<div class="db-agent ${a.alive ? '' : 'dead'} ${a.turnedBy ? 'turned' : ''}">
-      ${portrait(a, { size: 56, mood: a.alive ? null : 'dead' })}<div><b>${esc(a.first)} ${esc(a.name)}</b><span class="role">${ROLE_ICON[a.archetype]}${roleLabel(a.archetype)}</span><small>${esc(fate(a))}${a.turnedBy ? (a.sleeper ? ' · a sleeper from the start' : ' · turned') : ''}</small></div></div>`).join('');
+      ${portrait(a, { size: 56, mood: a.alive ? null : 'dead' })}<div><b>${esc(a.first)} ${esc(a.name)}</b><span class="role">${ROLE_ICON[a.archetype]}${roleLabel(a.archetype)}</span><small>${esc(fate(a))}</small></div></div>`).join('');
   const journal = (side) => r.journal[side].length ? `<section class="journal"><h3>${SIDE_LABEL[side]}'s private journal</h3>${r.journal[side].map((j) => `<p><b>Week ${j.week}.</b> ${esc(j.text)}</p>`).join('')}</section>` : '';
   return `<div class="debrief"><div class="db-sheet">
     <div class="stamp">CASE CLOSED</div>
     <h1>${o.winner ? `${SIDE_LABEL[o.winner]} wins` : 'Stalemate'}</h1><p class="db-reason">${esc(o.reason)}.</p>
-    <div class="db-score">${SIDES.map((s) => `<div class="${s}"><span>${o.score[s].total}</span><b>${SIDE_LABEL[s]}</b><small>${o.score[s].dead} killed · ${o.score[s].turned} turned</small></div>`).join('<i>vs</i>')}</div>
+    <div class="db-score">${SIDES.map((s) => `<div class="${s}"><span>${o.score[s].total}</span><b>${SIDE_LABEL[s]}</b><small>${o.score[s].dead} of theirs dead · ${o.score[s].turned} of theirs turned and still alive</small></div>`).join('<i>vs</i>')}</div>
     <div class="db-cols">${SIDES.map((s) => `<section><h3 class="${s}">${SIDE_LABEL[s]}'s people</h3>${roster(s)}</section>`).join('')}</div>
     ${journal('karla')}${journal('control')}
     <button class="btn gold" data-act="again">Another operation</button>
@@ -390,11 +416,14 @@ function onAct(el, ev) {
     case 'shuffle': app.setup[side] = heuristicPlacement({ own: Object.values(g.agents).filter((a) => a.side === side), cities: g.cities }, Math.floor(Math.random() * 1e6)); save(); return render();
     case 'place': return confirmPlacement();
     case 'traffic': app.traffic = !app.traffic; return render();
+    case 'tab': app.tab = el.dataset.tab; app.traffic = true; return render();
+    case 'select': { const a = g.agents[el.dataset.agent]; if (!a.alive) return; app.sel = { city: a.city, agent: a.id }; app.pick = null; return render(); }
+    case 'setrole': { const r = el.dataset.role; if (r === 'unknown') delete app.notes[side].roles[el.dataset.agent]; else app.notes[side].roles[el.dataset.agent] = r; save(); return render(); }
     case 'city': {
       const c = el.dataset.city;
       if (app.screen === 'setup') return;
       if (app.pick?.type === 'move') { if (c !== g.agents[app.pick.agentId].city) queue({ agentId: app.pick.agentId, type: 'move', city: c }); return; }
-      app.sel.city = app.sel.city === c ? null : c; app.sel.agent = null; app.pick = null; return render();
+      app.sel = { city: app.sel.city === c ? null : c, agent: null }; app.pick = null; return render();
     }
     case 'close-city': app.sel.city = null; app.sel.agent = null; app.pick = null; return render();
     case 'close-agent': app.sel.agent = null; app.pick = null; return render();
@@ -409,8 +438,7 @@ function onAct(el, ev) {
       const a = g.agents[el.dataset.agent];
       if (app.screen === 'setup') { delete app.setup[side][a.id]; save(); return render(); }
       if (app.pick?.targets?.includes(a.id)) return queue({ agentId: app.pick.agentId, type: app.pick.type, targetId: a.id });
-      app.sel.city = a.city;
-      app.sel.agent = (a.side === side || a.turnedBy === side) ? a.id : null;
+      app.sel = { city: a.city, agent: app.sel.agent === a.id ? null : a.id };
       app.pick = null; return render();
     }
     case 'target': return queue({ agentId: app.pick.agentId, type: app.pick.type, targetId: el.dataset.agent });
@@ -464,6 +492,14 @@ document.addEventListener('keydown', (ev) => {
   if (ev.key === 'Escape') { if (!$('#modal').hidden) closeModal(); else if (app?.pick) { app.pick = null; render(); } }
   if ((ev.key === 'Enter' || ev.key === ' ') && ev.target.matches?.('.city')) { ev.preventDefault(); onAct({ dataset: { act: 'city', city: ev.target.dataset.city } }, ev); }
 });
+// Notebook notes save as you type, without re-rendering (so focus stays in the field).
+document.addEventListener('input', (ev) => {
+  const id = ev.target.dataset?.note;
+  if (!id || !app) return;
+  (app.notes[app.active].text ||= {})[id] = ev.target.value;
+  save();
+});
+window.addEventListener('resize', () => { if (app?.screen === 'play') placePop(); });
 // Territory highlight follows the hovered city.
 document.addEventListener('pointerover', (ev) => {
   const c = ev.target.closest?.('.city, .cell, .msg');

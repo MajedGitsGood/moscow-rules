@@ -4,6 +4,23 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 
 ## [Unreleased]
 
+### Changed (after playtest 2)
+- No more sleepers: both sides start with clean networks.
+- Two approaches turn an agent, and approaches are never reported. A loyal Ferret in the target's
+  city quietly blocks them.
+- Only Lamplighters can surveil. Everyone else reports only preparations, traps and attacks, and a
+  witness to a killing can name the killer. Kills no longer reveal roles (no more interrogation).
+- Karla plays to win: he hunts named killers, keeps standing traps, surveils every week and strikes
+  on good odds. He also sees what each British agent has been witnessed doing.
+- Orders are given from a compact popover beside the agent's token: two or three clicks per order.
+  Clicking an enemy token lets you mark their role in one click.
+- The debrief explains every fate, including moles who died (scored as kills, not turns).
+
+### Added
+- The Notebook is back, as a tab beside Traffic: role marks and notes for every agent, on both sides.
+- If Karla's Claude call ever fails, his journal says the offline bot played that week.
+
+
 ### Changed: v2, a different game
 - Orders are clicks, not typed cables. Click an agent on the map, pick one of their orders, pick a
   target or a city. Five orders a week.

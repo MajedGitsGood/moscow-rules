@@ -14,11 +14,12 @@ at most three per city.
 
 ## Roster
 Eight agents a side, two of each role, no reinforcements.
-- Scalphunter: strikes without preparing; interrogates whoever it kills (their role, and one of
-  your agents their side had turned).
-- Lamplighter: surveillance reveals every role in the city; always notices preparations and traps.
-- Ferret: traps work the same night; notices surveillance and approaches; vets your own agents.
-- Talent-spotter: turns an enemy after three approaches; cannot kill or trap.
+- Scalphunter: strikes without preparing, so there's no warning.
+- Lamplighter: the only one who can surveil (reveals every role in the city); always notices
+  preparations, traps and attacks.
+- Ferret: traps work the same night; silently blocks approaches on its side's agents in its city;
+  notices surveillance; vets your own agents.
+- Talent-spotter: turns an enemy after two approaches, never reported; cannot kill or trap.
 
 ## Orders (five a week, one per agent)
 Move, Surveil, Lie low, Prepare (a strike on someone in the same city), Strike, Set trap, Approach,
@@ -28,8 +29,9 @@ have turned, choose their lie. Executing one of your own agents is free.
 ## Resolution
 Leaks (orders to turned agents reach the turner), moves, traps, strikes, preparations, approaches,
 vetting, then reports. A strike kills unless the target's side has a ready trap in the city (the
-attacker dies) or the target is lying low (nothing happens). Preparing, trapping and approaching are
-loud: enemies in the city are likely to report them (Lamplighters always). Lying low is quiet:
+attacker dies) or the target is lying low (nothing happens). Preparations, traps and attacks are
+noticed by enemies in the city (Lamplighters always, others half the time); a witness names the actor
+but never the role. Roles are learned only from Lamplighters. No sleepers. Lying low is quiet:
 invisible to reports and strikes. Turned agents leak, lie (all quiet, false alarm, frame a
 colleague), and quietly fail at strikes, traps and vetting.
 

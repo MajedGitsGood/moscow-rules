@@ -11,6 +11,14 @@ const label = (k) => ARCHETYPES[k].label;
 
 function summarize(game, view) {
   const name = (id) => game.agents[id]?.name;
+  // What each British agent has been seen doing in the last few weeks (witness reports).
+  const seen = {};
+  const verb = { prepare: 'prepared a strike on', strike: 'attacked', trap: 'set a trap', surveil: 'surveilled' };
+  for (const m of view.inbox.filter((x) => x.week >= view.week - 3)) {
+    for (const act of m.facts?.activities || []) {
+      (seen[act.id] ||= []).push(`wk ${m.week}: ${verb[act.kind] || act.kind}${act.targetId ? ' ' + name(act.targetId) : ''} in ${m.city}`);
+    }
+  }
   const intelOn = (id) => {
     const i = view.intel[id];
     if (!i) return {};
@@ -35,6 +43,7 @@ function summarize(game, view) {
     britishAgents: view.enemies.filter((e) => e.alive).map((e) => ({
       name: e.name, cover: e.cover, city: e.city,
       ...(e.asset ? { workingForYou: true, role: label(e.archetype) } : intelOn(e.id)),
+      seenDoing: seen[e.id],
     })),
     britishLosses: view.enemies.filter((e) => !e.alive).map((e) => e.name),
     trafficThisWeek: view.inbox.filter((m) => m.week === view.week).map((m) => ({ kind: m.kind, from: name(m.from) || 'Station', city: m.city, text: m.text })),
@@ -96,7 +105,8 @@ export async function claudeOrders(game, side, view) {
     return { ...toOrders(game, side, r), journal: r.journal, via: 'claude' };
   } catch (e) {
     console.warn('Karla fell back to the offline bot:', e.message);
-    return { orders: heuristicOrders(game, view, game.seed), executions: [], journal: null, via: 'bot' };
+    // Leave a trace in the debrief, so a passive week can be explained.
+    return { orders: heuristicOrders(game, view, game.seed), executions: [], journal: `(This week's orders came from the offline bot: ${e.message})`, via: 'bot' };
   }
 }
 

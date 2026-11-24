@@ -4,6 +4,26 @@ Why-this-not-that for this project, newest first. Companion to [CHANGELOG.md](CH
 
 ---
 
+## 2026-11-24: Roles are learned only by watching
+**Decision:** Only Lamplighters surveil; other agents report only preparations, traps and attacks
+(naming the actor, never the role); kills reveal nothing; approaches are never reported and take two;
+Ferrets silently block approaches. No sleepers. Karla's prompt is aggressive and he is shown what
+each British agent was witnessed doing.
+**Why:** Playtest 2: roles were too easy to learn, sleepers felt unfair and confusing, Karla was
+passive (his prompt only trapped against visible preparation, which Scalphunters never show, and kills
+never named the killer). The user wants mole-hunting to come from attention, not from notifications.
+**Rejected:** *Reporting approaches with a chance* (the user wants moles to be silent).
+*Scalphunters needing preparation* (removes their identity; witnesses and traps answer them instead).
+*Hard-coding Karla's tactics in the engine* (breaks symmetric rules; done in his prompt and the bot).
+**Affects:** `js/engine.js`, `js/world.js`, `js/prompts.js`, `js/controllers/*`, tests.
+
+## 2026-11-24: A popover beside the token instead of panels
+**Decision:** Orders, targets and role marks live in a small popover anchored to the clicked token;
+the city panel and order dock are gone; the right panel has Traffic and Notebook tabs.
+**Why:** Playtest 2: the panels covered too much of the map and every order took too many clicks.
+**Rejected:** *A radial menu* (hard to label eight orders legibly). *Keyboard shortcuts first* (still
+worth adding later, but clicks were the complaint).
+
 ## 2026-11-24: v2: clicks instead of cables; information decides fights
 **Decision:** Replace the v1 game. Orders are clicks; positions are public and roles hidden; the
 roles become ways of knowing (interrogate, surveil, trap/vet, recruit); a strike succeeds unless a

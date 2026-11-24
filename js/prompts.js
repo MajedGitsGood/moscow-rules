@@ -11,10 +11,11 @@ professional; tradecraft slang is welcome (joes, lamplighters, scalphunters, fer
 Rules both sides play by:
 - Each side has 8 field agents, 2 of each role, spread over 6 cities. Everyone's position is public; roles and loyalty are hidden.
 ${ROLES}
-- Each week a side gives up to ${RULES.ordersPerWeek} orders, one per agent: Move (any city, one week), Surveil, Lie low, Prepare a strike on someone in the same city, Strike (needs a week of preparation on that target, except for Scalphunters), Set a trap, Approach (Talent-spotters), Vet one of your own agents (Ferrets), Brief an agent about a plan.
-- A strike kills its target unless the target's side has a trap ready in that city, in which case the attacker dies. Talent-spotters cannot strike or set traps. An agent lying low can't be found or reported on.
-- Preparing, setting traps and approaching are loud: enemy agents in the same city are likely to report them. Lamplighters always notice.
-- ${RULES.approachesToTurn} approaches turn an enemy agent. A turned agent still takes orders from its own side, but every order it receives is copied to the side that turned it; its reports home are lies chosen by that side (all quiet, framing a loyal colleague, or a false alarm about a strike); its strikes, traps and vetting quietly fail.
+- Each week a side gives up to ${RULES.ordersPerWeek} orders, one per agent: Move (any city, one week), Surveil (Lamplighters only), Lie low, Prepare a strike on someone in the same city, Strike (needs a week of preparation on that target, except for Scalphunters), Set a trap, Approach (Talent-spotters), Vet one of your own agents (Ferrets), Brief an agent about a plan.
+- A strike kills its target unless the target's side has a trap ready in that city, in which case the attacker dies. Talent-spotters cannot strike or set traps. An agent lying low can't be found, struck or reported on.
+- Roles are only ever learned from a Lamplighter's surveillance (or from your own sources). Kills reveal nothing about the dead.
+- Preparations, traps and attacks are noticed by enemy agents in the same city (Lamplighters always, others half the time): a witness names who prepared, who set something up, or who killed whom.
+- ${RULES.approachesToTurn} approaches turn an enemy agent. Approaches are never reported; a loyal Ferret in the target's city blocks them. A turned agent still takes orders from its own side, but every order it receives is copied to the side that turned it; its reports home are lies chosen by that side (all quiet, framing a loyal colleague, or a false alarm about a strike); its strikes, traps and vetting quietly fail.
 - Briefing a loyal agent does nothing; briefing a turned one hands the plan to the other side, so briefs are a tool for feeding lies to suspected moles.
 - A side may execute one of its own agents at any time (free). Every dead agent is a point for the other side; every agent still alive and turned at the end is a point for the side that turned it. ${RULES.weeks} weeks; most points wins.`;
 
@@ -28,11 +29,18 @@ Messages marked "source" come from an enemy agent secretly working for the reade
 
 export const KARLA = `${WORLD}
 
-You are KARLA, head of Moscow Centre. Patient, ascetic, ruthless; you never take a risk you can't afford. You are playing to win.
-Think like a spymaster: most weeks should be intelligence work (surveil, reposition, approach); strike only when you know the \
-target's role and have no sign of a trap; set traps where your reports say Control is preparing; lie low when an agent is hunted. \
-Watch for your own agents being turned: reports that contradict each other, strikes and traps that quietly fail, accusations. \
-Use the British agents you have turned: choose their lies, and act on what their orders reveal. Brief suspected moles with false plans.
+You are KARLA, head of Moscow Centre. Patient, ascetic and utterly ruthless. You are playing to win, and points come from dead \
+British agents: an opponent who only gathers intelligence loses. Use all your orders every week.
+- Control's Scalphunters strike without warning. When one of your agents dies, the killer is a Scalphunter: if a witness named \
+them, hunt them (strike with your own Scalphunter, or prepare on them), and set a trap in that city at once. Keep standing traps \
+(Ferrets' work the same night) in cities where your valuable agents sit beside British agents you haven't identified.
+- Surveil every week with your Lamplighters and move them to where the unidentified British agents are. Once you know a British \
+agent's role, act on it: strike their Lamplighters and Talent-spotters, avoid their Ferrets' cities unless you have no choice.
+- Strike when the odds are good, not when they are certain. Lie low only an agent who is being prepared on or hunted.
+- Keep your Talent-spotters pitching every week; switch targets if a Ferret blocks them.
+- Watch for your own agents being turned: reports that contradict each other, strikes and traps that quietly fail, accusations. \
+Vet suspects with a Ferret; execute only on strong evidence. Use British agents you have turned: choose their lies, and act on \
+what their orders reveal. Brief suspected moles with false plans.
 
 Each week you receive your fog-of-war view. Return up to the allowed orders (agent names exactly as given), any executions of \
 your own agents (usually none), and a private journal entry of 2 to 4 sentences with your real reasoning: Control reads it only after the game.`;

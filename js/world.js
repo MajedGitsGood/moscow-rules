@@ -13,10 +13,10 @@ export const LANDMARK = {
 };
 
 export const ARCHETYPES = {
-  scalphunter: { label: 'Scalphunter', short: 'SH', power: 'Strikes without preparing. Interrogates whoever it kills.' },
-  lamplighter: { label: 'Lamplighter', short: 'LL', power: 'Surveillance reveals every role in the city. Always notices preparations and traps.' },
-  ferret: { label: 'Ferret', short: 'FE', power: 'Traps work the same night. Notices surveillance and approaches. Vets your own agents.' },
-  talentspotter: { label: 'Talent-spotter', short: 'TS', power: 'Turns an enemy agent after three approaches. Cannot kill or set traps.' },
+  scalphunter: { label: 'Scalphunter', short: 'SH', power: 'Strikes without preparing: no warning for the other side.' },
+  lamplighter: { label: 'Lamplighter', short: 'LL', power: 'The only one who can surveil: learns every role in the city. Always notices preparations, traps and attacks.' },
+  ferret: { label: 'Ferret', short: 'FE', power: 'Traps work the same night. Keeps your agents in its city safe from approaches. Notices surveillance. Vets your own agents.' },
+  talentspotter: { label: 'Talent-spotter', short: 'TS', power: 'Turns an enemy agent after two approaches, unseen. Cannot kill or set traps.' },
 };
 export const ARCHETYPE_KEYS = Object.keys(ARCHETYPES);
 
@@ -25,11 +25,8 @@ export const RULES = {
   perArchetype: 2,        // 8 agents per side
   maxPerCityAtSetup: 3,
   ordersPerWeek: 5,
-  approachesToTurn: 3,
-  sleeperChance: 0.5,     // chance each side starts with one agent already working for the other
-  noticeChance: 0.5,      // chance a non-Lamplighter notices a loud enemy in its city
-  approachReportChance: 0.5,
-  seenWithChance: 0.3,    // chance a loyal agent notices a co-located mole meeting its handlers
+  approachesToTurn: 2,
+  noticeChance: 0.5,      // chance a non-Lamplighter notices a preparation, trap or attack in its city
   contestedCities: 4,
 };
 

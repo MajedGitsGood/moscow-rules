@@ -4,12 +4,12 @@ import { ROLE_ICON, ORDER_ICON, sized } from './icons.js';
 
 const ORDERS = [
   ['move', 'Move', 'Any city by tomorrow'],
-  ['surveil', 'Surveil', 'Learn roles here'],
+  ['surveil', 'Surveil', 'Lamplighters only: learn every role here'],
   ['lielow', 'Lie low', 'Vanish for a week'],
   ['prepare', 'Prepare', 'Study a target (loud)'],
   ['strike', 'Strike', 'Kill, unless trapped'],
   ['trap', 'Trap', 'Catch the next attacker (loud)'],
-  ['approach', 'Approach', `${RULES.approachesToTurn} pitches turn them (loud)`],
+  ['approach', 'Approach', `${RULES.approachesToTurn} pitches turn them, unseen`],
   ['vet', 'Vet', 'Test one of ours'],
   ['brief', 'Brief', 'Feed a plan to a suspect'],
 ];
@@ -29,7 +29,7 @@ export function manualHTML() {
     ${g(60, 60, ORDER_ICON.prepare, '#4a8bd1')}${g(350, 60, ORDER_ICON.trap, '#cf4234')}${g(640, 60, ORDER_ICON.strike, '#4a8bd1')}
     <text x="60" y="112" text-anchor="middle" font-size="14" font-weight="600">You prepare</text><text x="60" y="130" text-anchor="middle" font-size="12" fill="#9fa7ad">their people may notice</text>
     <text x="350" y="112" text-anchor="middle" font-size="14" font-weight="600">They set a trap</text><text x="350" y="130" text-anchor="middle" font-size="12" fill="#9fa7ad">your people may notice</text>
-    <text x="640" y="112" text-anchor="middle" font-size="14" font-weight="600">Strike, or call it off</text><text x="640" y="130" text-anchor="middle" font-size="12" fill="#9fa7ad">into a trap, you lose them</text>
+    <text x="640" y="112" text-anchor="middle" font-size="14" font-weight="600">Strike, or call it off</text><text x="640" y="130" text-anchor="middle" font-size="12" fill="#9fa7ad">into a trap, you lose them. Scalphunters skip step one.</text>
     <text x="205" y="48" text-anchor="middle" font-size="12" fill="#9fa7ad">week 1</text><text x="490" y="48" text-anchor="middle" font-size="12" fill="#9fa7ad">week 2</text>
   </svg></div>
 
@@ -48,6 +48,8 @@ export function manualHTML() {
     <div><b>Canary trap</b>Brief two suspects with different plans. Whichever plan Karla reacts to names the mole.</div>
     <div><b>Sequencing</b>Surveil first. Strike only what you know, where no one is setting a trap.</div>
     <div><b>Go quiet</b>Someone studying your agent's routine? Lie low and the strike finds no one.</div>
+    <div><b>Read the dead</b>When one of yours dies, a witness may name the killer. Trap that city, or send a Scalphunter.</div>
+    <div><b>Moles are silent</b>No one reports an approach. Watch for reports that never match what happens.</div>
     <div><b>Feint</b>Brief a known mole about a strike in the wrong city. Watch Karla trap an empty street.</div>
   </div>
   </div>`;

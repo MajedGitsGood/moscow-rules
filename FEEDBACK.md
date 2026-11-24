@@ -61,3 +61,22 @@ drag-and-drop setup; role icons; who-beats-who replaced by the visual "exchange"
 grouped, attributed traffic (events, sources, reports); clear causes for every event; vet and
 execute for moles; no dead ends from depleted pieces (anyone but Talent-spotters can strike;
 recruitment has no per-game cap).
+
+---
+
+## Playtest 2 (2026-11-24, Majed, v2 vs Karla)
+
+### Verdict
+- More fun than v1. The game UX is "much better"; the selectors need work.
+
+### Notes
+- Confused by the end screen: it said Karla had a sleeper in my network from the start. I didn't know games could start with moles, and it isn't balanced across both sides, so remove it.
+- The end screen said Karla had 0 turned, though someone on my side had definitely turned. (Likely cause: the mole died before the end. A dead mole scores as a kill, not a turn, and the screen didn't say so.)
+- The selectors cover too much of the screen and are clunky; cut down the clicks it takes to give an order.
+- Karla felt too passive. His moves were obvious, and I could be very aggressive with my Scalphunters. (Cause: his instructions said to trap only where Control was seen preparing, and Scalphunters never prepare. Kills also never told him who the killer was.)
+- Three approaches to turn someone is too many: make it two. Approaches shouldn't be reported. Moles should only be caught by paying attention: learning roles and reading their reports.
+- Roles should be harder to work out. Only Lamplighters should be able to surveil; other agents report only preparations, attacks and traps, with no role information. Dead agents shouldn't give up their roles either.
+- Bring back the notebook to track agents, as a tab in the right-hand panel.
+
+### Addressed (2026-11-24)
+All of the above. Balance watch: in bot games, about two agents per side end up turned. Two unseen approaches are strong; Ferrets now quietly block approaches in their city.

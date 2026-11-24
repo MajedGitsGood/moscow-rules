@@ -42,6 +42,17 @@ export function heuristicOrders(game, view, seed = 1) {
     if (trapper) add({ agentId: trapper.id, type: 'trap' });
     else add({ agentId: target.id, type: 'move', city: rng.pick(view.cities.filter((c) => c !== target.city)) });
   }
+  // 1a. Revenge and defence: an enemy named as an attacker gets hunted; the city gets a trap.
+  const attackers = fresh.flatMap((m) => (m.facts?.activities || []).filter((x) => x.kind === 'strike').map((x) => ({ ...x, city: m.city })));
+  const lossCities = new Set(fresh.filter((m) => m.kind === 'event' && m.tone === 'loss').map((m) => m.city));
+  for (const at of attackers) {
+    const hunter = me.find((a) => a.archetype === 'scalphunter' && a.city === at.city && !used.has(a.id));
+    if (hunter && legal(hunter, 'strike')?.targets.includes(at.id)) add({ agentId: hunter.id, type: 'strike', targetId: at.id });
+  }
+  for (const c of lossCities) {
+    const trapper = me.find((a) => a.city === c && a.archetype !== 'talentspotter' && !used.has(a.id) && !view.traps.some((t) => t.city === c));
+    if (trapper) add({ agentId: trapper.id, type: 'trap' });
+  }
   // 1b. Ferrets keep a standing trap in their city.
   for (const a of me.filter((x) => x.archetype === 'ferret')) {
     if (!view.traps.some((t) => t.city === a.city) && rng() < 0.6) add({ agentId: a.id, type: 'trap' });
@@ -94,10 +105,10 @@ export function heuristicOrders(game, view, seed = 1) {
     const soft = view.enemies.filter((e) => e.alive && !e.asset && ['lamplighter', 'talentspotter'].includes(lastRole(view.intel, e.id)) && e.city !== a.city);
     if (soft.length) add({ agentId: a.id, type: 'move', city: rng.pick(soft).city });
   }
-  // 9. Remaining orders: surveil or reposition.
+  // 9. Remaining orders: reposition, sometimes go quiet.
   for (const a of rng.shuffle(me)) {
     if (orders.length >= RULES.ordersPerWeek) break;
-    if (unknownIn(a.city)) add({ agentId: a.id, type: 'surveil' });
+    if (rng() < 0.3) add({ agentId: a.id, type: 'lielow' });
     else add({ agentId: a.id, type: 'move', city: rng.pick(view.cities.filter((c) => c !== a.city)) });
   }
   return orders;

@@ -15,7 +15,8 @@ description: >-
 4. Drive a game through `window.MR` with `javascript_tool`:
    - `localStorage.clear(); MR.startNew('bot')`, click `[data-act=shuffle]` then `[data-act=place]`. Expect
      `MR.app.screen === 'play'` and agent tokens on the map.
-   - Click a token, pick an order in the dock (`[data-act=order]`), and for a move click a city medallion.
+   - Click a token: a popover (`#pop`) opens beside it. Pick an order (`.ob[data-type=…]`); targeted orders
+     show target portraits (`.tg`) in the popover; for a move, click a city medallion.
    - Fill `MR.app.queued.control` (e.g. from `heuristicOrders`), `MR.render()`, click `[data-act=end]`; repeat
      until `MR.app.screen === 'debrief'`. Wait on `MR.app.screen` rather than fixed sleeps.
    - `MR.startNew('hotseat')` and walk placement → handoff → placement → handoff → play.

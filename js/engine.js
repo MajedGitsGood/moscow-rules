@@ -48,7 +48,7 @@ function eliminate(game, agent, how, bySide) {
 }
 
 // ---------- setup ----------
-export function newGame(seed, { sleepers = true } = {}) {
+export function newGame(seed, { sleepers = false } = {}) {
   const rng = makeRng(seed);
   const { cities, agents } = generateWorld(rng);
   const game = {
@@ -65,7 +65,7 @@ export function newGame(seed, { sleepers = true } = {}) {
   if (sleepers) {
     withRng(game, (r) => {
       for (const side of SIDES) {
-        if (r() < RULES.sleeperChance) {
+        if (r() < 0.5) {
           const v = r.pick(alive(game, side));
           v.turnedBy = other(side);
           v.sleeper = true;
@@ -130,7 +130,8 @@ export function legalOrders(game, side, agentId) {
   if (a.side !== side) return a.turnedBy === side ? [{ type: 'lie' }] : [];
   const here = (s) => inCity(game, s, a.city).filter((x) => x.id !== a.id);
   const enemies = here(other(side));
-  const out = [{ type: 'surveil' }, { type: 'lielow' }, { type: 'move', cities: game.cities.filter((c) => c !== a.city) }];
+  const out = [{ type: 'lielow' }, { type: 'move', cities: game.cities.filter((c) => c !== a.city) }];
+  if (a.archetype === 'lamplighter') out.unshift({ type: 'surveil' });
   if (a.archetype !== 'talentspotter') {
     if (enemies.length) out.push({ type: 'prepare', targets: enemies.map((e) => e.id) });
     const strikeable = a.archetype === 'scalphunter' ? enemies : enemies.filter((e) => a.prep && a.prep.targetId === e.id && a.prep.week < game.week);
@@ -255,7 +256,8 @@ export function resolveWeek(game) {
     a.history.push({ week: w, city: a.city });
     if (a.prep && (!game.agents[a.prep.targetId].alive || game.agents[a.prep.targetId].city !== a.city)) a.prep = null;
   }
-  const loud = new Set(all.filter((o) => ['prepare', 'trap', 'approach'].includes(o.type)).map((o) => o.agentId));
+  const loud = new Set(all.filter((o) => ['prepare', 'trap'].includes(o.type)).map((o) => o.agentId));
+  const attacks = []; // { city, attacker, target, result } for witnesses
   const quiet = new Set(of('lielow').map((o) => o.agentId));
 
   // 2. Traps. A Ferret's trap works tonight; anyone else's from next week. A turned setter's trap is a dud.
@@ -284,25 +286,15 @@ export function resolveWeek(game) {
     if (trap) {
       eliminate(game, s, 'trapped', t.side);
       game.traps = game.traps.filter((x) => x !== trap);
-      claim(game, t.side, s.id, s.archetype, 'the trap');
       send(game, o.side, { kind: 'event', tone: 'loss', from: null, city: s.city, text: `${fullName(s)} went for ${t.name} in ${s.city} and walked into a trap. We have lost them.` });
-      send(game, t.side, { kind: 'event', tone: 'win', from: trap.setterId, city: s.city, text: `The trap in ${s.city} worked. ${fullName(s)}, their ${role(s.archetype)}, came for ${t.name} and is in our hands.` });
+      send(game, t.side, { kind: 'event', tone: 'win', from: trap.setterId, city: s.city, text: `The trap in ${s.city} worked. ${fullName(s)} came for ${t.name} and is in our hands.` });
+      attacks.push({ city: s.city, attacker: s, target: t, result: 'trapped' });
       continue;
     }
     eliminate(game, t, 'killed', o.side);
     send(game, t.side, { kind: 'event', tone: 'loss', from: null, city: s.city, text: `${fullName(t)} was found dead in ${s.city}.` });
-    let text = `${t.name} is dead in ${s.city}.`;
-    const facts = {};
-    if (s.archetype === 'scalphunter') {
-      // Interrogation: their role, and one of our agents they had turned, if any.
-      claim(game, o.side, t.id, t.archetype, `${s.name}'s interrogation`);
-      const traitors = alive(game, o.side).filter((x) => x.turnedBy === t.side);
-      const named = traitors.length ? withRng(game, (r) => r.pick(traitors)) : null;
-      text += ` Before the end they talked: they were a ${role(t.archetype)}.`;
-      if (named) { text += ` And they gave up a name on our side: ${fullName(named)} works for ${SIDE_LABEL[t.side]}.`; suspect(game, o.side, named.id, 'named', `${t.name}, under interrogation`); facts.traitor = named.id; }
-      facts.archetype = t.archetype;
-    }
-    send(game, o.side, { kind: 'event', tone: 'win', from: s.id, city: s.city, text, facts });
+    send(game, o.side, { kind: 'event', tone: 'win', from: s.id, city: s.city, text: `${t.name} is dead in ${s.city}.` });
+    attacks.push({ city: s.city, attacker: s, target: t, result: 'killed' });
   }
 
   // 4. Preparations.
@@ -311,15 +303,14 @@ export function resolveWeek(game) {
     if (t.alive && t.city === a.city) a.prep = { targetId: t.id, week: w };
   }
 
-  // 5. Approaches. Three approaches turn the target. A turned Talent-spotter warns the target instead.
-  const approached = [];
-  for (const o of of('approach')) {
+  // 5. Approaches. Two approaches turn the target. Approaches are never reported: the only way to
+  //    catch a mole is to notice it in the traffic. A turned Talent-spotter's pitches quietly go nowhere.
+  for (const o of withRng(game, (r) => r.shuffle(of('approach')))) {
     const ts = game.agents[o.agentId], t = game.agents[o.targetId];
-    if (!t.alive || t.city !== ts.city) continue;
-    approached.push({ ts, t, side: o.side });
-    if (!loyal(ts)) {
-      send(game, t.side, { kind: 'report', from: t.id, city: t.city, text: `${fullName(ts)} made a clumsy pitch to me. I sent them packing.` });
-      claim(game, t.side, ts.id, 'talentspotter', t.name);
+    if (!t.alive || t.city !== ts.city || !loyal(ts)) continue;
+    // A loyal Ferret on the target's side keeps its people out of reach, silently.
+    if (inCity(game, t.side, t.city).some((f) => f.archetype === 'ferret' && loyal(f) && f.id !== t.id)) {
+      send(game, o.side, { kind: 'report', from: ts.id, city: ts.city, text: `I couldn't get near ${t.name}. Someone on their side is keeping their people close.` });
       continue;
     }
     if (t.turnedBy === o.side) continue;
@@ -352,37 +343,30 @@ export function resolveWeek(game) {
       if (!loyal(a)) { moleReport(game, side, a, lieFor[a.id] || { kind: 'hide' }); continue; }
       const notes = [];
       const facts = { roles: [], activities: [], suspicions: [] };
-      const surveilling = orderOf[a.id]?.type === 'surveil';
+      const surveilling = orderOf[a.id]?.type === 'surveil'; // Lamplighters only
       const isLL = a.archetype === 'lamplighter';
       const visible = inCity(game, enemy, a.city).filter((e) => !quiet.has(e.id)); // lying low = invisible
-      if (surveilling && isLL) for (const e of visible) { claim(game, side, e.id, e.archetype, `${a.name} (Lamplighter)`); facts.roles.push({ id: e.id, archetype: e.archetype }); }
-      else if (surveilling && visible.length) {
-        const e = withRng(game, (r) => r.pick(visible));
-        claim(game, side, e.id, e.archetype, a.name);
-        facts.roles.push({ id: e.id, archetype: e.archetype });
-      }
+      if (surveilling) for (const e of visible) { claim(game, side, e.id, e.archetype, `${a.name} (Lamplighter)`); facts.roles.push({ id: e.id, archetype: e.archetype }); }
       if (facts.roles.length) notes.push(facts.roles.map((r) => `${game.agents[r.id].name} is a ${role(r.archetype)}.`).join(' '));
+      // Preparations and traps are loud: Lamplighters always notice, anyone else may.
       for (const e of visible.filter((x) => loud.has(x.id))) {
-        if (!(isLL || surveilling || roll(game, RULES.noticeChance))) continue;
+        if (!(isLL || roll(game, RULES.noticeChance))) continue;
         const eo = orderOf[e.id];
         if (eo.type === 'prepare') { notes.push(`${e.name} has been studying ${game.agents[eo.targetId].name}'s routine.`); facts.activities.push({ id: e.id, kind: 'prepare', targetId: eo.targetId }); }
         if (eo.type === 'trap') { notes.push(`${e.name}'s people are setting something up in ${a.city}.`); facts.activities.push({ id: e.id, kind: 'trap' }); }
-        if (eo.type === 'approach' && game.agents[eo.targetId].side === side) { notes.push(`${e.name} has been cultivating ${game.agents[eo.targetId].name}.`); facts.activities.push({ id: e.id, kind: 'approach', targetId: eo.targetId }); }
       }
+      // Attacks by the other side in this city: who went for whom.
+      for (const at of attacks.filter((x) => x.city === a.city && x.attacker.side === enemy && x.target.id !== a.id)) {
+        if (!(isLL || roll(game, RULES.noticeChance))) continue;
+        notes.push(at.result === 'killed' ? `It was ${at.attacker.name} who killed ${at.target.name}.` : `${at.attacker.name} was the one who went for ${at.target.name}.`);
+        facts.activities.push({ id: at.attacker.id, kind: 'strike', targetId: at.target.id });
+      }
+      // Ferrets notice enemy surveillance in their city.
       if (a.archetype === 'ferret') {
         for (const o of all.filter((x) => x.side === enemy && x.type === 'surveil' && game.agents[x.agentId].alive && game.agents[x.agentId].city === a.city)) {
           const e = game.agents[o.agentId];
           notes.push(`${e.name} has been watching us here.`); facts.activities.push({ id: e.id, kind: 'surveil' });
         }
-        for (const ap of approached.filter((x) => x.t.side === side && x.ts.city === a.city && loyal(x.ts) && !facts.activities.some((f) => f.id === x.ts.id))) {
-          notes.push(`${ap.ts.name} has been cultivating ${ap.t.name}.`); claim(game, side, ap.ts.id, 'talentspotter', `${a.name} (Ferret)`); facts.activities.push({ id: ap.ts.id, kind: 'approach', targetId: ap.t.id });
-        }
-      }
-      for (const m of inCity(game, side, a.city).filter((x) => x.id !== a.id && !loyal(x) && lieFor[x.id])) {
-        if (roll(game, RULES.seenWithChance)) { notes.push(`I saw ${m.name} with someone from the other side. It may be nothing.`); suspect(game, side, m.id, 'seen', a.name); facts.suspicions.push({ id: m.id, kind: 'seen' }); }
-      }
-      for (const ap of approached.filter((x) => x.t.id === a.id && loyal(x.ts))) {
-        if (roll(game, RULES.approachReportChance)) { notes.push(`${ap.ts.name} has been sounding me out. A Talent-spotter, I'd say.`); claim(game, side, ap.ts.id, 'talentspotter', a.name); facts.activities.push({ id: ap.ts.id, kind: 'approach', targetId: a.id }); }
       }
       if (notes.length || surveilling) send(game, side, { kind: 'report', from: a.id, city: a.city, text: notes.join(' ') || `Nothing worth reporting in ${a.city}.`, facts });
     }
