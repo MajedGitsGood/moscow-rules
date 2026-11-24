@@ -4,6 +4,16 @@ Why-this-not-that for this project, newest first. Companion to [CHANGELOG.md](CH
 
 ---
 
+## 2026-11-24: City pool: Rome, Belgrade, Tangier in; Paris, Bern, Athens out
+**Decision:** The contested pool is Lisbon, Tangier, Rome, Berlin, Vienna, Belgrade, Helsinki and
+Istanbul (still eight, four per game). Pairs too close on the map (Lisbon/Tangier, Vienna/Belgrade)
+are never drawn together.
+**Why:** Paris sits about 60px from London on our projection, so their token clusters always
+collided, with Bern 80px further on. The new cities spread the board and carry Cold War weight
+(Vatican back-channels, Tito's non-aligned crossroads, the old international zone).
+**Rejected:** *Adding Stockholm too* (the user wanted the same number of cities). *Prague* (sits
+between Berlin and Vienna). *Shrinking the token clusters* (the crowding was geographic).
+
 ## 2026-11-24: Footprints from a shared pool; one-night traps
 **Decision:** Every order produces footprints from one shared pool of six sentences, with
 per-order odds of being noticed and of each sentence (`TELLS` in world.js, shown to players in the

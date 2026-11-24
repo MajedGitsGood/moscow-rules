@@ -4,6 +4,12 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 
 ## [Unreleased]
 
+### Changed (cities)
+- Rome, Belgrade and Tangier replace Paris, Bern and Athens, each with its own landmark. Paris sat
+  so close to London that the two cities' agents overlapped.
+- Lisbon and Tangier, and Vienna and Belgrade, never appear in the same game, so no two cities'
+  agents crowd each other.
+
 ### Changed (footprints)
 - Every order leaves footprints, drawn from one shared pool: "asking about Ashby", "keeps turning up
   where Ashby goes", "a room overlooking the Riesenrad", "unfamiliar faces", "met someone off the

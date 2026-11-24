@@ -10,6 +10,7 @@ const CITIES = {
   London: [-0.13, 51.51], Paris: [2.35, 48.86], Lisbon: [-9.14, 38.72], Bern: [7.45, 46.95],
   Berlin: [13.40, 52.52], Prague: [14.42, 50.08], Vienna: [16.37, 48.21], Budapest: [19.04, 47.50],
   Helsinki: [24.94, 60.17], Athens: [23.73, 37.98], Istanbul: [28.98, 41.01], Moscow: [37.62, 55.75],
+  Rome: [12.50, 41.90], Belgrade: [20.46, 44.82], Tangier: [-5.80, 35.77],
 };
 
 const world = JSON.parse(fs.readFileSync(new URL('../node_modules/world-atlas/countries-50m.json', import.meta.url)));

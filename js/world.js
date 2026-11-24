@@ -5,17 +5,21 @@ export const SIDE_LABEL = { control: 'Control', karla: 'Karla' };
 
 export const HOME = { London: 'control', Moscow: 'karla' };
 // Spread-out pool so cities never crowd each other on the map.
-const CONTESTED_POOL = ['Paris', 'Lisbon', 'Bern', 'Berlin', 'Vienna', 'Helsinki', 'Athens', 'Istanbul'];
+const CONTESTED_POOL = ['Lisbon', 'Tangier', 'Rome', 'Berlin', 'Vienna', 'Belgrade', 'Helsinki', 'Istanbul'];
+// Neighbours too close on the map for both sets of agents to fit: never drawn in the same game.
+const APART = [['Lisbon', 'Tangier'], ['Vienna', 'Belgrade']];
 
 export const LANDMARK = {
   London: 'clock', Moscow: 'onion', Paris: 'tower', Lisbon: 'tram', Bern: 'peak', Berlin: 'gate',
   Vienna: 'wheel', Helsinki: 'cathedral', Athens: 'columns', Istanbul: 'minaret',
+  Rome: 'colosseum', Belgrade: 'fortress', Tangier: 'kasbah',
 };
 
 // A named place in each city, for footprints ("has taken a room overlooking ...").
 export const PLACE = {
   London: 'the clock tower', Moscow: "St Basil's", Paris: 'the Eiffel Tower', Lisbon: 'the tram depot', Bern: 'the Bundesplatz',
   Berlin: 'the Brandenburg Gate', Vienna: 'the Riesenrad', Helsinki: 'the cathedral', Athens: 'the Acropolis', Istanbul: 'the Blue Mosque',
+  Rome: 'the Colosseum', Belgrade: 'the Kalemegdan fortress', Tangier: 'the kasbah gate',
 };
 
 // Footprints: what an agent's week looks like from across the street. The same sentences come from
@@ -77,7 +81,10 @@ const COVERS = ['trade attaché', 'journalist', 'professor', 'chauffeur', 'banke
   'pianist', 'travel agent', 'film critic', 'airline steward', 'shipping clerk'];
 
 export function generateWorld(rng) {
-  const contested = rng.shuffle(CONTESTED_POOL).slice(0, RULES.contestedCities);
+  const contested = [];
+  for (const c of rng.shuffle(CONTESTED_POOL)) {
+    if (contested.length < RULES.contestedCities && !APART.some((p) => p.includes(c) && p.some((o) => o !== c && contested.includes(o)))) contested.push(c);
+  }
   const cities = ['London', ...contested, 'Moscow'];
   const covers = rng.shuffle(COVERS);
   const agents = {};
