@@ -2,6 +2,7 @@
 //   node tools/test.js
 import { newGame, submitOrders, resolveWeek, viewFor } from '../js/engine.js';
 import { keywordInterpret } from '../js/interpret.js';
+import { factsCheck } from '../js/cables.js';
 
 let fails = 0;
 const ok = (cond, msg) => { if (!cond) { fails++; console.error('FAIL', msg); } else console.log('ok  ', msg); };
@@ -90,6 +91,22 @@ const week = (g, control, karla) => { submitOrders(g, 'control', control); submi
   ok(r1.type === 'move' && r1.city === 'Vienna', 'keywords: move');
   ok(r2.type === 'strike' && r2.targetId === 'k1', 'keywords: strike with named target');
   ok(r3.type === 'lielow' && r3.unclear, 'keywords: wrong archetype refuses');
+}
+{ // Fact check on Claude-written agent text (the playtest 1 bug: replies inventing "London is quiet").
+  const g = newGame(3, { sleepers: false });
+  g.cities = ['London', 'Lisbon', 'Istanbul', 'Paris', 'Prague', 'Moscow'];
+  const a = Object.values(g.agents).find((x) => x.side === 'control' && x.archetype === 'talentspotter');
+  const k = Object.values(g.agents).find((x) => x.side === 'karla');
+  a.city = 'Moscow';
+  const self = `Moscow ${a.first} ${a.name} Talent-spotter`;
+  ok(!factsCheck(g, `Anyone worth talking to? ${self}`, 'London is quiet as far as I can tell, sir. Give me a name.'), 'reply naming a city it was never sent to is rejected');
+  ok(!factsCheck(g, `Who's in your city? ${self}`, 'Moscow is quiet on my side, but I need a clearer instruction.'), 'reply describing a city it never watched is rejected');
+  ok(factsCheck(g, `Anyone worth talking to? ${self}`, 'Do you want me to find someone to approach here in Moscow, or make a pitch?'), 'a plain clarifying question passes');
+  ok(!factsCheck(g, `Who's in your city? ${self}`, `I'll keep an eye on ${k.name}.`), 'reply naming an enemy agent the cable never mentioned is rejected');
+  const src = `Opposition in Istanbul: ${k.name} (Scalphunter).`;
+  ok(factsCheck(g, src, `Istanbul. ${k.name} is here, and he is a Scalphunter.`, { preserve: true }), 'voice rewrite keeping every fact passes');
+  ok(!factsCheck(g, src, `Istanbul. ${k.name} is here, a Lamplighter by the look of it.`, { preserve: true }), 'voice rewrite changing the role is rejected');
+  ok(!factsCheck(g, src, 'Istanbul has one of theirs, a Scalphunter.', { preserve: true }), 'voice rewrite dropping the name is rejected');
 }
 console.log(fails ? `\n${fails} FAILED` : '\nall passed');
 process.exit(fails ? 1 : 0);

@@ -27,13 +27,14 @@ Return the single order the agent will carry out this week.
 - target: for strike/expose/recruit, the exact name of an enemy agent from the list if the cable names or clearly implies one; "any" if it says to act against whoever is there; else null.
 - clarity: 0 to 1. Below 0.5 if the cable is vague, contradictory, asks for two things at once, or gives no actionable instruction. Do not invent intent the cable doesn't support. Coded or indirect language is fine if the meaning is clear.
 - If the order needs a capability the agent's archetype lacks, still report the order the cable asks for; the game will handle the refusal.
-- reply: one or two sentences the agent cables back, in character (voice fits their archetype and nationality), acknowledging what they will do, or asking what was meant if unclear. Never mention game mechanics, numbers, or "orders".`;
+- reply: one or two sentences the agent cables back, in character (voice fits their archetype and nationality), acknowledging what they will do, or asking what was meant if unclear. The agent has not looked into anything yet: never describe their city, any people, or any situation, and never mention a place or person the cable doesn't name (their own city excepted). Never mention game mechanics, numbers, or "orders".`;
 
 export const VOICE = `${WORLD}
 
 Your job: rewrite a batch of short game messages as the cables and reports they would be in the world: one voice per sender, \
 terse teleprinter style, 1 to 3 sentences each. You must keep every fact exactly: every name, city, archetype, number and outcome. \
-Do not add facts, hints, or speculation, and do not soften or reveal anything that isn't in the original. "Station" messages are \
+Do not add facts, hints, or speculation, and do not soften or reveal anything that isn't in the original. \
+Never name a city or person the original doesn't name, and never describe a place (quiet, empty, busy) unless the original does. "Station" messages are \
 from headquarters staff. "leak" messages are intercepted enemy cables: reproduce their text exactly, unchanged.`;
 
 export const KARLA = `${WORLD}

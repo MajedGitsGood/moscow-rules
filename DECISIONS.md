@@ -4,6 +4,18 @@ Why-this-not-that for this project, newest first. Companion to [CHANGELOG.md](CH
 
 ---
 
+## 2026-11-24: Fact-check Claude's agent text in code, not just in the prompt
+**Decision:** Every line Claude writes for an agent (the reply to a cable, the morning rewrite) passes
+`factsCheck` in `js/cables.js`. It may not name a city, agent or role that its source doesn't name, or
+describe a place as quiet/empty/clear unless the source does. Rewrites must keep every city, surname
+and role. A failure silently uses the engine's own wording. Clarification replies are no longer re-voiced.
+**Why:** Playtest 1 showed replies inventing intelligence ("London is quiet" from an agent in Moscow
+who never watched anything). In a game about trusting information, false intel the engine didn't
+produce breaks the puzzle. Prompt wording alone can't guarantee it doesn't happen.
+**Rejected:** *Prompt-only fixes* (still probabilistic). *Dropping Claude's voices entirely* (the
+traffic is the part the player enjoys most). *A second LLM call to verify* (cost and latency for a
+check that string matching does reliably).
+
 ## 2026-11-24: Node proxy instead of Python `serve.py`
 **Decision:** The dev server and Claude proxy are `server.js` (Node, `@anthropic-ai/sdk`), not a
 `serve.py` like Hall of Mirrors.

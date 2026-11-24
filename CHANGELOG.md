@@ -4,6 +4,11 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 
 ## [Unreleased]
 
+### Fixed
+- Agents no longer invent intelligence in their replies ("London is quiet" from an agent in Moscow who
+  never looked). Text Claude writes for an agent is fact-checked against what the game actually
+  produced; anything that adds a city, a person, a role or a description falls back to the plain report.
+
 ### Added
 - `.env` support: put your API key in `.env` (copy `.env.example`) and run `npm start`.
 - First playable build: setup on six cities, eight agents a side (Scalphunter, Lamplighter, Ferret,
