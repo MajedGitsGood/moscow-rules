@@ -14,6 +14,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
   leak through a mole, or an honest report), what it did because of it, and what that cost.
 - The debrief is sparer: colour shows which side a moment favoured, numbered pins match the moments
   below, fates are icons and a mole chip, and every text Claude writes is a line or two.
+- The debrief's moments run down columns, left to right, so they line up with the chart's weeks.
 - A debrief written by the rules engine has an "Ask the analyst" link to try Claude again.
 
 

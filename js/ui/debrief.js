@@ -55,7 +55,9 @@ function storyChart(game, story, last) {
 
 function moments(story) {
   if (!story) return `<p class="db-wait">The analysts are going through the files<span class="dots"></span></p>`;
-  return `<ol class="moments">${story.moments.map((m, i) => `<li class="moment ${m.side} ${m.kind}" data-pin="${i + 1}" title="${esc(KIND[m.kind]?.label || m.kind)}">
+  // Fill column by column, so the numbers run left to right like the weeks on the chart above.
+  const rows = story.moments.length <= 4 ? 2 : 3;
+  return `<ol class="moments" style="--rows:${rows}">${story.moments.map((m, i) => `<li class="moment ${m.side} ${m.kind}" data-pin="${i + 1}" title="${esc(KIND[m.kind]?.label || m.kind)}">
     <span class="mo-n">${i + 1}</span>
     <div><b>${esc(m.title)}</b><span class="mo-when">${KIND[m.kind]?.icon || ''}wk ${m.week}${m.city ? ` · ${esc(m.city)}` : ''}</span><p>${esc(m.detail)}</p></div></li>`).join('')}</ol>`;
 }

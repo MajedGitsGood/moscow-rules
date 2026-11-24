@@ -540,7 +540,8 @@ kbd { font-family: var(--ui); font-size: 9.5px; line-height: 1; padding: 2px 4px
 .pin.control circle { fill: #8fb6e6; } .pin.karla circle { fill: #ee8c82; }
 .pin text { font-family: var(--ui); font-size: 11px; font-weight: 700; fill: #0a0f14; }
 .story:has(.pin.lit) .pin:not(.lit) { opacity: .35; } .pin.lit circle { r: 12; }
-.moments { list-style: none; margin: 8px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 22px 28px; }
+.moments { list-style: none; margin: 8px 0 0; padding: 0; display: grid; grid-template-rows: repeat(var(--rows, 3), auto); grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 22px 28px; }
+@media (max-width: 760px) { .moments { grid-template-rows: none; grid-auto-flow: row; } }
 .moment { display: flex; gap: 12px; padding: 4px 0; transition: opacity .15s; }
 .moments:has(.lit) .moment:not(.lit) { opacity: .4; }
 .mo-n { flex: none; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 12px; color: #0a0f14; background: var(--gold-hi); }
