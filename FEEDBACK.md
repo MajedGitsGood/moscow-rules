@@ -100,3 +100,14 @@ is selected automatically. Setup is click-then-city or keys 1–6, with no scrol
 **Addressed (2026-11-24):** hotkey hints, number keys and auto-advance removed (Escape still closes).
 Clicking a city opens a compact panel listing everyone there, ours and theirs; clicking a row opens
 the order popover beside it.
+
+### Follow-up 3
+- The UI for cancelling an order is horrible: every one of the five queued orders should be undoable.
+- Yes to arrow-key navigation of the map and city menus. No to standing orders. Yes to dragging tokens.
+- The debrief strayed: it should be a visual, week-by-week view of what was really happening behind the scenes (Karla's moves included), showing where the momentum shifted. Cut the diary.
+
+**Addressed (2026-11-24):**
+- **Order bar:** across the bottom, one slot per order, each with ✕ to cancel and click to revisit.
+- **Arrow keys:** move a highlight through cities, the people in a city, their orders, then targets. Enter chooses, Escape steps back.
+- **Dragging:** drag a token onto a city to move it; drag it onto an enemy for the obvious action (strike, approach or prepare).
+- **New debrief:** a momentum chart marking where the game turned, a week-by-week replay map showing true roles, moles and moves, and both sides' orders for each week.

@@ -14,6 +14,7 @@ import { mapBase, mapOverlay, cityXY, tintCells, MAP_SIZE } from './ui/map.js';
 import { portrait, SPYMASTER } from './ui/portraits.js';
 import { ROLE_ICON, ORDER_ICON, UI_ICON, LANDMARK_ICON } from './ui/icons.js';
 import { manualHTML } from './ui/manual.js';
+import { debriefHTML } from './ui/debrief.js';
 
 const SAVE = 'mr-save-v2';
 const $ = (s, r = document) => r.querySelector(s);
@@ -116,7 +117,7 @@ function render() {
   if (!app) { root.innerHTML = titleScreen(); return; }
   const screens = { setup: playScreen, play: playScreen, handoff: handoffScreen, busy: busyScreen, debrief: debriefScreen };
   root.innerHTML = (screens[app.screen] || playScreen)();
-  if (app.screen === 'play') { tintCells(root, viewFor(app.game, app.active)); placePop(); }
+  if (app.screen === 'play') { tintCells(root, viewFor(app.game, app.active)); placePop(); applyNavFocus(); }
   if (app.screen === 'setup') tintCells(root, setupView());
 }
 function busy(text) { app.screen = 'busy'; app.busyText = text; render(); }
@@ -184,7 +185,7 @@ function playScreen() {
     ${!setup && app.traffic ? sidePanel(v) : ''}
     ${!setup && app.sel.city && app.pick?.type !== 'move' ? cityPanel(v) : ''}
     ${!setup && app.sel.agent ? orderPop(v) : ''}
-    ${!setup ? endTurn(v) : ''}
+    ${!setup ? queueStrip(v) + endTurn(v) : ''}
     ${app.pick?.type === 'move' ? `<div class="pick-hint">${pickHint()}<button class="btn small ghost" data-act="cancel-pick">Cancel</button></div>` : ''}
     <div id="toast" class="toast" hidden></div>
   </div>`;
@@ -386,34 +387,32 @@ function notebook(v) {
     <p class="empty">A dotted ring marks the role a report gave you. Your marks show on the map.</p>`;
 }
 
+// The week's orders, always visible: click one to revisit the agent, ✕ to cancel it.
+function queueStrip(v) {
+  const g = app.game, q = app.queued[v.side];
+  const slots = Array.from({ length: RULES.ordersPerWeek }, (_, i) => {
+    const o = q[i];
+    if (!o) return `<div class="qslot empty"><span>${i + 1}</span></div>`;
+    const a = g.agents[o.agentId];
+    return `<div class="qslot ${app.sel.agent === a.id ? 'sel' : ''}"><button class="qbody" data-act="pick-agent" data-agent="${a.id}" title="${esc(`${a.first} ${a.name}: ${describeOrder(o, g)}`)}">${portrait(a, { size: 30 })}<span class="qtxt"><b>${esc(a.name)}</b><small>${ORDER_ICON[o.type]}${esc(describeOrder(o, g))}</small></span></button><button class="qx" data-act="unqueue-id" data-agent="${a.id}" title="Cancel this order">${UI_ICON.close}</button></div>`;
+  }).join('');
+  return `<div class="queue">${slots}</div>`;
+}
+
 function endTurn() {
   const n = app.queued[app.active].length;
   return `<button class="end-turn" data-act="end">${n ? `Send ${n} order${n > 1 ? 's' : ''}` : 'End week'}<small>${n ? 'and wait for the night' : 'no orders this week'}</small></button>`;
 }
 
 // ----- debrief -----
-function debriefScreen() {
-  const r = revealAll(app.game), o = r.outcome;
-  const how = { killed: 'Killed', trapped: 'Caught in a trap', executed: 'Executed by their own side' };
-  const fate = (a) => {
-    if (a.alive) return a.turnedBy ? `Alive and working for ${SIDE_LABEL[a.turnedBy]}: a point for ${SIDE_LABEL[a.turnedBy]}` : 'Alive';
-    const d = `${how[a.eliminated.how] || a.eliminated.how} in ${a.eliminated.city}, week ${a.eliminated.week}`;
-    return a.turnedBy ? `${d}. Had been working for ${SIDE_LABEL[a.turnedBy]}; counted as a kill, not a turn.` : d;
-  };
-  const roster = (side) => r.agents.filter((a) => a.side === side).map((a) => `<div class="db-agent ${a.alive ? '' : 'dead'} ${a.turnedBy ? 'turned' : ''}">
-      ${portrait(a, { size: 56, mood: a.alive ? null : 'dead' })}<div><b>${esc(a.first)} ${esc(a.name)}</b><span class="role">${ROLE_ICON[a.archetype]}${roleLabel(a.archetype)}</span><small>${esc(fate(a))}</small></div></div>`).join('');
-  const journal = (side) => r.journal[side].length ? `<section class="journal"><h3>${SIDE_LABEL[side]}'s private journal</h3>${r.journal[side].map((j) => `<p><b>Week ${j.week}.</b> ${esc(j.text)}</p>`).join('')}</section>` : '';
-  return `<div class="debrief"><div class="db-sheet">
-    <div class="stamp">CASE CLOSED</div>
-    <h1>${o.winner ? `${SIDE_LABEL[o.winner]} wins` : 'Stalemate'}</h1><p class="db-reason">${esc(o.reason)}.</p>
-    <div class="db-score">${SIDES.map((s) => `<div class="${s}"><span>${o.score[s].total}</span><b>${SIDE_LABEL[s]}</b><small>${o.score[s].dead} of theirs dead · ${o.score[s].turned} of theirs turned and still alive</small></div>`).join('<i>vs</i>')}</div>
-    <div class="db-cols">${SIDES.map((s) => `<section><h3 class="${s}">${SIDE_LABEL[s]}'s people</h3>${roster(s)}</section>`).join('')}</div>
-    ${journal('karla')}${journal('control')}
-    <button class="btn gold" data-act="again">Another operation</button>
-  </div></div>`;
-}
+function debriefScreen() { return debriefHTML(app.game, app.dbWeek); }
 
 // ---------- interaction ----------
+let replayTimer = null;
+function stopReplay() { clearInterval(replayTimer); replayTimer = null; }
+// Re-render the debrief without jumping back to the top.
+function renderKeepScroll() { const sc = $('.debrief2'); const y = sc ? sc.scrollTop : 0; render(); const n = $('.debrief2'); if (n) n.scrollTop = y; }
+document.addEventListener('input', (ev) => { if (ev.target.id === 'db-slider') { stopReplay(); app.dbWeek = Number(ev.target.value); renderKeepScroll(); } });
 function queue(order) {
   const side = app.active;
   app.queued[side] = app.queued[side].filter((o) => o.agentId !== order.agentId);
@@ -450,7 +449,7 @@ function onAct(el, ev) {
     case 'traffic': app.traffic = !app.traffic; return render();
     case 'tab': app.tab = el.dataset.tab; app.traffic = true; return render();
     case 'stance': setStance(g, side, app.sel.agent, el.dataset.stance); save(); return render();
-    case 'pick-agent': { const a = g.agents[el.dataset.agent]; app.sel = { city: a.city, agent: app.sel.agent === a.id ? null : a.id }; app.pick = null; return render(); }
+    case 'pick-agent': { const a = g.agents[el.dataset.agent]; app.sel = { city: a.city, agent: app.sel.agent === a.id ? null : a.id }; app.pick = null; if (app.nav) { app.nav.orders = 0; app.nav.roles = 0; } return render(); }
     case 'select': { const a = g.agents[el.dataset.agent]; if (!a.alive) return; app.sel = { city: a.city, agent: a.id }; app.pick = null; return render(); }
     case 'setrole': { const r = el.dataset.role; if (r === 'unknown') delete app.notes[side].roles[el.dataset.agent]; else app.notes[side].roles[el.dataset.agent] = r; save(); return render(); }
     case 'city': {
@@ -479,6 +478,7 @@ function onAct(el, ev) {
     case 'order': {
       const type = el.dataset.type, a = g.agents[app.sel.agent];
       const l = legalOrders(g, side, a.id).find((x) => x.type === type);
+      if (app.nav) { app.nav.targets = 0; app.nav.city = a.city; }
       if (type === 'move') { app.pick = { type, agentId: a.id }; return render(); }
       if (l.targets) { app.pick = { type, agentId: a.id, targets: l.targets }; app.sel.city = a.city; return render(); }
       if (type === 'brief' || type === 'lie') { app.pick = { type, agentId: a.id }; return render(); }
@@ -489,6 +489,7 @@ function onAct(el, ev) {
       const kind = el.dataset.kind;
       return queue({ agentId: app.pick.agentId, type: 'lie', lie: kind === 'frame' ? { kind, targetId: $('#lie-target').value } : { kind } });
     }
+    case 'unqueue-id': app.queued[side] = app.queued[side].filter((o) => o.agentId !== el.dataset.agent); save(); return render();
     case 'unqueue': app.queued[side] = app.queued[side].filter((o) => o.agentId !== app.sel.agent); save(); return render();
     case 'execute': app.pick = { type: 'execute', agentId: app.sel.agent }; return render();
     case 'execute-ok': {
@@ -511,10 +512,25 @@ function onAct(el, ev) {
     case 'goto': if (el.dataset.city) { app.sel.city = el.dataset.city; app.sel.agent = null; render(); } return;
     case 'end': return endWeek();
     case 'again': clearSave(); app = null; return render();
+    case 'db-week': stopReplay(); app.dbWeek = Number(el.dataset.week); return renderKeepScroll();
+    case 'db-play': {
+      if (replayTimer) return stopReplay();
+      const last = Math.max(1, ...g.orderLog.map((x) => x.week));
+      app.dbWeek = 1; renderKeepScroll();
+      replayTimer = setInterval(() => { if (app.dbWeek >= last) return stopReplay(); app.dbWeek++; renderKeepScroll(); }, 1400);
+      return;
+    }
   }
 }
 
+document.addEventListener('pointerdown', () => { if (app?.nav?.on) { app.nav.on = false; document.querySelectorAll('.kfocus').forEach((x) => x.classList.remove('kfocus')); } }, true);
+function orderRoomFor(id) {
+  const q = app.queued[app.active];
+  if (q.length >= RULES.ordersPerWeek && !q.some((o) => o.agentId === id)) { render(); toast(`All ${RULES.ordersPerWeek} orders are used. Cancel one in the order bar first.`); return false; }
+  return true;
+}
 document.addEventListener('click', (ev) => {
+  if (justDragged) return;
   const el = ev.target.closest('[data-act]');
   if (el && !el.disabled) { onAct(el, ev); return; }
   const tok = ev.target.closest('.token');
@@ -522,9 +538,85 @@ document.addEventListener('click', (ev) => {
   const city = ev.target.closest('.city, .cell');
   if (city && app) onAct({ dataset: { act: 'city', city: city.dataset.city } }, ev);
 });
+// ----- arrow-key navigation -----
+// A highlight moves through whatever is on screen: cities on the map, then the people in a city,
+// then an agent's orders, then targets. Enter chooses, Escape steps back. The level follows the UI
+// state, so mouse and keyboard can be mixed freely.
+function navLevel() {
+  if (app.screen !== 'play' || !$('#modal').hidden) return null;
+  if (app.pick?.type === 'move') return 'map';
+  if (app.pick?.targets) return 'targets';
+  if ($('#pop .obs')) return 'orders';
+  if ($('#pop .role-picks')) return 'roles';
+  if (app.sel.city) return 'list';
+  return 'map';
+}
+const NAV_SEL = { list: '.cp-row', orders: '#pop .ob:not(:disabled)', targets: '#pop .tg', roles: '#pop .rp' };
+function applyNavFocus() {
+  document.querySelectorAll('.kfocus').forEach((x) => x.classList.remove('kfocus'));
+  if (!app?.nav?.on) return;
+  const lvl = navLevel();
+  if (lvl === 'map') { if (app.nav.city) document.querySelector(`.city[data-city="${app.nav.city}"]`)?.classList.add('kfocus'); return; }
+  const items = [...document.querySelectorAll(NAV_SEL[lvl] || '')];
+  if (!items.length) return;
+  const i = Math.min(app.nav[lvl] || 0, items.length - 1);
+  app.nav[lvl] = i;
+  items[i].classList.add('kfocus');
+  items[i].scrollIntoView?.({ block: 'nearest' });
+}
+// The nearest city in the direction of the arrow.
+function cityInDirection(from, key) {
+  const [x0, y0] = cityXY(from);
+  const dir = { ArrowRight: [1, 0], ArrowLeft: [-1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[key];
+  let best = null, bs = Infinity;
+  for (const c of app.game.cities) {
+    if (c === from) continue;
+    const [x, y] = cityXY(c), dx = x - x0, dy = y - y0;
+    const along = dx * dir[0] + dy * dir[1];
+    if (along <= 0) continue;
+    const across = Math.abs(dx * dir[1] - dy * dir[0]);
+    const score = along + across * 2;
+    if (score < bs) { bs = score; best = c; }
+  }
+  return best;
+}
 document.addEventListener('keydown', (ev) => {
-  if (ev.key === 'Escape') { if (!$('#modal').hidden) closeModal(); else if (app?.pick) { app.pick = null; render(); } else if (app?.sel?.agent) { app.sel.agent = null; render(); } return; }
-  if ((ev.key === 'Enter' || ev.key === ' ') && ev.target.matches?.('.city')) { ev.preventDefault(); onAct({ dataset: { act: 'city', city: ev.target.dataset.city } }, ev); }
+  if (ev.key === 'Escape') {
+    if (!$('#modal').hidden) return closeModal();
+    if (app?.pick) { app.pick = null; return render(); }
+    if (app?.sel?.agent) { app.sel.agent = null; return render(); }
+    if (app?.sel?.city) { app.nav = { ...(app.nav || {}), on: true, city: app.sel.city }; app.sel.city = null; return render(); }
+    return;
+  }
+  if (!app || ev.metaKey || ev.ctrlKey || ev.altKey || ev.target.matches?.('input, select, textarea')) return;
+  const lvl = navLevel();
+  if (!lvl) return;
+  const k = ev.key;
+  const arrows = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
+  if (!arrows.includes(k) && k !== 'Enter') return;
+  ev.preventDefault();
+  const nav = (app.nav ||= {});
+  if (!nav.on) { // first key press just shows the highlight
+    nav.on = true;
+    nav.city ||= app.sel.city || Object.values(app.game.agents).find((a) => a.alive && a.side === app.active)?.city || app.game.cities[0];
+    return applyNavFocus();
+  }
+  if (lvl === 'map') {
+    if (k === 'Enter') { if (nav.city) { nav.list = 0; onAct({ dataset: { act: 'city', city: nav.city } }, ev); } return; }
+    const next = cityInDirection(nav.city || app.game.cities[0], k);
+    if (next) nav.city = next;
+    return applyNavFocus();
+  }
+  const items = [...document.querySelectorAll(NAV_SEL[lvl])];
+  if (!items.length) return;
+  const i = nav[lvl] || 0;
+  if (k === 'Enter') { items[i]?.click(); return; }
+  if (lvl === 'list' && k === 'ArrowLeft') { nav.city = app.sel.city; app.sel = { city: null, agent: null }; return render(); }
+  if (lvl === 'list' && k === 'ArrowRight') { items[i]?.click(); return; }
+  const cols = lvl === 'orders' ? 4 : lvl === 'list' ? 1 : items.length;
+  const step = { ArrowRight: 1, ArrowLeft: -1, ArrowDown: cols, ArrowUp: -cols }[k];
+  nav[lvl] = Math.max(0, Math.min(items.length - 1, i + step));
+  applyNavFocus();
 });
 // Click-to-place: put the selected agent in a city, then select the next one still unplaced.
 function placeSel(c) {
@@ -555,7 +647,15 @@ document.addEventListener('pointerover', (ev) => {
 
 // ----- setup: click a card then a city, or drag a card onto a city -----
 let drag = null;
+let justDragged = false;
 document.addEventListener('pointerdown', (ev) => {
+  if (app?.screen === 'play') {
+    // Drag one of our tokens: onto a city to move, onto an enemy token for the obvious action.
+    const tok = ev.target.closest('.token');
+    const a = tok && app.game.agents[tok.dataset.agent];
+    if (a && a.side === app.active && ev.button === 0) drag = { id: a.id, x: ev.clientX, y: ev.clientY, ghost: null, play: true };
+    return;
+  }
   const card = ev.target.closest('[data-drag]');
   if (!card || app?.screen !== 'setup') return;
   ev.preventDefault();
@@ -572,12 +672,43 @@ document.addEventListener('pointermove', (ev) => {
   }
   if (!drag.ghost) return;
   moveGhost(ev);
-  const c = nearestCity(ev);
-  document.querySelectorAll('.city.drop').forEach((x) => x.classList.remove('drop'));
-  if (c) document.querySelector(`.city[data-city="${c}"]`)?.classList.add('drop');
+  document.querySelectorAll('.city.drop, .token.drop').forEach((x) => x.classList.remove('drop'));
+  const enemy = drag.play && enemyUnder(ev);
+  if (enemy) document.querySelector(`.token[data-agent="${enemy}"]`)?.classList.add('drop');
+  else { const c = nearestCity(ev); if (c) document.querySelector(`.city[data-city="${c}"]`)?.classList.add('drop'); }
 });
+function enemyUnder(ev) {
+  const t = document.elementFromPoint(ev.clientX, ev.clientY)?.closest?.('.token');
+  const a = t && app.game.agents[t.dataset.agent];
+  return a && a.side !== app.active ? a.id : null;
+}
+// What dragging an agent onto an enemy means: strike if possible, else approach, else prepare.
+function dragAction(agentId, targetId) {
+  const legal = legalOrders(app.game, app.active, agentId);
+  for (const type of ['strike', 'approach', 'prepare']) {
+    const l = legal.find((x) => x.type === type);
+    if (l?.targets?.includes(targetId)) return type;
+  }
+  return null;
+}
 document.addEventListener('pointerup', (ev) => {
   if (!drag) return;
+  if (drag.play) {
+    const { id, ghost } = drag; drag = null;
+    if (!ghost) return; // a plain click: the click handler deals with it
+    ghost.remove(); justDragged = true; setTimeout(() => { justDragged = false; }, 0);
+    const g = app.game, a = g.agents[id];
+    const enemy = enemyUnder(ev);
+    if (enemy) {
+      const type = dragAction(id, enemy);
+      if (!type) { render(); toast(`${a.name} can't act against ${g.agents[enemy].name} from here.`); return; }
+      if (orderRoomFor(id)) { queue({ agentId: id, type, targetId: enemy }); toast(`${a.name}: ${describeOrder({ type, targetId: enemy }, g)}. ✕ in the order bar to undo.`); }
+      return;
+    }
+    const c = nearestCity(ev);
+    if (c && c !== a.city && orderRoomFor(id)) { queue({ agentId: id, type: 'move', city: c }); toast(`${a.name} will go to ${c}. ✕ in the order bar to undo.`); return; }
+    render(); return;
+  }
   const { id, ghost } = drag; drag = null;
   if (!ghost) { app.setupSel = app.setupSel === id ? null : id; render(); return; } // a click: select
   ghost.remove();

@@ -326,6 +326,7 @@ export function resolveWeek(game) {
     rec.count++;
     if (rec.count >= RULES.approachesToTurn) {
       t.turnedBy = o.side;
+      t.turnedWeek = w;
       delete game.approaches[t.id];
       send(game, o.side, { kind: 'event', tone: 'win', from: ts.id, city: ts.city, text: `${fullName(t)} is ours. They're a ${role(t.archetype)}. Every order ${SIDE_LABEL[t.side]} gives them, we'll hear, and they'll report home whatever we choose.`, facts: { turned: t.id } });
       claim(game, o.side, t.id, t.archetype, `${t.name} (our new source)`);

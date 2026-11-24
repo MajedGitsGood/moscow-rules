@@ -4,6 +4,23 @@ Why-this-not-that for this project, newest first. Companion to [CHANGELOG.md](CH
 
 ---
 
+## 2026-11-24: Debrief as a replay, not a report
+**Decision:** The debrief shows a momentum chart (points lead per week, biggest swing marked), a
+replay map per week with true roles, loyalties and moves, and both sides' orders per week. Karla's
+journal is no longer shown. The engine now records `turnedWeek` so turnings can be placed in time.
+**Why:** The user wanted to see what was really going on behind the scenes and where the game
+turned, visually. A list of fates and a diary didn't show that.
+**Rejected:** *Animating the whole game automatically* (a Play button steps weeks instead, so it can
+be paused). *Keeping the diary* (the user asked to cut it).
+
+## 2026-11-24: Arrow keys move a highlight; drag tokens to give orders
+**Decision:** Arrow keys move through what's on screen (cities by direction, then a city's people,
+then orders, then targets); Enter chooses, Escape steps back. The level is derived from the UI
+state, so mouse and keyboard mix. Dragging a token onto a city moves it; onto an enemy, it strikes,
+approaches or prepares, whichever is possible. All queued orders sit in an order bar with ✕ to undo.
+**Why:** The user found letter hotkeys unhelpful but wanted fewer clicks via spatial navigation.
+**Rejected:** *Standing orders* (the user said no). *Letter hotkeys* (tried, removed).
+
 ## 2026-11-24: Standing instructions for moles; ten agents; keyboard-first
 **Decision:** The side that turned an agent sets a standing instruction (obey or sabotage their own
 side's orders) instead of moles always failing; leaked orders state which. Suspicion is never

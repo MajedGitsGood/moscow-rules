@@ -4,6 +4,18 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 
 ## [Unreleased]
 
+### Added
+- Order bar: the week's five orders across the bottom of the screen, each cancellable with ✕.
+- Arrow-key navigation: move between cities, the people in a city, an agent's orders and targets;
+  Enter chooses, Escape steps back.
+- Drag a token onto a city to move it, or onto an enemy agent for the obvious action.
+- A new debrief: who was ahead week by week (with the turning point marked), a replay map of each
+  week showing true roles, moles and moves, and both sides' orders side by side.
+
+### Removed
+- Karla's diary from the debrief (he still keeps it privately, for his own continuity).
+
+
 ### Changed (playtest 2 follow-up)
 - Ten agents a side: three Lamplighters, three Ferrets, two Scalphunters, two Talent-spotters.
 - No suspicion tags anywhere: spotting moles is up to you.

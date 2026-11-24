@@ -21,7 +21,9 @@ description: >-
      until `MR.app.screen === 'debrief'`. Wait on `MR.app.screen` rather than fixed sleeps.
    - `MR.startNew('hotseat')` and walk placement → handoff → placement → handoff → play.
 5. Re-check the console and take a screenshot of the desk and the debrief.
-6. To test the Claude path without spending tokens, stub `window.fetch` for `/api/status` and `/api/claude`
+6. Debrief: after a game, `.momentum`, `.replay-map` and `.ws-col` (one per week) should render;
+   clicking a week column updates the replay.
+7. To test the Claude path without spending tokens, stub `window.fetch` for `/api/status` and `/api/claude`
    (see git history of this skill's first v2 run). With a real key, one week against Karla shows `[claude]`
    lines in the server log.
 
