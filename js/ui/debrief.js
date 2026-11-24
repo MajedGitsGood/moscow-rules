@@ -81,7 +81,7 @@ function battleground(game, story) {
       const died = a.eliminated?.week === w, mole = a.turnedBy && a.turnedWeek && a.turnedWeek <= w;
       return `<g class="bg-tok ${side} ${died ? 'died' : ''} ${mole ? 'mole' : ''}" transform="translate(${tx.toFixed(1)},${ty.toFixed(1)})"><title>${esc(`${a.first} ${a.name}, ${SIDE_LABEL[side]}'s ${role(a.archetype)}${mole ? `, working for ${SIDE_LABEL[a.turnedBy]}` : ''}${died ? ', died this week' : ''}`)}</title>
         <circle r="15" class="ring"/><svg x="-13" y="-13" width="26" height="26" viewBox="0 0 64 64" clip-path="url(#tok)">${portraitBody(a, died ? 'dead' : null)}</svg>
-        <g class="badge" transform="translate(10,10)"><circle r="7"/>${sized(ROLE_ICON[a.archetype], 10)}</g>
+        <g class="badge r-${a.archetype}" transform="translate(10,10)"><circle r="8"/>${sized(ROLE_ICON[a.archetype], 11.5)}</g>
         ${mole ? `<g class="mole-tag" transform="translate(-11,-11)"><circle r="6.5"/><text y="3" text-anchor="middle">M</text></g>` : ''}</g>`;
     }).join('');
   }).join('');

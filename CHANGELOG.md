@@ -4,6 +4,14 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 
 ## [Unreleased]
 
+### Changed (roles at a glance)
+- A role your Lamplighter reports is filled in for you everywhere (map, city panel, notebook).
+  These reports are always true, so there's nothing to confirm. You only mark your own guesses,
+  which show as dashed badges.
+- Role badges are bigger, sit on the outside of each token, and are colour-coded: orange
+  Scalphunter, yellow Lamplighter, green Ferret, purple Talent-spotter.
+- Cover jobs (journalist, banker…) are gone from the screen; they were flavour that cost attention.
+
 ### Changed (cities)
 - Rome, Belgrade and Tangier replace Paris, Bern and Athens, each with its own landmark. Paris sat
   so close to London that the two cities' agents overlapped.

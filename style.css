@@ -131,8 +131,25 @@ h1, h2, h3 { margin: 0; font-weight: 700; }
 .karla .token.theirs .ring { stroke: var(--control); }
 .token.asset .ring { stroke: var(--ok); stroke-dasharray: 3 2; }
 .token.queued .ring { stroke: var(--gold-hi); stroke-width: 3; }
-.badge circle { fill: #0a0f14; stroke: var(--gold); stroke-width: 1; }
-.badge .ico { color: var(--gold-hi); stroke-width: 2.4; }
+/* Role colours: one hue per role, so a role reads at a glance. Solid = known, dashed = a guess. */
+.r-scalphunter { --rc: #ef8a4c; } .r-lamplighter { --rc: #f2d36b; } .r-ferret { --rc: #62c48f; } .r-talentspotter { --rc: #b493ec; }
+.badge circle { fill: var(--rc, var(--gold-hi)); stroke: #0a0f14; stroke-width: 1.5; }
+.badge .ico { color: #0a0f14; stroke-width: 2.6; }
+.badge.guess circle { fill: #0a0f14; stroke: var(--rc); stroke-width: 1.6; stroke-dasharray: 2.5 1.8; }
+.badge.guess .ico { color: var(--rc); }
+.rtag { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; flex: none; background: var(--rc); color: #0a0f14; }
+.rtag .ico { width: 15px; height: 15px; stroke-width: 2.4; }
+.rtag.guess { background: transparent; border: 1.5px dashed var(--rc); color: var(--rc); }
+.rtag.unknown { background: transparent; border: 1px solid rgba(201,162,78,.3); color: var(--text-dim); }
+.rtag.mini { width: 16px; height: 16px; margin-right: 4px; vertical-align: -3px; } .rtag.mini .ico { width: 10px; height: 10px; }
+.cp-id small[class^="r-"] { color: var(--rc); }
+.pop-known { display: flex; gap: 10px; align-items: center; padding: 4px 0; }
+.pop-known .rtag { width: 34px; height: 34px; } .pop-known .rtag .ico { width: 20px; height: 20px; }
+.pop-known b { display: block; color: var(--rc); font-family: var(--serif); letter-spacing: .08em; font-size: 13px; text-transform: uppercase; }
+.pop-known small { color: var(--text-dim); font-size: 12px; }
+.nb-known { color: var(--rc); font-size: 12px; margin-left: 6px; }
+.rp[class*="r-"]:hover, .rp[class*="r-"].on { border-color: var(--rc); color: var(--rc); }
+.rp[class*="r-"].on { background: color-mix(in srgb, var(--rc) 22%, transparent); border-style: dashed; }
 .qmark circle { fill: var(--gold-hi); }
 .qmark .ico { color: #1b140a; stroke-width: 2.8; }
 .picking .token.theirs .ring { stroke-opacity: .5; }
@@ -424,8 +441,8 @@ details summary { cursor: pointer; color: var(--text-dim); font-size: 13px; marg
 .tg { background: rgba(10,15,20,.6); border: 1px solid rgba(207,66,52,.5); border-radius: 3px; padding: 5px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 3px; width: 64px; position: relative; color: var(--text); }
 .tg .portrait { border-radius: 50%; }
 .tg span { font-size: 11px; }
-.tg i { position: absolute; top: 3px; right: 3px; color: var(--gold-hi); }
-.tg i .ico { width: 14px; height: 14px; }
+.tg .tg-role { position: absolute; top: 3px; right: 3px; width: 20px; height: 20px; }
+.tg .tg-role .ico { width: 12px; height: 12px; }
 .tg:hover { border-color: var(--gold-hi); transform: translateY(-1px); }
 .inline { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 13px; }
 .inline select { background: #0a0f14; border: 1px solid var(--plate-edge); padding: 3px 5px; }
@@ -500,8 +517,8 @@ kbd { font-family: var(--ui); font-size: 9.5px; line-height: 1; padding: 2px 4px
 .cp-id { display: flex; flex-direction: column; min-width: 0; flex: 1; }
 .cp-id b { font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .cp-id small { font-size: 11.5px; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.cp-role, .cp-q { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; border: 1px solid rgba(201,162,78,.35); color: var(--gold-hi); flex: none; }
-.cp-role .ico, .cp-q .ico { width: 15px; height: 15px; }
+.cp-q { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; border: 1px solid rgba(201,162,78,.35); color: var(--gold-hi); flex: none; }
+.cp-q .ico { width: 15px; height: 15px; }
 .cp-q { background: var(--gold-hi); color: #1b140a; border-color: var(--gold-hi); }
 
 /* ---------- v2.4: order queue strip ---------- */

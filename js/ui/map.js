@@ -64,7 +64,7 @@ export function mapBase(cities) {
 
 // Dynamic layer: cities, tokens, queued moves. `state` comes from the UI.
 //   view: viewFor(side); selected: city; orders: queued orders; moveTargets: Set of cities to
-//   highlight; roleOf(agent): the role to badge on a token (known for ours, the player's guess for theirs)
+//   highlight; roleOf(agent): { role, sure } to badge on a token (or a plain role string)
 export function mapOverlay({ view, selected, orders = [], moveTargets = null, roleOf, numbers = null }) {
   const out = [];
   // Queued moves as arcs.
@@ -87,13 +87,13 @@ export function mapOverlay({ view, selected, orders = [], moveTargets = null, ro
       const ang = ((left ? 180 : 0) + (i - (n - 1) / 2) * spread * (left ? -1 : 1)) * Math.PI / 180;
       const tx = Math.cos(ang) * 40, ty = Math.sin(ang) * 40 + 4;
       const queued = orders.find((o) => o.agentId === a.id);
-      const role = roleOf(a);
+      const ri = roleOf(a), role = ri?.role ?? (typeof ri === 'string' ? ri : null), sure = ri?.sure ?? true;
       return `<g class="token ${sideCls} ${a.asset ? 'asset' : ''} ${queued ? 'queued' : ''}" data-agent="${a.id}" transform="translate(${tx.toFixed(1)},${ty.toFixed(1)})"><g class="tok-inner">
         <circle r="12.5" class="ring"/>
         <svg x="-11" y="-11" width="22" height="22" viewBox="0 0 64 64" clip-path="url(#tok)">${portraitBody(a, a.alive ? null : 'dead')}</svg>
-        ${role ? `<g class="badge" transform="translate(8,8)"><circle r="6.5"/>${sized(ROLE_ICON[role], 9.5)}</g>` : ''}
+        ${role ? `<g class="badge r-${role} ${sure ? '' : 'guess'}" transform="translate(${sideCls === 'ours' ? -13 : 13},5)"><circle r="8.5"/>${sized(ROLE_ICON[role], 12.5)}</g>` : ''}
         ${queued ? `<g class="qmark" transform="translate(-9,-9)"><circle r="6.5"/>${sized(ORDER_ICON[queued.type] || '', 9)}</g>` : ''}
-        <title>${a.first} ${a.name}, ${a.cover}</title>
+        <title>${a.first} ${a.name}</title>
       </g></g>`;
     };
     out.push(`<g class="${cls}" data-city="${c}" transform="translate(${x},${y})" tabindex="0" role="button" aria-label="${c}: ${ours.length} of ours, ${theirs.length} of theirs">

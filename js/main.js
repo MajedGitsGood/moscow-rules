@@ -130,13 +130,20 @@ function base(g) {
   return baseSvg;
 }
 
-// The role to show on a token: known for our own agents and sources; the player's guess for theirs.
-function roleOf(side) {
+// What we know of an agent's role. Ours and our sources: certain. Theirs: a Lamplighter's report is
+// certain (only loyal Lamplighters ever report roles, so it is never a lie) and fills in by itself;
+// otherwise the player's own guess, shown as a guess.
+function roleInfo(side) {
   return (a) => {
-    if (a.side === side || a.asset) return a.archetype;
-    return app.notes[side].roles[a.id] || null;
+    if (a.side === side || a.asset || (a.turnedBy === side && a.side !== side)) return { role: a.archetype, sure: true };
+    const rep = app.game.intel[side]?.[a.id]?.roles?.at(-1);
+    if (rep) return { role: rep.archetype, sure: true, source: rep };
+    const guess = app.notes[side].roles[a.id];
+    return { role: guess || null, sure: false };
   };
 }
+const roleOf = (side) => (a) => roleInfo(side)(a).role;
+const roleTag = (ri, cls = '') => ri.role ? `<span class="rtag r-${ri.role} ${ri.sure ? 'sure' : 'guess'} ${cls}" title="${roleLabel(ri.role)}${ri.sure ? '' : ' (your guess)'}">${ROLE_ICON[ri.role]}</span>` : `<span class="rtag unknown ${cls}" title="Role unknown">${ROLE_ICON.unknown}</span>`;
 
 // ----- title -----
 function titleScreen() {
@@ -180,7 +187,7 @@ function playScreen() {
   const fresh = app.fresh && !setup; app.fresh = false;
   return `<div class="stage ${fresh ? 'fresh' : ''} ${side} ${setup ? 'is-setup' : ''} ${app.pick ? 'picking' : ''} ${!setup && app.traffic ? 'traffic-open' : ''}">
     <svg class="map" viewBox="0 0 ${MAP_SIZE.W} ${MAP_SIZE.H}" preserveAspectRatio="xMidYMid meet">${base(g)}
-      <g id="overlay">${mapOverlay({ view: v, selected: app.sel.city, orders: setup ? [] : app.queued[side], moveTargets, roleOf: roleOf(side), numbers: null })}</g>
+      <g id="overlay">${mapOverlay({ view: v, selected: app.sel.city, orders: setup ? [] : app.queued[side], moveTargets, roleOf: roleInfo(side), numbers: null })}</g>
     </svg>
     ${hudTop(v, setup)}
     ${setup ? setupTray(v) : ''}
@@ -226,7 +233,7 @@ function setupTray(v) {
   const errs = validatePlacement(app.game, app.active, draft);
   const unplaced = v.own.filter((a) => !draft[a.id]);
   return `<div class="tray">
-    <div class="tray-cards">${v.own.map((a) => `<div class="tcard ${draft[a.id] ? 'placed' : ''} ${app.setupSel === a.id ? 'sel' : ''}" data-drag="${a.id}" title="${esc(a.cover)}">
+    <div class="tray-cards">${v.own.map((a) => `<div class="tcard ${draft[a.id] ? 'placed' : ''} ${app.setupSel === a.id ? 'sel' : ''}" data-drag="${a.id}">
         ${portrait(a, { size: 40 })}<div><b>${esc(a.name)}</b><span class="role">${ROLE_ICON[a.archetype]}${roleLabel(a.archetype)}</span><em>${draft[a.id] || '—'}</em></div></div>`).join('')}</div>
     <div class="tray-actions">
       <button class="btn" data-act="shuffle">${UI_ICON.shuffle} Shuffle</button>
@@ -243,12 +250,12 @@ function cityPanel(v) {
   const trap = v.traps.find((t) => t.city === c);
   const row = (a) => {
     const mine = a.side === side;
-    const r = roleOf(side)(a);
+    const ri = roleInfo(side)(a);
     const q = app.queued[side].find((o) => o.agentId === a.id);
     const target = app.pick?.targets?.includes(a.id);
     return `<button class="cp-row ${mine ? 'mine' : a.asset ? 'asset' : 'theirs'} ${app.sel.agent === a.id ? 'sel' : ''} ${target ? 'targetable' : ''}" data-act="${target ? 'target' : 'pick-agent'}" data-agent="${a.id}">
-      ${portrait(a, { size: 38 })}<span class="cp-id"><b>${esc(a.first)} ${esc(a.name)}</b><small>${esc(a.cover)}${a.asset ? ' · our source' : ''}</small></span>
-      <span class="cp-role" title="${r ? roleLabel(r) : 'Role unknown'}">${ROLE_ICON[r || 'unknown']}</span>
+      ${portrait(a, { size: 38 })}<span class="cp-id"><b>${esc(a.first)} ${esc(a.name)}</b><small class="${ri.role ? `r-${ri.role}` : ''}">${ri.role ? `${roleLabel(ri.role)}${ri.sure ? '' : '?'}` : 'Unknown'}${a.asset ? ' · our source' : ''}</small></span>
+      ${roleTag(ri, 'cp-role')}
       ${q ? `<span class="cp-q" title="${esc(describeOrder(q, app.game))}">${ORDER_ICON[q.type]}</span>` : ''}</button>`;
   };
   return `<aside class="panel city-panel">
@@ -275,16 +282,17 @@ function orderPop(v) {
   if (mine && a.prep) chips.push(chip(`${ORDER_ICON.prepare}Ready to strike ${esc(g.agents[a.prep.targetId].name)}`));
   if (!mine && v.approachProgress[a.id]) chips.push(chip(`${ORDER_ICON.approach}Pitched ${v.approachProgress[a.id]}/${RULES.approachesToTurn}`, 'good'));
   if (asset) chips.push(chip('Our source', 'good'));
-  const head = `<div class="pop-head">${portrait(a, { size: 40 })}<div class="pop-id"><b>${esc(a.first)} ${esc(a.name)}</b><small>${esc(a.cover)} · ${a.city}</small></div>
+  const head = `<div class="pop-head">${portrait(a, { size: 40 })}<div class="pop-id"><b>${esc(a.first)} ${esc(a.name)}</b><small>${a.city}</small></div>
     <button class="icon-btn" data-act="close-agent" title="Close">${UI_ICON.close}</button></div>`;
   // An enemy agent: no orders, just your notes on who they are.
   if (!mine && !asset) {
+    const ri = roleInfo(side)(a);
     const guess = app.notes[side].roles[a.id] || 'unknown';
-    const last = v.intel[a.id]?.roles?.at(-1);
-    return `<div class="pop theirs" id="pop">${head}
-      <div class="pop-label">What are they?</div>
-      <div class="role-picks">${ROLE_PICKS.map((k) => `<button class="rp ${guess === k ? 'on' : ''}" data-act="setrole" data-agent="${a.id}" data-role="${k}" title="${k === 'unknown' ? 'No idea yet' : roleLabel(k)}">${ROLE_ICON[k]}</button>`).join('')}</div>
-      ${last ? `<div class="pop-note">${ROLE_ICON[last.archetype]} ${esc(last.source)} reported a ${roleLabel(last.archetype)}, wk ${last.week}</div>` : ''}
+    const body = ri.sure
+      ? `<div class="pop-known r-${ri.role}">${roleTag(ri)}<div><b>${roleLabel(ri.role)}</b><small>${esc(ri.source.source)}, week ${ri.source.week}</small></div></div>`
+      : `<div class="pop-label">Your guess</div>
+      <div class="role-picks">${ROLE_PICKS.map((k) => `<button class="rp ${k !== 'unknown' ? `r-${k}` : ''} ${guess === k ? 'on' : ''}" data-act="setrole" data-agent="${a.id}" data-role="${k}" title="${k === 'unknown' ? 'No idea yet' : roleLabel(k)}">${ROLE_ICON[k]}</button>`).join('')}</div>`;
+    return `<div class="pop theirs" id="pop">${head}${body}
       ${chips.length ? `<div class="chips">${chips.join('')}</div>` : ''}</div>`;
   }
   const legal = legalOrders(g, side, a.id);
@@ -300,8 +308,8 @@ function orderPop(v) {
   let sub = '';
   if (app.pick?.targets && app.pick.agentId === a.id) {
     sub = `<div class="pop-label">${ORDER_LABEL[app.pick.type]}: who?</div><div class="targets">${app.pick.targets.map((id) => {
-      const t = g.agents[id]; const r = roleOf(side)({ ...t, asset: t.turnedBy === side && t.side !== side });
-      return `<button class="tg" data-act="target" data-agent="${id}">${portrait(t, { size: 38 })}<span>${esc(t.name)}</span>${r ? `<i>${ROLE_ICON[r]}</i>` : ''}</button>`;
+      const t = g.agents[id]; const ri = roleInfo(side)({ ...t, asset: t.turnedBy === side && t.side !== side });
+      return `<button class="tg" data-act="target" data-agent="${id}">${portrait(t, { size: 38 })}<span>${esc(t.name)}</span>${ri.role ? roleTag(ri, 'tg-role') : ''}</button>`;
     }).join('')}</div>`;
   }
   if (app.pick?.type === 'brief' && app.pick.agentId === a.id) {
@@ -383,17 +391,17 @@ function notebook(v) {
   const note = (id) => `<input class="nb-note" data-note="${id}" value="${esc(notes.text[id] || '')}" placeholder="note…" autocomplete="off">`;
   const ours = v.own.slice().sort((a, b) => b.alive - a.alive).map((a) => {
     const t = notes.trust[a.id] || 'trusted';
-    return `<div class="nb-row ${a.alive ? '' : 'dead'}"><button class="nb-who" data-act="select" data-agent="${a.id}">${portrait(a, { size: 30, mood: a.alive ? null : 'dead' })}<span><b>${esc(a.name)}</b><small>${ROLE_ICON[a.archetype]}${a.alive ? a.city : esc(a.eliminated?.how || 'lost')}</small></span></button>
+    return `<div class="nb-row ${a.alive ? '' : 'dead'}"><button class="nb-who" data-act="select" data-agent="${a.id}">${portrait(a, { size: 30, mood: a.alive ? null : 'dead' })}<span><b>${esc(a.name)}</b><small>${roleTag({ role: a.archetype, sure: true }, 'mini')}${a.alive ? a.city : esc(a.eliminated?.how || 'lost')}</small></span></button>
       ${a.alive ? `<button class="trust ${t}" data-act="trust" data-agent="${a.id}">${t === 'suspect' ? 'Suspect' : 'Trusted'}</button>` : ''}${note(a.id)}</div>`;
   }).join('');
   const theirs = v.enemies.slice().sort((a, b) => b.alive - a.alive).map((e) => {
-    const guess = e.asset ? e.archetype : notes.roles[e.id] || 'unknown';
-    const last = v.intel[e.id]?.roles?.at(-1);
+    const ri = roleInfo(side)(e);
+    const guess = notes.roles[e.id] || 'unknown';
     return `<div class="nb-row ${e.alive ? '' : 'dead'}"><button class="nb-who" data-act="select" data-agent="${e.id}">${portrait(e, { size: 30, mood: e.alive ? null : 'dead' })}<span><b>${esc(e.name)}</b><small>${e.alive ? e.city : 'dead'}${e.asset ? ' · our source' : ''}</small></span></button>
-      <div class="role-picks small">${e.asset ? `<span class="rp on">${ROLE_ICON[e.archetype]}</span>` : ROLE_PICKS.map((k) => `<button class="rp ${guess === k ? 'on' : ''} ${last?.archetype === k && guess !== k ? 'hint' : ''}" data-act="setrole" data-agent="${e.id}" data-role="${k}" title="${k === 'unknown' ? 'No idea yet' : roleLabel(k)}${last?.archetype === k ? ` (reported by ${esc(last.source)})` : ''}">${ROLE_ICON[k]}</button>`).join('')}</div>${note(e.id)}</div>`;
+      <div class="role-picks small">${ri.sure ? `${roleTag(ri)}<span class="nb-known r-${ri.role}">${roleLabel(ri.role)}</span>` : ROLE_PICKS.map((k) => `<button class="rp ${k !== 'unknown' ? `r-${k}` : ''} ${guess === k ? 'on' : ''}" data-act="setrole" data-agent="${e.id}" data-role="${k}" title="${k === 'unknown' ? 'No idea yet' : roleLabel(k)}">${ROLE_ICON[k]}</button>`).join('')}</div>${note(e.id)}</div>`;
   }).join('');
   return `<h3 class="h-report">Ours</h3><div class="nb">${ours}</div><h3 class="h-event">Theirs</h3><div class="nb">${theirs}</div>
-    <p class="empty">A dotted ring marks the role a report gave you. Your marks show on the map.</p>`;
+    <p class="empty">Roles your Lamplighters report fill in by themselves. Your own guesses show on the map as dashed badges.</p>`;
 }
 
 // The week's orders, always visible: click one to revisit the agent, ✕ to cancel it.

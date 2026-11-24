@@ -4,6 +4,16 @@ Why-this-not-that for this project, newest first. Companion to [CHANGELOG.md](CH
 
 ---
 
+## 2026-11-24: Reported roles apply themselves; colour per role; no covers on screen
+**Decision:** A role reported by a Lamplighter (or a new source) is shown as known everywhere, with
+its source; the player marks only guesses, drawn dashed. Each role has its own colour on a larger
+badge placed on the token's outer side. Cover jobs are no longer shown or sent to Karla.
+**Why:** Role reports only ever come from loyal Lamplighters, so they can't be lies: asking the
+player to copy them into the notebook was busywork, and the finding was easy to miss. Small gold
+icons on dark were hard to tell apart. Covers had no mechanical use.
+**Rejected:** *Requiring the player to confirm reports* (nothing to doubt). *Bigger icons in one
+colour* (shape alone still needs squinting).
+
 ## 2026-11-24: City pool: Rome, Belgrade, Tangier in; Paris, Bern, Athens out
 **Decision:** The contested pool is Lisbon, Tangier, Rome, Berlin, Vienna, Belgrade, Helsinki and
 Istanbul (still eight, four per game). Pairs too close on the map (Lisbon/Tangier, Vienna/Belgrade)

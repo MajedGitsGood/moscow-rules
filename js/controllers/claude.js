@@ -43,7 +43,7 @@ function summarize(game, view) {
     yourTraps: view.traps.map((t) => `${t.city} (catches ${t.active ? 'tonight' : 'next week'} only)`),
     yourApproaches: Object.entries(view.approachProgress).map(([id, n]) => `${name(id)}: ${n}/${RULES.approachesToTurn}`),
     britishAgents: view.enemies.filter((e) => e.alive).map((e) => ({
-      name: e.name, cover: e.cover, city: e.city,
+      name: e.name, city: e.city,
       ...(e.asset ? { workingForYou: true, role: label(e.archetype), standingInstruction: e.stance === 'obey' ? 'carry out British orders' : 'make British orders fail' } : intelOn(e.id)),
       seenDoing: seen[e.id],
     })),
@@ -130,7 +130,7 @@ export async function claudePlacement(game, side, view) {
   try {
     const user = JSON.stringify({
       cities: view.cities,
-      yourAgents: view.own.map((a) => ({ name: a.name, role: label(a.archetype), cover: a.cover })),
+      yourAgents: view.own.map((a) => ({ name: a.name, role: label(a.archetype) })),
       britishAgentsWorkingForYou: view.enemies.filter((e) => e.asset).map((e) => ({ name: e.name, role: label(e.archetype) })),
     });
     const r = await callClaude('karla', { system: KARLA_PLACEMENT, user, schema: PLACEMENT_SCHEMA, maxTokens: 4000 });
