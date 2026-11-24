@@ -4,6 +4,17 @@ Why-this-not-that for this project, newest first. Companion to [CHANGELOG.md](CH
 
 ---
 
+## 2026-11-24: The pivotal section is one information exchange
+**Decision:** The debrief's map section shows one chain: what a side heard, what it did because of
+it, and the result. Planted lies and mole leaks are preferred, so it answers "what did I feed Karla
+that hurt him, or give away that helped him?" The analyst checks the receiver's orders to confirm
+they really acted on it. The rules engine builds the same chain from warned-but-ignored strikes,
+framed executions, leaks before a trap, and surveillance before a kill.
+**Why:** Listing everything each side knew showed information, not consequence. The interesting
+story in this game is information moving between sides and being acted on.
+**Rejected:** *Both sides' known facts side by side* (the previous version: no synthesis). *Several
+exchanges* (one is clearer; the moments list covers the rest).
+
 ## 2026-11-24: An analyst writes the debrief; score is agents standing
 **Decision:** On reaching the debrief, Opus reads the full game record (true roles, moles, both
 sides' orders, what each side was told) plus rule-detected moments (recruitments, strikes into

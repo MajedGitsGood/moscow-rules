@@ -409,6 +409,8 @@ function endTurn() {
 let analyzing = false;
 function debriefScreen() {
   // The analyst runs once per game; the page shows the facts at once and the story when it's ready.
+  // A story saved in the older shape (pivotal without an exchange) is redone.
+  if (app.story && !('receiver' in (app.story.pivotal || {}))) app.story = null;
   if (!app.story && !analyzing) {
     analyzing = true;
     analyze(app.game).then((story) => { app.story = story; analyzing = false; save(); if (app.screen === 'debrief') render(); });
@@ -517,6 +519,7 @@ function onAct(el, ev) {
     case 'goto': if (el.dataset.city) { app.sel.city = el.dataset.city; app.sel.agent = null; render(); } return;
     case 'end': return endWeek();
     case 'again': clearSave(); app = null; return render();
+    case 'reanalyze': if (!analyzing) { app.story = null; checkLLM().then(render); } return;
 
   }
 }

@@ -8,8 +8,13 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 - Winning is now about agents standing: the most agents still alive and still loyal at the end.
   Lost and turned are shown as substats. The HUD shows how many of each side are still alive.
 - The debrief tells the story: Claude's analysis of the key moments (recruitments, intelligence that
-  mattered, mistakes) pinned to the week-by-week chart, and the pivotal battleground with what each
-  side knew there. The rosters list who's standing first. The replay map and order strip are gone.
+  mattered, mistakes) pinned to the week-by-week chart. The rosters list who's standing first. The
+  replay map and order strip are gone.
+- The debrief's map section is now the decisive exchange: what one side heard (a planted lie, a
+  leak through a mole, or an honest report), what it did because of it, and what that cost.
+- The debrief is sparer: colour shows which side a moment favoured, numbered pins match the moments
+  below, fates are icons and a mole chip, and every text Claude writes is a line or two.
+- A debrief written by the rules engine has an "Ask the analyst" link to try Claude again.
 
 
 ### Added

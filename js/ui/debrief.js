@@ -46,8 +46,8 @@ function storyChart(game, story, last) {
     <path d="${area(1)}" class="st-area control"/><path d="${area(-1)}" class="st-area karla"/>
     <polyline points="${pts}" class="st-line"/>
     ${weeks.map((w) => `<circle cx="${x(w)}" cy="${y(lead[w])}" r="3.5" class="st-dot"/>`).join('')}
-    <text x="${padL - 10}" y="${top + 14}" text-anchor="end" class="st-lab control">Control</text><text x="${padL - 10}" y="${top + 28}" text-anchor="end" class="st-sub">ahead</text>
-    <text x="${padL - 10}" y="${H - bottom - 18}" text-anchor="end" class="st-lab karla">Karla</text><text x="${padL - 10}" y="${H - bottom - 4}" text-anchor="end" class="st-sub">ahead</text>
+    <text x="${padL - 12}" y="${top + 16}" text-anchor="end" class="st-lab control">Control</text>
+    <text x="${padL - 12}" y="${H - bottom - 8}" text-anchor="end" class="st-lab karla">Karla</text>
     ${weeks.filter((w) => w > 0).map((w) => `<text x="${x(w)}" y="${H - 4}" text-anchor="middle" class="st-wk ${w === pw ? 'pv' : ''}">${w === pw ? '★ ' : ''}wk ${w}</text>`).join('')}
     ${pinSvg}
   </svg>`;
@@ -55,10 +55,9 @@ function storyChart(game, story, last) {
 
 function moments(story) {
   if (!story) return `<p class="db-wait">The analysts are going through the files<span class="dots"></span></p>`;
-  return `<ol class="moments">${story.moments.map((m, i) => `<li class="moment ${m.side} ${m.kind}" data-pin="${i + 1}">
+  return `<ol class="moments">${story.moments.map((m, i) => `<li class="moment ${m.side} ${m.kind}" data-pin="${i + 1}" title="${esc(KIND[m.kind]?.label || m.kind)}">
     <span class="mo-n">${i + 1}</span>
-    <div><div class="mo-meta">${KIND[m.kind]?.icon || ''}<span>${KIND[m.kind]?.label || esc(m.kind)}</span> · week ${m.week}${m.city ? ` · ${esc(m.city)}` : ''} · <em>${m.side === 'both' ? 'both sides' : `in ${SIDE_LABEL[m.side]}'s favour`}</em></div>
-    <b>${esc(m.title)}</b><p>${esc(m.detail)}</p></div></li>`).join('')}</ol>`;
+    <div><b>${esc(m.title)}</b><span class="mo-when">${KIND[m.kind]?.icon || ''}wk ${m.week}${m.city ? ` · ${esc(m.city)}` : ''}</span><p>${esc(m.detail)}</p></div></li>`).join('')}</ol>`;
 }
 
 // The pivotal battleground: that week's map around the city, with the true picture in the spotlight.
@@ -68,13 +67,15 @@ function battleground(game, story) {
   const posAt = (a) => { let c = a.history[0]?.city; for (const h of a.history) if (h.week <= w) c = h.city; return c; };
   const here = Object.values(game.agents).filter((a) => posAt(a) === city && (!a.eliminated || a.eliminated.week >= w));
   const [cx, cy] = cityXY(city);
+  const half = MAP_SIZE.W / 2.1 / 2, edge = cx - half < 0 || cx + half > MAP_SIZE.W;
   const toks = SIDES.map((side) => {
     const list = here.filter((a) => a.side === side);
     return list.map((a, i) => {
-      const left = side === 'control';
-      const n = list.length, spread = Math.min(30, 130 / Math.max(n, 1));
-      const ang = ((left ? 180 : 0) + (i - (n - 1) / 2) * spread * (left ? -1 : 1)) * Math.PI / 180;
-      const tx = cx + Math.cos(ang) * 46, ty = cy + Math.sin(ang) * 46 + 4;
+      // Control to the left, Karla to the right; near the map's edge, above and below instead.
+      const base = edge ? (side === 'control' ? 270 : 90) : (side === 'control' ? 180 : 0);
+      const n = list.length, r = n > 3 ? 58 : 46, spread = (36 / r) * 180 / Math.PI;
+      const ang = (base + (i - (n - 1) / 2) * spread) * Math.PI / 180;
+      const tx = cx + Math.cos(ang) * r, ty = cy + Math.sin(ang) * r + 4;
       const died = a.eliminated?.week === w, mole = a.turnedBy && a.turnedWeek && a.turnedWeek <= w;
       return `<g class="bg-tok ${side} ${died ? 'died' : ''} ${mole ? 'mole' : ''}" transform="translate(${tx.toFixed(1)},${ty.toFixed(1)})"><title>${esc(`${a.first} ${a.name}, ${SIDE_LABEL[side]}'s ${role(a.archetype)}${mole ? `, working for ${SIDE_LABEL[a.turnedBy]}` : ''}${died ? ', died this week' : ''}`)}</title>
         <circle r="15" class="ring"/><svg x="-13" y="-13" width="26" height="26" viewBox="0 0 64 64" clip-path="url(#tok)">${portraitBody(a, died ? 'dead' : null)}</svg>
@@ -84,33 +85,38 @@ function battleground(game, story) {
   }).join('');
   const zoom = 2.1, vw = MAP_SIZE.W / zoom, vh = MAP_SIZE.H / zoom;
   const vx = Math.max(0, Math.min(MAP_SIZE.W - vw, cx - vw / 2)), vy = Math.max(0, Math.min(MAP_SIZE.H - vh, cy - vh / 2));
-  const list = (items) => items?.length ? `<ul>${items.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>` : '<p class="nothing">Nothing.</p>';
+  const p = story.pivotal;
+  const other = (x) => (x === 'control' ? 'karla' : 'control');
+  const SRC = { planted: 'Planted', leaked: 'Leaked', true: 'Report' };
+  const step = (cls, icon, label, text, extra = '') => `<li class="ch-step ${cls}"><span class="ch-dot">${icon}</span><div><small>${label}${extra}</small><p>${esc(text)}</p></div></li>`;
+  const chain = p.receiver ? `<ol class="chain">
+      ${step(`${p.source === 'true' ? p.receiver : other(p.receiver)} src-${p.source}`, UI_ICON.traffic, `${SIDE_LABEL[p.receiver]} heard`, p.told, ` <em class="src">${SRC[p.source] || ''}</em>`)}
+      ${step(p.receiver, ORDER_ICON.brief, `${SIDE_LABEL[p.receiver]} acted`, p.did)}
+      ${step(`${p.favoured} result`, UI_ICON.skull, 'Result', p.result)}
+    </ol>` : '';
   return `<section class="db2-card bg">
-    <h2>The pivotal battleground · ${esc(city)}, week ${w}</h2>
+    <h2>The decisive exchange <span class="h-sub">${esc(city)} · wk ${w}</span></h2>
     <div class="bg-grid">
       <svg class="bg-map" viewBox="${vx} ${vy} ${vw} ${vh}" preserveAspectRatio="xMidYMid slice">${mapBase(game.cities)}
         <circle cx="${cx}" cy="${cy}" r="70" class="spot"/><circle cx="${cx}" cy="${cy}" r="18" class="bg-city"/>
-        <text x="${cx}" y="${cy - 26}" text-anchor="middle" class="bg-name">${esc(city.toUpperCase())}</text>${toks}</svg>
-      <div class="bg-side">
-        <p class="why">${esc(story.pivotal.why)}</p>
-        <div class="knew control"><h3>What Control knew</h3>${list(story.pivotal.controlKnew)}</div>
-        <div class="knew karla"><h3>What Karla knew</h3>${list(story.pivotal.karlaKnew)}</div>
-      </div>
+        <text x="${edge ? cx + 26 : cx}" y="${edge ? cy + 4 : cy - 26}" text-anchor="${edge ? 'start' : 'middle'}" class="bg-name">${esc(city.toUpperCase())}</text>${toks}</svg>
+      <div class="bg-side"><h3 class="ex-title ${p.favoured || ''}">${esc(p.title || '')}</h3>${chain}</div>
     </div>
   </section>`;
 }
 
 function rosters(game) {
+  const HOW = { killed: ['strike', 'Killed'], trapped: ['trap', 'Trapped'], executed: ['execute', 'Executed by own side'] };
   const fate = (a) => {
-    const how = { killed: 'Killed', trapped: 'Caught in a trap', executed: 'Executed by their own side' };
-    if (a.alive) return a.turnedBy ? `Alive, but working for ${SIDE_LABEL[a.turnedBy]} since week ${a.turnedWeek}` : 'Standing';
-    const d = `${how[a.eliminated.how] || a.eliminated.how} in ${a.eliminated.city}, week ${a.eliminated.week}`;
-    return a.turnedBy ? `${d}. Had worked for ${SIDE_LABEL[a.turnedBy]} since week ${a.turnedWeek}.` : d;
+    const mole = a.turnedBy ? `<span class="mole-chip ${a.turnedBy}" title="Worked for ${SIDE_LABEL[a.turnedBy]} from week ${a.turnedWeek}">M · wk ${a.turnedWeek}</span>` : '';
+    if (a.alive) return mole;
+    const [ic, label] = HOW[a.eliminated.how] || ['strike', a.eliminated.how];
+    return `<span class="death" title="${label}">${ORDER_ICON[ic]}wk ${a.eliminated.week} · ${esc(a.eliminated.city)}</span>${mole}`;
   };
   const rank = (a) => (a.alive && !a.turnedBy ? 0 : a.alive ? 1 : 2);
   const list = (side) => Object.values(game.agents).filter((a) => a.side === side)
     .sort((a, b) => rank(a) - rank(b) || (b.eliminated?.week || 0) - (a.eliminated?.week || 0))
-    .map((a) => `<div class="db-agent r${rank(a)}">${portrait(a, { size: 40, mood: a.alive ? null : 'dead' })}<div><b>${esc(a.first)} ${esc(a.name)}</b><span class="role">${ROLE_ICON[a.archetype]}${role(a.archetype)}</span><small>${esc(fate(a))}</small></div></div>`).join('');
+    .map((a) => `<div class="db-agent r${rank(a)}">${portrait(a, { size: 40, mood: a.alive ? null : 'dead' })}<div><b>${esc(a.first)} ${esc(a.name)}</b><span class="role">${ROLE_ICON[a.archetype]}${role(a.archetype)}</span><small>${fate(a)}</small></div></div>`).join('');
   return `<section class="db2-card"><div class="db-cols">${SIDES.map((s) => `<div><h3 class="${s}">${SIDE_LABEL[s]}'s people</h3>${list(s)}</div>`).join('')}</div></section>`;
 }
 
@@ -120,12 +126,12 @@ export function debriefHTML(game, story) {
     <header class="db2-head">
       <div><div class="stamp">CASE CLOSED</div><h1>${o.winner ? `${SIDE_LABEL[o.winner]} wins` : 'Stalemate'}</h1>
         <p class="hl">${story ? esc(story.headline) : esc(o.reason)}</p>${story ? `<p class="sum">${esc(story.summary)}</p>` : ''}</div>
-      <div class="db-score">${SIDES.map((s) => `<div class="${s}"><span>${o.score[s].standing}</span><b>${SIDE_LABEL[s]}</b><small>standing · ${o.score[s].lost} lost · ${o.score[s].turned} turned</small></div>`).join('<i>vs</i>')}</div>
+      <div class="db-score">${SIDES.map((s) => `<div class="${s}"><span>${o.score[s].standing}</span><b>${SIDE_LABEL[s]}</b><small>${o.score[s].lost} lost · ${o.score[s].turned} turned</small></div>`).join('<i>vs</i>')}</div>
     </header>
     <section class="db2-card"><h2>How it unfolded</h2>${storyChart(game, story, last)}${moments(story)}</section>
     ${battleground(game, story)}
     ${rosters(game)}
-    ${story?.via === 'rules' ? '<p class="db-note">Analysis by the rules engine (Claude was unavailable).</p>' : ''}
+    ${story?.via === 'rules' ? '<p class="db-note">Rules-engine analysis. <button class="link" data-act="reanalyze">Ask the analyst</button></p>' : ''}
     <button class="btn gold" data-act="again">Another operation</button>
   </div>`;
 }

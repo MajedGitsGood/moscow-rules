@@ -128,3 +128,13 @@ key moments pinned to the week-by-week chart, and the pivotal battleground (a zo
 roles and moles, plus what each side knew). A rules engine does the same if Claude is unavailable.
 The replay and order strip are gone, and the rosters are ordered standing, then turned, then lost.
 Scoring is now agents standing.
+
+### Follow-up 5: debrief, after Claude's version
+- Better, but text-heavy. Prefer minimalist layouts, more blank space, and colour or shapes instead
+  of words ("in Karla's favour" doesn't need saying).
+- The pivotal battleground listed what each side knew, without synthesis. It should show the
+  pivotal exchange: information one side fed the other (or gave away) and what it led to.
+
+**Addressed (2026-11-24):** colour-coded moments and pins with one-line details; the decisive
+exchange (heard → acted → result, with planted/leaked/report marked); icon fates; "Ask the analyst"
+to redo a rules-engine debrief.

@@ -30,6 +30,11 @@ export function findMoments(game) {
   const moments = [];
   const last = lastWeek(game);
   const inboxAt = (side, w) => game.inbox[side].filter((m) => m.week === w);
+  // The latest report naming this agent's role, in the two weeks before.
+  const intelOn = (side, w, id) => game.inbox[side].filter((m) => m.week <= w && m.week >= w - 2 && (m.facts?.roles || []).some((r) => r.id === id)).pop();
+  // A leak from a mole, in the two weeks before, that pointed at this city or this agent.
+  const leakAbout = (side, w, city, id) => game.inbox[side].find((m) => m.kind === 'source' && m.week <= w && m.week >= w - 2
+    && (m.facts?.plan?.city === city || m.facts?.city === city || m.from === id));
   for (const a of Object.values(game.agents)) {
     if (a.turnedWeek) {
       moments.push({ week: a.turnedWeek, side: a.turnedBy, kind: 'recruitment', city: cityAt(a, a.turnedWeek), title: `${a.name} turned by ${SIDE_LABEL[a.turnedBy]}`,
@@ -39,16 +44,23 @@ export function findMoments(game) {
     if (!e) continue;
     const by = e.by;
     if (e.how === 'trapped') {
-      const warned = inboxAt(a.side, e.week).some((m) => m.city === e.city && (m.facts?.activities || []).some((x) => x.kind === 'trap'));
-      moments.push({ week: e.week, side: by, kind: warned ? 'mistake' : 'strike', city: e.city, title: warned ? `${a.name} ignored a trap warning` : `${SIDE_LABEL[by]}'s trap catches ${a.name}`,
-        detail: warned ? `${SIDE_LABEL[a.side]} had been told something was being set up in ${e.city}, and sent ${a.name} in anyway.` : `${a.first} ${a.name} (${role(a.archetype)}) struck into a ready trap in ${e.city}.` });
+      const warn = inboxAt(a.side, e.week).find((m) => m.city === e.city && (m.facts?.activities || []).some((x) => x.kind === 'trap'));
+      moments.push({ week: e.week, side: by, kind: warn ? 'mistake' : 'strike', city: e.city, title: warn ? `${a.name} ignored a trap warning` : `${SIDE_LABEL[by]}'s trap catches ${a.name}`,
+        detail: warn ? `${SIDE_LABEL[a.side]} had been told something was being set up in ${e.city}, and sent ${a.name} in anyway.` : `${a.first} ${a.name} (${role(a.archetype)}) struck into a ready trap in ${e.city}.`,
+        chain: warn ? { receiver: a.side, source: 'true', told: warn.text, did: `Sent ${a.name} to strike in ${e.city} anyway.`, result: `${a.name} caught in the trap.`, favoured: by }
+          : leakAbout(by, e.week, e.city, a.id) && { receiver: by, source: 'leaked', told: leakAbout(by, e.week, e.city, a.id).text, did: `Set a trap in ${e.city}.`, result: `${a.name} walked into it.`, favoured: by } });
     } else if (e.how === 'killed') {
-      const warned = inboxAt(a.side, e.week).some((m) => (m.facts?.activities || []).some((x) => x.kind === 'prepare' && x.targetId === a.id));
-      moments.push({ week: e.week, side: by, kind: warned ? 'mistake' : 'strike', city: e.city, title: warned ? `${a.name} was warned, and still died` : `${SIDE_LABEL[by]} kills ${a.name}`,
-        detail: warned ? `${SIDE_LABEL[a.side]}'s reports showed someone studying ${a.name}'s routine; no trap, no lying low.` : `${a.first} ${a.name} (${role(a.archetype)}) killed in ${e.city}.` });
+      const warn = inboxAt(a.side, e.week).find((m) => (m.facts?.activities || []).some((x) => x.kind === 'prepare' && x.targetId === a.id));
+      moments.push({ week: e.week, side: by, kind: warn ? 'mistake' : 'strike', city: e.city, title: warn ? `${a.name} was warned, and still died` : `${SIDE_LABEL[by]} kills ${a.name}`,
+        detail: warn ? `${SIDE_LABEL[a.side]}'s reports showed someone studying ${a.name}'s routine; no trap, no lying low.` : `${a.first} ${a.name} (${role(a.archetype)}) killed in ${e.city}.`,
+        chain: warn ? { receiver: a.side, source: warn.lie ? 'planted' : 'true', told: warn.text, did: `Left ${a.name} in place: no trap, no lying low.`, result: `${a.name} killed in ${e.city}.`, favoured: by }
+          : (() => { const m = intelOn(by, e.week, a.id); return m && { receiver: by, source: m.lie ? 'planted' : m.kind === 'source' ? 'leaked' : 'true', told: m.text, did: `Struck ${a.name} in ${e.city}.`, result: `${a.name} killed.`, favoured: by }; })() });
     } else if (e.how === 'executed') {
-      moments.push({ week: e.week, side: a.side, kind: a.turnedBy ? 'intel' : 'mistake', city: e.city, title: a.turnedBy ? `${SIDE_LABEL[a.side]} unmasks ${a.name}` : `${SIDE_LABEL[a.side]} executes a loyal agent`,
-        detail: a.turnedBy ? `${a.name} was indeed working for ${SIDE_LABEL[a.turnedBy]}.` : `${a.name} was loyal all along.` });
+      // Was the execution set up by a framing lie from the other side's mole?
+      const frame = game.inbox[a.side].filter((m) => m.lie && m.week <= e.week && m.facts?.accused === a.id).pop();
+      moments.push({ week: e.week, side: a.turnedBy ? a.side : other(a.side), kind: a.turnedBy ? 'intel' : 'mistake', city: e.city, title: a.turnedBy ? `${SIDE_LABEL[a.side]} unmasks ${a.name}` : `${SIDE_LABEL[a.side]} executes a loyal agent`,
+        detail: a.turnedBy ? `${a.name} was indeed working for ${SIDE_LABEL[a.turnedBy]}.` : `${a.name} was loyal all along.`,
+        chain: frame && { receiver: a.side, source: 'planted', told: frame.text, did: `Executed ${a.name}.`, result: a.turnedBy ? `${a.name} really was a mole.` : `${a.name} was loyal. The frame worked.`, favoured: a.turnedBy ? a.side : other(a.side) } });
     }
   }
   // The pivotal week: the biggest swing in who was ahead.
@@ -58,16 +70,16 @@ export function findMoments(game) {
     const d = Math.abs((a.control - a.karla) - (b.control - b.karla));
     if (d > mag) { mag = d; pw = w; }
   }
+  // The pivotal exchange: information one side received, what it did with it, and what that cost.
+  // Planted lies first, then leaks, then the chain in the biggest-swing week, then any chain.
+  const chained = moments.filter((m) => m.chain);
+  const pick = chained.find((m) => m.chain.source === 'planted') || chained.find((m) => m.chain.source === 'leaked') || chained.find((m) => m.week === pw) || chained[0];
   const here = moments.filter((m) => m.week === pw);
-  const cityCount = {};
-  for (const m of here) cityCount[m.city] = (cityCount[m.city] || 0) + 1;
-  const pcity = Object.entries(cityCount).sort((x, y) => y[1] - x[1])[0]?.[0] || game.cities[1];
-  // What each side had been told about that city before it gave its orders that week.
-  const knew = (side) => game.inbox[side].filter((m) => m.week <= pw && m.week >= pw - 1 && m.city === pcity && m.kind !== 'briefing').map((m) => m.text).slice(-4);
-  return {
-    moments: moments.sort((x, y) => x.week - y.week),
-    pivotal: { week: pw, city: pcity, why: here.length ? here.map((m) => m.title).join('; ') : 'The biggest swing in who was ahead.', controlKnew: knew('control'), karlaKnew: knew('karla') },
-  };
+  const pivotal = pick
+    ? { week: pick.week, city: pick.city, title: pick.title, ...pick.chain }
+    : { week: pw, city: here[0]?.city || game.cities[1], title: here[0]?.title || 'The biggest swing', receiver: null };
+  for (const m of moments) delete m.chain;
+  return { moments: moments.sort((x, y) => x.week - y.week), pivotal };
 }
 
 // A compact, complete record of the game for Claude.
@@ -81,7 +93,7 @@ function record(game, found) {
       week: w,
       standingAfter: standingAt(game, w),
       orders: Object.fromEntries(SIDES.map((s) => [SIDE_LABEL[s], game.orderLog.filter((o) => o.week === w && o.side === s).map((o) => `${name(o.agentId)} (${cityAt(game.agents[o.agentId], w - 1)}): ${o.type === 'lie' ? describeOrder(o, game) + ' (lie told through a mole)' : describeOrder(o, game)}`)])),
-      toldNextMorning: Object.fromEntries(SIDES.map((s) => [SIDE_LABEL[s], game.inbox[s].filter((m) => m.week === w + 1 && m.kind !== 'briefing').map((m) => `${m.from ? name(m.from) : 'Station'}${m.lie ? ' (a lie)' : ''}: ${m.text}`)])),
+      toldNextMorning: Object.fromEntries(SIDES.map((s) => [SIDE_LABEL[s], game.inbox[s].filter((m) => m.week === w + 1 && m.kind !== 'briefing').map((m) => `${m.from ? name(m.from) : 'Station'}${m.lie ? ' (a LIE planted by the other side through their mole)' : m.kind === 'source' ? ' (LEAKED by a mole inside the other side)' : ''}: ${m.text}`)])),
     })),
     outcome: game.outcome,
     rulesFound: found.moments.map((m) => `wk ${m.week}, ${m.city}: ${m.title}`),
@@ -111,8 +123,14 @@ const SCHEMA = {
     },
     pivotal: {
       type: 'object',
-      properties: { week: { type: 'integer' }, city: { type: 'string' }, why: { type: 'string' }, controlKnew: { type: 'array', items: { type: 'string' } }, karlaKnew: { type: 'array', items: { type: 'string' } } },
-      required: ['week', 'city', 'why', 'controlKnew', 'karlaKnew'],
+      properties: {
+        week: { type: 'integer' }, city: { type: 'string' }, title: { type: 'string' },
+        receiver: { type: 'string', enum: ['control', 'karla'] },
+        source: { type: 'string', enum: ['planted', 'leaked', 'true'] },
+        told: { type: 'string' }, did: { type: 'string' }, result: { type: 'string' },
+        favoured: { type: 'string', enum: ['control', 'karla'] },
+      },
+      required: ['week', 'city', 'title', 'receiver', 'source', 'told', 'did', 'result', 'favoured'],
       additionalProperties: false,
     },
   },
@@ -127,7 +145,7 @@ function fallbackStory(game, found) {
   const mistakes = found.moments.filter((m) => m.kind === 'mistake').length;
   return {
     headline: o.winner ? `${SIDE_LABEL[o.winner]} held more of their people` : 'Neither side broke through',
-    summary: `${lead} ${recruits} agent${recruits === 1 ? ' was' : 's were'} turned, and ${mistakes} loss${mistakes === 1 ? ' was' : 'es were'} avoidable on the information at hand.`,
+    summary: `${lead} ${recruits} turned, ${mistakes} avoidable loss${mistakes === 1 ? '' : 'es'}.`,
     moments: found.moments.slice(0, 10),
     pivotal: found.pivotal,
     via: 'rules',

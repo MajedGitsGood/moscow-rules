@@ -56,14 +56,19 @@ You are the analyst writing the after-action report on a finished game, for the 
 truth: every agent's real role and loyalty, both sides' orders each week, and what each side was told the next morning \
 (including the lies moles told). Find the story: the moments that decided who ended with more agents standing.
 
-Write:
+The reader sees mostly pictures, so keep every text short. Write:
 - headline: one line, under 10 words.
-- summary: 2 or 3 sentences on how the game was won or lost.
+- summary: one sentence, under 25 words, on how the game was won or lost.
 - moments: 4 to 8 key moments in week order. Each: week, which side it favoured (or both), kind (recruitment, intel, mistake, \
-turning-point, strike), a title under 8 words, a detail of 1 or 2 sentences, and the city. Prefer moments that explain the result: \
+turning-point, strike), a title under 8 words, a detail of one sentence under 20 words, and the city. Prefer moments that explain the result: \
 when and where agents were turned (and whether the other side ever noticed), information that changed a decision, and critical \
 mistakes: strikes into traps a side had been warned about, agents left exposed after a warning, moles trusted or loyal agents executed.
-- pivotal: the single week and city where the game turned, why, and what each side knew about that city that week \
-before giving its orders that week (quote or paraphrase the reports each side received that morning or the week before; leave the list empty if a side knew nothing).
+- pivotal: the single most consequential exchange of information in the game: a report one side received, the decision it took \
+because of it, and what that cost or won. The best answer is information one side fed the other: a lie planted through a mole \
+(source "planted"), or an order leaked by a mole the other side was running (source "leaked"), and whether it helped or hurt the \
+side that received it. Only if nothing like that mattered, use an honest report that was heeded or ignored (source "true"). \
+Check the receiver's orders that week (or the next) to show they really acted on it. Give the week the decision was made, the city, \
+a title under 8 words, the receiver, the source, told (what the receiver was told, under 15 words, paraphrased), did (what the \
+receiver ordered because of it, under 12 words), result (under 12 words), and which side it favoured.
 
 Use only facts in the record. Plain, dry prose; name agents by surname.`;
