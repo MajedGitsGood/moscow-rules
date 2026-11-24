@@ -92,3 +92,11 @@ All of the above. Balance watch: in bot games, about two agents per side end up 
 **Addressed (2026-11-24):** all of the above. Keys: arrows cycle agents, letters give orders,
 number keys pick targets and cities, Backspace undoes, Enter ends the week, and the next idle agent
 is selected automatically. Setup is click-then-city or keys 1–6, with no scrolling.
+
+### Follow-up 2
+- The hotkeys weren't helpful.
+- Viewing a city only showed the one agent, not who else was there. Bring back the view of a city full of agents.
+
+**Addressed (2026-11-24):** hotkey hints, number keys and auto-advance removed (Escape still closes).
+Clicking a city opens a compact panel listing everyone there, ours and theirs; clicking a row opens
+the order popover beside it.

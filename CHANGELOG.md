@@ -10,11 +10,10 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 - Moles you run can frame anyone on their side, other moles included, and take a standing
   instruction: carry out their own side's orders (to keep their cover) or quietly let them fail.
   Every leaked order says which they're doing.
-- Faster controls: arrow keys cycle your agents, letter keys give orders (shown on each button),
-  number keys pick targets and cities, Backspace undoes, Enter ends the week, and the next idle
-  agent is selected automatically after each order.
-- Setup: click an agent then a city (or press 1–6), or drag; the tray is a compact grid with no
-  scrolling, and the map stays clear of it.
+- Clicking a city opens a compact panel with everyone there, ours and theirs; click a row to give
+  orders (or mark a role) from a popover beside it.
+- Setup: click an agent then a city, or drag; the tray is a compact grid with no scrolling, and the
+  map stays clear of it.
 
 
 ### Changed (after playtest 2)

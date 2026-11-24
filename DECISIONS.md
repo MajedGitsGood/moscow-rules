@@ -7,8 +7,9 @@ Why-this-not-that for this project, newest first. Companion to [CHANGELOG.md](CH
 ## 2026-11-24: Standing instructions for moles; ten agents; keyboard-first
 **Decision:** The side that turned an agent sets a standing instruction (obey or sabotage their own
 side's orders) instead of moles always failing; leaked orders state which. Suspicion is never
-tracked for the player. Ten agents a side (+1 Lamplighter, +1 Ferret). Orders can be given entirely
-from the keyboard, with auto-advance to the next idle agent.
+tracked for the player. Ten agents a side (+1 Lamplighter, +1 Ferret). (A keyboard-first scheme with
+auto-advance was tried and removed the same day: the user found it unhelpful, and auto-advance hid
+the city view. The city panel came back in a compact form instead.)
 **Why:** Playtest 2 follow-up. Always-failing moles were easy to spot and gave handlers no choice; a
 mole that sometimes obeys makes trust genuinely hard, which the user called realistic. Suspicion
 tags did the player's thinking for them. The extra Lamplighter and Ferret give more eyes and more

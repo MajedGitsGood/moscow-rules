@@ -33,10 +33,6 @@ const ORDER_HINT = {
   lie: 'Decide what this source tells their masters this week.',
 };
 
-const ORDER_KEY = { move: 'M', surveil: 'S', lielow: 'L', prepare: 'P', strike: 'K', trap: 'T', approach: 'A', vet: 'V', brief: 'B', lie: 'L' };
-// Cities numbered west to east, for the number keys.
-const cityOrder = (g) => [...g.cities].sort((a, b) => cityXY(a)[0] - cityXY(b)[0]);
-const cityNumbers = (g) => Object.fromEntries(cityOrder(g).map((c, i) => [c, i + 1]));
 
 let app = null;
 // app = { game, mode, screen, active, queued:{side:[]}, notes:{side:{roles:{},trust:{}}}, sel:{city, agent}, pick, setup:{side:{id:city}}, panel }
@@ -181,11 +177,12 @@ function playScreen() {
   const fresh = app.fresh && !setup; app.fresh = false;
   return `<div class="stage ${fresh ? 'fresh' : ''} ${side} ${setup ? 'is-setup' : ''} ${app.pick ? 'picking' : ''} ${!setup && app.traffic ? 'traffic-open' : ''}">
     <svg class="map" viewBox="0 0 ${MAP_SIZE.W} ${MAP_SIZE.H}" preserveAspectRatio="xMidYMid meet">${base(g)}
-      <g id="overlay">${mapOverlay({ view: v, selected: app.sel.city, orders: setup ? [] : app.queued[side], moveTargets, roleOf: roleOf(side), numbers: (setup || app.pick?.type === 'move') ? cityNumbers(g) : null })}</g>
+      <g id="overlay">${mapOverlay({ view: v, selected: app.sel.city, orders: setup ? [] : app.queued[side], moveTargets, roleOf: roleOf(side), numbers: null })}</g>
     </svg>
     ${hudTop(v, setup)}
     ${setup ? setupTray(v) : ''}
     ${!setup && app.traffic ? sidePanel(v) : ''}
+    ${!setup && app.sel.city && app.pick?.type !== 'move' ? cityPanel(v) : ''}
     ${!setup && app.sel.agent ? orderPop(v) : ''}
     ${!setup ? endTurn(v) : ''}
     ${app.pick?.type === 'move' ? `<div class="pick-hint">${pickHint()}<button class="btn small ghost" data-act="cancel-pick">Cancel</button></div>` : ''}
@@ -209,7 +206,7 @@ function hudTop(v, setup) {
   return `<header class="hud-top">
     <div class="plate who ${side}"><span class="crest">${side === 'control' ? 'C' : 'K'}</span><div><b>${SIDE_LABEL[side].toUpperCase()}</b><small>${side === 'control' ? 'The Circus, London' : 'Moscow Centre'}</small></div>
       ${setup ? '' : `<div class="tally" title="Agents eliminated"><span class="us">${UI_ICON.skull}${v.score.us}</span><span class="them">${UI_ICON.skull}${v.score.them}</span></div>`}</div>
-    <div class="plate week">${setup ? '<b>PLACE YOUR NETWORKS</b><small>Pick an agent, then a city (or keys 1–6) · three per city</small>' : `<b>WEEK ${Math.min(g.week, RULES.weeks)} <span>/ ${RULES.weeks}</span></b><div class="pips" title="Orders this week">${pips}<small>${RULES.ordersPerWeek - used} orders left</small></div>`}</div>
+    <div class="plate week">${setup ? '<b>PLACE YOUR NETWORKS</b><small>Pick an agent, then a city · three per city</small>' : `<b>WEEK ${Math.min(g.week, RULES.weeks)} <span>/ ${RULES.weeks}</span></b><div class="pips" title="Orders this week">${pips}<small>${RULES.ordersPerWeek - used} orders left</small></div>`}</div>
     <div class="plate tools">
       ${setup ? '' : `<button class="icon-btn ${app.traffic ? 'on' : ''}" data-act="traffic" title="Traffic">${UI_ICON.traffic}</button>`}
       <button class="icon-btn" data-act="manual" title="Field Manual">${UI_ICON.book}</button>
@@ -235,7 +232,32 @@ function setupTray(v) {
   </div>`;
 }
 
-// ----- the order popover: anchored beside the selected token -----
+// ----- city panel: everyone in the selected city -----
+function cityPanel(v) {
+  const c = app.sel.city, side = v.side;
+  const ours = v.own.filter((a) => a.alive && a.city === c);
+  const theirs = v.enemies.filter((a) => a.alive && a.city === c);
+  const trap = v.traps.find((t) => t.city === c);
+  const row = (a) => {
+    const mine = a.side === side;
+    const r = roleOf(side)(a);
+    const q = app.queued[side].find((o) => o.agentId === a.id);
+    const target = app.pick?.targets?.includes(a.id);
+    return `<button class="cp-row ${mine ? 'mine' : a.asset ? 'asset' : 'theirs'} ${app.sel.agent === a.id ? 'sel' : ''} ${target ? 'targetable' : ''}" data-act="${target ? 'target' : 'pick-agent'}" data-agent="${a.id}">
+      ${portrait(a, { size: 38 })}<span class="cp-id"><b>${esc(a.first)} ${esc(a.name)}</b><small>${esc(a.cover)}${a.asset ? ' · our source' : ''}</small></span>
+      <span class="cp-role" title="${r ? roleLabel(r) : 'Role unknown'}">${ROLE_ICON[r || 'unknown']}</span>
+      ${q ? `<span class="cp-q" title="${esc(describeOrder(q, app.game))}">${ORDER_ICON[q.type]}</span>` : ''}</button>`;
+  };
+  return `<aside class="panel city-panel">
+    <div class="cp-head"><div class="cp-landmark">${LANDMARK_ICON[LANDMARK[c]]}</div><div><h2>${c}</h2><small>${HOME[c] ? (HOME[c] === 'control' ? 'Home of the Circus' : 'Home of Moscow Centre') : 'Open city'}${trap ? ` · our trap ${trap.active ? 'is ready' : 'ready next week'}` : ''}</small></div>
+      <button class="icon-btn" data-act="close-city">${UI_ICON.close}</button></div>
+    <div class="cp-list">
+      <h3 class="ours">Ours · ${ours.length}</h3>${ours.map(row).join('') || '<p class="empty">No one here.</p>'}
+      <h3 class="theirs">Theirs · ${theirs.length}</h3>${theirs.map(row).join('') || '<p class="empty">No one here.</p>'}
+    </div></aside>`;
+}
+
+// ----- the order popover: beside the agent's row in the city panel (or its token) -----
 function chip(text, cls = '') { return `<span class="chip ${cls}">${text}</span>`; }
 const ROLE_PICKS = ['unknown', ...ARCHETYPE_KEYS];
 
@@ -264,12 +286,12 @@ function orderPop(v) {
   }
   const legal = legalOrders(g, side, a.id);
   const full = app.queued[side].length >= RULES.ordersPerWeek && !q;
-  const btns = legal.map((l) => `<button class="ob ${q?.type === l.type ? 'on' : ''} ${app.pick?.type === l.type ? 'picking' : ''}" data-act="order" data-type="${l.type}" ${full ? 'disabled' : ''} title="${esc(ORDER_HINT[l.type])}">${ORDER_ICON[l.type]}<span>${ORDER_LABEL[l.type]}</span><kbd>${ORDER_KEY[l.type]}</kbd></button>`).join('');
+  const btns = legal.map((l) => `<button class="ob ${q?.type === l.type ? 'on' : ''} ${app.pick?.type === l.type ? 'picking' : ''}" data-act="order" data-type="${l.type}" ${full ? 'disabled' : ''} title="${esc(ORDER_HINT[l.type])}">${ORDER_ICON[l.type]}<span>${ORDER_LABEL[l.type]}</span></button>`).join('');
   let sub = '';
   if (app.pick?.targets && app.pick.agentId === a.id) {
     sub = `<div class="pop-label">${ORDER_LABEL[app.pick.type]}: who?</div><div class="targets">${app.pick.targets.map((id) => {
       const t = g.agents[id]; const r = roleOf(side)({ ...t, asset: t.turnedBy === side && t.side !== side });
-      return `<button class="tg" data-act="target" data-agent="${id}">${portrait(t, { size: 38 })}<span>${esc(t.name)}</span>${r ? `<i>${ROLE_ICON[r]}</i>` : ''}<kbd>${app.pick.targets.indexOf(id) + 1}</kbd></button>`;
+      return `<button class="tg" data-act="target" data-agent="${id}">${portrait(t, { size: 38 })}<span>${esc(t.name)}</span>${r ? `<i>${ROLE_ICON[r]}</i>` : ''}</button>`;
     }).join('')}</div>`;
   }
   if (app.pick?.type === 'brief' && app.pick.agentId === a.id) {
@@ -290,20 +312,19 @@ function orderPop(v) {
       ${q ? `<button class="link" data-act="unqueue">Cancel order</button>` : ''}${mine ? `<button class="link danger" data-act="execute" title="Execute">${ORDER_ICON.execute}</button>` : ''}</div>
     ${chips.length ? `<div class="chips">${chips.join('')}</div>` : ''}
     ${asset ? `<div class="pop-label">When ${SIDE_LABEL[a.side]} gives them orders</div><div class="stance"><button class="${stance !== 'obey' ? 'on' : ''}" data-act="stance" data-stance="sabotage" title="Their strikes, traps, approaches and vetting quietly fail">Let them fail</button><button class="${stance === 'obey' ? 'on' : ''}" data-act="stance" data-stance="obey" title="They carry out their orders, keeping their cover">Carry them out</button></div><div class="pop-label">Their report home this week</div>` : ''}
-    <div class="obs">${btns}</div>${sub}
-    <div class="keys"><kbd>←</kbd><kbd>→</kbd> next agent · letter = order · <kbd>1</kbd>–<kbd>9</kbd> pick · <kbd>⌫</kbd> undo · <kbd>Enter</kbd> end week</div></div>`;
+    <div class="obs">${btns}</div>${sub}</div>`;
 }
 // Keep the popover next to its token, inside the screen.
 function placePop() {
   const pop = $('#pop'); if (!pop) return;
-  const tok = document.querySelector(`.token[data-agent="${app.sel.agent}"]`);
+  const tok = document.querySelector(`.cp-row[data-agent="${app.sel.agent}"]`) || document.querySelector(`.token[data-agent="${app.sel.agent}"]`);
   const stage = $('.stage').getBoundingClientRect();
   const r = tok ? tok.getBoundingClientRect() : { left: stage.width / 2, right: stage.width / 2, top: stage.height / 2, bottom: stage.height / 2 };
   const pw = pop.offsetWidth, ph = pop.offsetHeight, gap = 14, top = 80;
   const limitR = stage.width - (app.traffic ? 404 : 12);
   // Open away from the city (tokens sit to its left or right), else above or below the token.
   const city = tok?.closest('.city')?.querySelector('.medal')?.getBoundingClientRect();
-  const awayLeft = city ? r.left < city.left : false;
+  const awayLeft = tok?.classList.contains('cp-row') ? false : (city ? r.left < city.left : false);
   const cx = (r.left + r.right) / 2;
   const options = [
     awayLeft ? [r.left - pw - gap, (r.top + r.bottom) / 2 - ph / 2] : [r.right + gap, (r.top + r.bottom) / 2 - ph / 2],
@@ -398,22 +419,8 @@ function queue(order) {
   app.queued[side] = app.queued[side].filter((o) => o.agentId !== order.agentId);
   app.queued[side].push(order);
   app.pick = null;
-  // Move straight on to the next agent without an order, while orders remain.
-  const next = app.queued[side].length < RULES.ordersPerWeek ? cycleAgent(1, true) : null;
-  app.sel = next ? { city: app.game.agents[next].city, agent: next } : { city: app.sel.city, agent: null };
+  app.sel = { city: app.game.agents[order.agentId].city, agent: null };
   save(); render();
-}
-// Our agents in map order (west to east, then name). With `idle`, only those without an order.
-function cycleAgent(dir, idle = false) {
-  const g = app.game, side = app.active;
-  const order = cityOrder(g);
-  const mine = Object.values(g.agents).filter((a) => a.alive && (a.side === side || a.turnedBy === side))
-    .sort((a, b) => order.indexOf(a.city) - order.indexOf(b.city) || a.name.localeCompare(b.name));
-  const pool = idle ? mine.filter((a) => a.id === app.sel.agent || !app.queued[side].some((o) => o.agentId === a.id)) : mine;
-  if (!pool.length) return null;
-  const i = pool.findIndex((a) => a.id === app.sel.agent);
-  const next = pool[(i + dir + pool.length) % pool.length];
-  return next.id === app.sel.agent && idle ? null : next.id;
 }
 function toast(text) {
   const t = $('#toast'); if (!t) return;
@@ -443,6 +450,7 @@ function onAct(el, ev) {
     case 'traffic': app.traffic = !app.traffic; return render();
     case 'tab': app.tab = el.dataset.tab; app.traffic = true; return render();
     case 'stance': setStance(g, side, app.sel.agent, el.dataset.stance); save(); return render();
+    case 'pick-agent': { const a = g.agents[el.dataset.agent]; app.sel = { city: a.city, agent: app.sel.agent === a.id ? null : a.id }; app.pick = null; return render(); }
     case 'select': { const a = g.agents[el.dataset.agent]; if (!a.alive) return; app.sel = { city: a.city, agent: a.id }; app.pick = null; return render(); }
     case 'setrole': { const r = el.dataset.role; if (r === 'unknown') delete app.notes[side].roles[el.dataset.agent]; else app.notes[side].roles[el.dataset.agent] = r; save(); return render(); }
     case 'city': {
@@ -516,38 +524,8 @@ document.addEventListener('click', (ev) => {
 });
 document.addEventListener('keydown', (ev) => {
   if (ev.key === 'Escape') { if (!$('#modal').hidden) closeModal(); else if (app?.pick) { app.pick = null; render(); } else if (app?.sel?.agent) { app.sel.agent = null; render(); } return; }
-  if ((ev.key === 'Enter' || ev.key === ' ') && ev.target.matches?.('.city')) { ev.preventDefault(); onAct({ dataset: { act: 'city', city: ev.target.dataset.city } }, ev); return; }
-  if (!app || !$('#modal').hidden || ev.metaKey || ev.ctrlKey || ev.altKey || ev.target.matches?.('input, select, textarea')) return;
-  const g = app.game, side = app.active, k = ev.key;
-  if (app.screen === 'setup') return setupKey(ev);
-  if (app.screen !== 'play') return;
-  if (k === 'ArrowRight' || k === 'ArrowDown' || k === 'ArrowLeft' || k === 'ArrowUp' || k === 'Tab') {
-    ev.preventDefault();
-    const id = cycleAgent(k === 'ArrowLeft' || k === 'ArrowUp' || (k === 'Tab' && ev.shiftKey) ? -1 : 1);
-    if (id) { app.sel = { city: g.agents[id].city, agent: id }; app.pick = null; render(); }
-    return;
-  }
-  if (k === 'Enter') { ev.preventDefault(); return endWeek(); }
-  if (/^[1-9]$/.test(k)) {
-    const n = Number(k);
-    if (app.pick?.type === 'move') { const c = cityOrder(g)[n - 1]; if (c && c !== g.agents[app.pick.agentId].city) queue({ agentId: app.pick.agentId, type: 'move', city: c }); return; }
-    if (app.pick?.targets) { const t = app.pick.targets[n - 1]; if (t) queue({ agentId: app.pick.agentId, type: app.pick.type, targetId: t }); return; }
-    return;
-  }
-  if (k === 'Backspace' && app.sel.agent) { app.queued[side] = app.queued[side].filter((o) => o.agentId !== app.sel.agent); save(); render(); return; }
-  if (!app.sel.agent) return;
-  const legal = legalOrders(g, side, app.sel.agent);
-  const hit = legal.find((l) => ORDER_KEY[l.type] === k.toUpperCase());
-  if (hit) { ev.preventDefault(); onAct({ dataset: { act: 'order', type: hit.type } }, ev); }
+  if ((ev.key === 'Enter' || ev.key === ' ') && ev.target.matches?.('.city')) { ev.preventDefault(); onAct({ dataset: { act: 'city', city: ev.target.dataset.city } }, ev); }
 });
-function setupKey(ev) {
-  const g = app.game, side = app.active, draft = app.setup[side];
-  const own = Object.values(g.agents).filter((a) => a.side === side);
-  const i = own.findIndex((a) => a.id === app.setupSel);
-  if (ev.key === 'ArrowRight' || ev.key === 'ArrowLeft') { ev.preventDefault(); app.setupSel = own[(i + (ev.key === 'ArrowRight' ? 1 : -1) + own.length) % own.length].id; return render(); }
-  if (/^[1-9]$/.test(ev.key) && app.setupSel) { const c = cityOrder(g)[Number(ev.key) - 1]; if (c) placeSel(c); }
-  if (ev.key === 'Enter' && !validatePlacement(g, side, draft).length) confirmPlacement();
-}
 // Click-to-place: put the selected agent in a city, then select the next one still unplaced.
 function placeSel(c) {
   const g = app.game, side = app.active, draft = app.setup[side], id = app.setupSel;
