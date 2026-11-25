@@ -4,7 +4,7 @@
 import { callClaude } from '../llm.js';
 import { KARLA, KARLA_PLACEMENT } from '../prompts.js';
 import { ARCHETYPES, RULES } from '../world.js';
-import { validateOrders, validatePlacement, legalOrders, FEEDABLE } from '../engine.js';
+import { validateOrders, validatePlacement, legalOrders, FEEDABLE, ordersPerWeek } from '../engine.js';
 import { heuristicOrders, heuristicPlacement } from './heuristic.js';
 
 const label = (k) => ARCHETYPES[k].label;
@@ -31,7 +31,7 @@ function summarize(game, view) {
     return { reportedRole: r ? `${label(r.archetype)} (per ${r.source}, wk ${r.week})` : undefined };
   };
   return {
-    week: view.week, weeksTotal: RULES.weeks, ordersAllowed: RULES.ordersPerWeek, cities: view.cities,
+    week: view.week, weeksTotal: RULES.weeks, ordersAllowed: ordersPerWeek(game), cities: view.cities,
     rosterPerSide: Object.entries(game.roster || RULES.roster).map(([k, n]) => `${n} ${label(k)}${n > 1 ? 's' : ''}`).join(', '),
     score: view.score,
     yourAgents: view.own.filter((a) => a.alive).map((a) => ({
@@ -106,7 +106,7 @@ function toOrders(game, side, r) {
     }
     if (c.type === 'lie') o.lie = { kind: ['frame', 'alarm'].includes(c.lieKind) ? c.lieKind : 'hide', targetId: byName(c.lieTarget)?.id };
     if (!validateOrders(game, side, [...valid, o]).length) valid.push(o);
-    if (valid.length >= RULES.ordersPerWeek) break;
+    if (valid.length >= ordersPerWeek(game)) break;
   }
   const executions = (r.execute || []).map(byName).filter((a) => a && a.side === side && a.alive).map((a) => a.id);
   const stances = (r.instructions || []).map((x) => ({ id: byName(x.agent)?.id, stance: x.stance })).filter((x) => x.id && game.agents[x.id].turnedBy === side);

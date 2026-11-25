@@ -44,7 +44,7 @@ export function manualHTML() {
   const g = (x, y, icon, color) => `<g transform="translate(${x},${y})"><circle r="26" fill="#0a0f14" stroke="${color}" stroke-width="2.5"/><g color="#ecc978">${sized(icon, 28)}</g></g>`;
   return `<div class="manual">
   <div><div class="eyebrow">Field Manual · Circus internal</div><h2 style="margin-top:6px">Every agent is on the map. None of them are what they seem.</h2></div>
-  <p class="lead">${RULES.weeks} weeks. ${RULES.ordersPerWeek} orders a week. Most agents working for you at the end wins: your own still loyal, plus theirs you've turned.</p>
+  <p class="lead">${RULES.weeks} weeks. Five orders a week (four with six agents). Most agents working for you at the end wins: your own still loyal, plus theirs you've turned.</p>
 
   <div class="man-h">Your people</div>
   <div class="man-roles">${ARCHETYPE_KEYS.map((k) => `<div class="man-role">${ROLE_ICON[k]}<b>${ARCHETYPES[k].label}</b><span>${ARCHETYPES[k].power}</span></div>`).join('')}</div>

@@ -10,10 +10,10 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 - The debrief reveals itself once: a win brings up a warm desk-lamp light and a gold glow on your
   score; a loss opens in darkness and leaves a cold red edge on the page. Hot-seat games and draws
   get a neutral reveal. Reduced-motion settings skip the animation.
-- The stamp speaks the trade: NETWORK HOLDS (you won), BLOWN (you lost), STANDOFF (a draw), FILE
+- The stamp speaks the trade: CHECKMATE (you won), BLOWN (you lost), STANDOFF (a draw), FILE
   CLOSED (hot-seat).
 - Six-agent games are played on five cities (London, Moscow and three open cities), so agents share
-  cities from the start.
+  cities from the start, and allow four orders a week instead of five.
 
 ### Changed (playtest 3 round)
 - **Ferrets no longer block approaches.** They trap, notice surveillance and vet.

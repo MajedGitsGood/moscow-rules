@@ -82,6 +82,8 @@ const COVERS = ['trade attaché', 'journalist', 'professor', 'chauffeur', 'banke
 // Agents per side, chosen at the start of a game.
 // Smaller networks play on fewer cities, so agents share cities from the first week.
 export const CONTESTED_FOR_SIZE = { 6: 3, 8: 4, 10: 4 };
+// ...and fewer orders a week, so choosing who acts still matters.
+export const ORDERS_FOR_SIZE = { 6: 4, 8: 5, 10: 5 };
 export const ROSTERS = {
   6: { scalphunter: 2, lamplighter: 2, ferret: 1, talentspotter: 1 },
   8: { scalphunter: 2, lamplighter: 2, ferret: 2, talentspotter: 2 },

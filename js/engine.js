@@ -9,7 +9,7 @@
 // verdicts. Lamplighters see loud work for what it is. Talent-spotters turn an enemy agent after two
 // unseen approaches; turned agents leak orders and report lies. Most agents working for you wins.
 import { makeRng } from './rng.js';
-import { generateWorld, RULES, ROSTERS, CONTESTED_FOR_SIZE, SIDES, other, ARCHETYPES, SIDE_LABEL, FOOTPRINTS, TELLS, PLACE } from './world.js';
+import { generateWorld, RULES, ROSTERS, CONTESTED_FOR_SIZE, ORDERS_FOR_SIZE, SIDES, other, ARCHETYPES, SIDE_LABEL, FOOTPRINTS, TELLS, PLACE } from './world.js';
 
 // ---------- helpers ----------
 const withRng = (game, fn) => {
@@ -51,7 +51,7 @@ export function newGame(seed, { sleepers = false, size = 10 } = {}) {
   const roster = ROSTERS[size] || ROSTERS[10];
   const { cities, agents } = generateWorld(rng, roster, CONTESTED_FOR_SIZE[size] || RULES.contestedCities);
   const game = {
-    version: 2, seed, size: Object.values(roster).reduce((a, b) => a + b, 0), roster, rngState: rng.state(), week: 1, phase: 'setup', cities, agents,
+    version: 2, seed, size: Object.values(roster).reduce((a, b) => a + b, 0), roster, ordersPerWeek: ORDERS_FOR_SIZE[size] || RULES.ordersPerWeek, rngState: rng.state(), week: 1, phase: 'setup', cities, agents,
     placed: { control: false, karla: false },
     pending: { control: null, karla: null },
     approaches: {},   // targetId -> { side, count }
@@ -119,6 +119,8 @@ function startPlay(game) {
 }
 
 // ---------- orders ----------
+// Orders a side may give each week: set by the roster size (older saves: the default).
+export const ordersPerWeek = (game) => game.ordersPerWeek || RULES.ordersPerWeek;
 // { agentId, type, city?, targetId?, plan?: {kind:'strike'|'trap', city}, lie?: {kind:'hide'|'frame'|'alarm', targetId?} }
 export const ORDER_TYPES = ['move', 'surveil', 'lielow', 'prepare', 'strike', 'trap', 'approach', 'vet', 'feed', 'lie'];
 // Feed: give an agent a fake order. They do nothing this week, but anyone leaking their orders (they
@@ -153,7 +155,7 @@ export function legalOrders(game, side, agentId) {
 
 export function validateOrders(game, side, orders) {
   const errors = [];
-  if (orders.length > RULES.ordersPerWeek) errors.push(`Only ${RULES.ordersPerWeek} orders a week.`);
+  if (orders.length > ordersPerWeek(game)) errors.push(`Only ${ordersPerWeek(game)} orders a week.`);
   const seen = new Set();
   for (const o of orders) {
     const a = game.agents[o.agentId];
@@ -528,7 +530,7 @@ export function viewFor(game, side) {
     return v;
   });
   return {
-    side, enemy, week: game.week, phase: game.phase, cities: game.cities, rules: RULES,
+    side, enemy, week: game.week, phase: game.phase, cities: game.cities, rules: RULES, ordersPerWeek: ordersPerWeek(game),
     own, enemies, intel: game.intel[side], inbox: game.inbox[side],
     traps: game.traps.filter((t) => t.side === side).map((t) => ({ city: t.city, setterId: t.setterId, night: t.night, active: t.night === game.week })),
     approachProgress: Object.fromEntries(Object.entries(game.approaches).filter(([, r]) => r.side === side).map(([id, r]) => [id, r.count])),

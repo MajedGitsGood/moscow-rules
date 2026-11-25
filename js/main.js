@@ -2,7 +2,7 @@
 // The engine owns the rules; this file owns who is at the desk and what they may see.
 import {
   newGame, placeAgents, validatePlacement, submitOrders, validateOrders, resolveWeek, viewFor, revealAll,
-  addJournal, rescore, legalOrders, executeAgent, surrender, describeOrder, setStance, trapWhen, FEEDABLE,
+  addJournal, rescore, legalOrders, ordersPerWeek, executeAgent, surrender, describeOrder, setStance, trapWhen, FEEDABLE,
 } from './engine.js';
 import { SIDES, other, SIDE_LABEL, ARCHETYPES, ARCHETYPE_KEYS, RULES, HOME, LANDMARK } from './world.js';
 import { randomSeed } from './rng.js';
@@ -228,13 +228,13 @@ function setupView() {
 function hudTop(v, setup) {
   const side = app.active, g = app.game;
   const used = app.queued[side]?.length || 0;
-  const pips = Array.from({ length: RULES.ordersPerWeek }, (_, i) => `<i class="${i < used ? 'on' : ''}"></i>`).join('');
+  const pips = Array.from({ length: ordersPerWeek(app.game) }, (_, i) => `<i class="${i < used ? 'on' : ''}"></i>`).join('');
   const st = llmStatus();
   return `<header class="hud-top">
     <div class="plate who ${side}"><span class="crest">${side === 'control' ? 'C' : 'K'}</span><div><b>${SIDE_LABEL[side].toUpperCase()}</b><small>${side === 'control' ? 'The Circus, London' : 'Moscow Centre'}</small></div>
       ${setup ? '' : `<div class="tally"><span class="us" title="Our agents still alive">${v.score.ours}<small>ours</small></span><span class="them" title="Their agents still alive">${v.score.theirs}<small>theirs</small></span></div>`}</div>
     ${app.mode === 'claude' && app.karlaDown ? `<div class="plate karla-down" title="${esc(app.karlaDown)}"><b>OFFLINE KARLA</b><small>Claude unreachable · the bot is playing</small></div>` : ''}
-    <div class="plate week">${setup ? '<b>PLACE YOUR NETWORKS</b><small>Pick an agent, then a city · three per city</small>' : `<b>WEEK ${Math.min(g.week, RULES.weeks)} <span>/ ${RULES.weeks}</span></b><div class="pips" title="Orders this week">${pips}<small>${RULES.ordersPerWeek - used} orders left</small></div>`}</div>
+    <div class="plate week">${setup ? '<b>PLACE YOUR NETWORKS</b><small>Pick an agent, then a city · three per city</small>' : `<b>WEEK ${Math.min(g.week, RULES.weeks)} <span>/ ${RULES.weeks}</span></b><div class="pips" title="Orders this week">${pips}<small>${ordersPerWeek(app.game) - used} orders left</small></div>`}</div>
     <div class="plate tools">
       ${setup ? '' : `<button class="icon-btn ${app.traffic ? 'on' : ''}" data-act="traffic" title="Traffic">${UI_ICON.traffic}</button>`}
       <button class="icon-btn" data-act="manual" title="Field Manual">${UI_ICON.book}</button>
@@ -315,7 +315,7 @@ function orderPop(v) {
       ${chips.length ? `<div class="chips">${chips.join('')}</div>` : ''}</div>`;
   }
   const legal = legalOrders(g, side, a.id);
-  const full = app.queued[side].length >= RULES.ordersPerWeek && !q;
+  const full = app.queued[side].length >= ordersPerWeek(app.game) && !q;
   // Orders in two groups: what only this role can do (its special), and what everyone can do.
   const instantStrike = a.archetype === 'scalphunter';
   const isSpecial = (l, when) => ['surveil', 'approach', 'vet'].includes(l.type) || (l.type === 'strike' && instantStrike) || when === 'tonight';
@@ -469,8 +469,8 @@ function queueStrip(v) {
     const ask = app.whyFor === a.id ? `<div class="why-ask"><input id="why-in" maxlength="${WHY_MAX}" autocomplete="off" placeholder="Why? One line, optional" value="${esc(o.why || '')}"><small>Enter to keep · for the debrief</small></div>` : '';
     return `<div class="qslot ${app.sel.agent === a.id ? 'sel' : ''} ${o.why ? 'has-why' : ''}">${ask}<button class="qbody" data-act="why" data-agent="${a.id}" title="${esc(`${a.first} ${a.name}: ${describeOrder(o, g)}${o.why ? `\nWhy: ${o.why}` : ''}`)}">${portrait(a, { size: 30 })}<span class="qtxt"><b>${esc(a.name)}</b><small>${ORDER_ICON[o.type]}${esc(describeOrder(o, g))}</small>${o.why ? `<i class="qwhy">${esc(o.why)}</i>` : ''}</span></button><button class="qx" data-act="unqueue-id" data-agent="${a.id}" title="Cancel this order">${UI_ICON.close}</button></div>`;
   };
-  const slots = Array.from({ length: RULES.ordersPerWeek }, (_, i) => slot(q[i], i)).join('');
-  return `<div class="queue">${slots}</div>`;
+  const slots = Array.from({ length: ordersPerWeek(app.game) }, (_, i) => slot(q[i], i)).join('');
+  return `<div class="queue" style="--n:${ordersPerWeek(app.game)}">${slots}</div>`;
 }
 
 function endTurn() {
@@ -629,7 +629,7 @@ function onAct(el, ev) {
 document.addEventListener('pointerdown', () => { if (app?.nav?.on) { app.nav.on = false; document.querySelectorAll('.kfocus').forEach((x) => x.classList.remove('kfocus')); } }, true);
 function orderRoomFor(id) {
   const q = app.queued[app.active];
-  if (q.length >= RULES.ordersPerWeek && !q.some((o) => o.agentId === id)) { render(); toast(`All ${RULES.ordersPerWeek} orders are used. Cancel one in the order bar first.`); return false; }
+  if (q.length >= ordersPerWeek(app.game) && !q.some((o) => o.agentId === id)) { render(); toast(`All ${ordersPerWeek(app.game)} orders are used. Cancel one in the order bar first.`); return false; }
   return true;
 }
 document.addEventListener('click', (ev) => {

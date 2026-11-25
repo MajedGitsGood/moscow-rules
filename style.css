@@ -530,7 +530,7 @@ kbd { font-family: var(--ui); font-size: 9.5px; line-height: 1; padding: 2px 4px
 
 /* ---------- v2.4: order queue strip ---------- */
 .queue { position: absolute; z-index: 5; left: max(12px, env(safe-area-inset-left, 0px)); right: 404px; bottom: max(16px, env(safe-area-inset-bottom, 0px));
-  display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; max-width: 980px; }
+  display: grid; grid-template-columns: repeat(var(--n, 5), minmax(0, 1fr)); gap: 6px; max-width: calc(196px * var(--n, 5)); }
 .qslot { display: flex; align-items: stretch; min-width: 0; background: linear-gradient(180deg, rgba(33,48,64,.96), rgba(19,27,36,.97)); border: 1px solid var(--plate-edge); border-radius: 3px; box-shadow: 0 6px 18px rgba(0,0,0,.45); }
 .qslot.sel { border-color: var(--gold-hi); }
 .qslot.empty { border-style: dashed; border-color: rgba(201,162,78,.3); background: rgba(10,15,20,.35); box-shadow: none; justify-content: center; align-items: center; min-height: 44px; }

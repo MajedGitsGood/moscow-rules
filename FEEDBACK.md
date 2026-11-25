@@ -220,3 +220,6 @@ groups people by allegiance; a visible "Offline Karla" warning; Save case file.
   and for neutral reveals. **Done:** NETWORK HOLDS, STANDOFF, FILE CLOSED.
 - First impression of a 6-agent game: too many cities. Use one fewer so agents share cities from
   the start. **Done:** 6 agents play on 5 cities.
+- "Network holds" doesn't feel like winning. **Done:** CHECKMATE.
+- Fewer orders in 6-agent games? **Done:** 4 a week (in 600 bot games: fewer draws, 67 vs 96, wins
+  still even; two-thirds of agents act each week, close to the larger games).

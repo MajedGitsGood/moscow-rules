@@ -28,7 +28,7 @@ export function heuristicOrders(game, view, seed = 1) {
   const side = view.side;
   const me = view.own.filter((a) => a.alive);
   const orders = [], used = new Set();
-  const add = (o) => { if (orders.length < RULES.ordersPerWeek && !used.has(o.agentId)) { orders.push(o); used.add(o.agentId); } };
+  const add = (o) => { if (orders.length < (view.ordersPerWeek || RULES.ordersPerWeek) && !used.has(o.agentId)) { orders.push(o); used.add(o.agentId); } };
   const legal = (a, type) => legalOrders(game, side, a.id).find((l) => l.type === type);
   const fresh = view.inbox.filter((m) => m.week === view.week);
   // Warnings: a Lamplighter's word is certain; a footprint near one of ours is taken seriously half the time.
@@ -136,7 +136,7 @@ export function heuristicOrders(game, view, seed = 1) {
   }
   // 9. Remaining orders: reposition, sometimes go quiet.
   for (const a of rng.shuffle(me)) {
-    if (orders.length >= RULES.ordersPerWeek) break;
+    if (orders.length >= (view.ordersPerWeek || RULES.ordersPerWeek)) break;
     if (rng() < 0.3) add({ agentId: a.id, type: 'lielow' });
     else add({ agentId: a.id, type: 'move', city: rng.pick(view.cities.filter((c) => c !== a.city)) });
   }
