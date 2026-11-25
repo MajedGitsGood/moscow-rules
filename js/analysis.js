@@ -138,6 +138,13 @@ const SCHEMA = {
         additionalProperties: false,
       },
     },
+    lessons: {
+      type: 'object',
+      description: "for each side, the strategic lapse that ran through its game and how it should have played instead",
+      properties: { control: { type: 'string' }, karla: { type: 'string' } },
+      required: ['control', 'karla'],
+      additionalProperties: false,
+    },
     pivotal: {
       type: 'object',
       properties: {
@@ -151,9 +158,24 @@ const SCHEMA = {
       additionalProperties: false,
     },
   },
-  required: ['headline', 'summary', 'moments', 'pivotal'],
+  required: ['headline', 'summary', 'moments', 'pivotal', 'lessons'],
   additionalProperties: false,
 };
+
+// Offline: the biggest leak in a side's game, by simple counts.
+function lessonFor(game, side) {
+  const mine = Object.values(game.agents).filter((a) => a.side === side);
+  const turned = mine.filter((a) => a.turnedBy).length;
+  const trapped = mine.filter((a) => a.eliminated?.how === 'trapped').length;
+  const executedLoyal = mine.filter((a) => a.eliminated?.how === 'executed' && !a.turnedBy).length;
+  const killed = mine.filter((a) => a.eliminated?.how === 'killed').length;
+  const vets = game.orderLog.filter((o) => o.side === side && o.type === 'vet').length;
+  if (turned >= 2) return `${turned} agents were turned and ${vets ? 'too few were vetted' : 'none were ever vetted'}. Rotate suspects through a Ferret, and feed fake orders to test who leaks.`;
+  if (executedLoyal) return `${executedLoyal} loyal agent${executedLoyal > 1 ? 's were' : ' was'} executed on a framing. Test an accusation with a vet or a fake order before acting on it.`;
+  if (trapped >= 2) return `${trapped} attackers walked into traps. Strike only where no trap is being set, and watch for rooms and unfamiliar faces first.`;
+  if (killed >= 3) return `${killed} agents were killed. Read the footprints around your people and lie low or trap when someone starts asking about them.`;
+  return 'No single lapse stands out; the margin came from small exchanges.';
+}
 
 function fallbackStory(game, found) {
   const o = game.outcome, s = o.score;
@@ -165,6 +187,7 @@ function fallbackStory(game, found) {
     summary: `${lead} ${recruits} turned, ${mistakes} avoidable loss${mistakes === 1 ? '' : 'es'}.`,
     moments: found.moments.slice(0, 10),
     pivotal: found.pivotal,
+    lessons: { control: lessonFor(game, 'control'), karla: lessonFor(game, 'karla') },
     via: 'rules',
   };
 }
@@ -177,7 +200,7 @@ export async function analyze(game) {
     const okCity = (c) => game.cities.find((x) => x.toLowerCase() === String(c).toLowerCase());
     const moments = r.moments.filter((m) => m.week >= 1 && m.week <= last).map((m) => ({ ...m, city: okCity(m.city) || null })).slice(0, 10);
     const pivotal = { ...r.pivotal, week: Math.min(Math.max(1, r.pivotal.week), last), city: okCity(r.pivotal.city) || found.pivotal.city };
-    return { headline: r.headline, summary: r.summary, moments, pivotal, via: 'claude' };
+    return { headline: r.headline, summary: r.summary, moments, pivotal, lessons: r.lessons, via: 'claude' };
   } catch (e) {
     if (!(e instanceof LLMUnavailable)) console.warn('debrief analysis fell back:', e.message);
     return fallbackStory(game, found);

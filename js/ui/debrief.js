@@ -62,6 +62,12 @@ function moments(story) {
     <div><b>${esc(m.title)}</b><span class="mo-when">${KIND[m.kind]?.icon || ''}${m.city ? esc(m.city) : ''}</span><p>${esc(m.detail)}</p></div></li>`).join('')}</ol>`;
 }
 
+// Below the moments: each side's lapse across the whole game, and how it should have played.
+function lessons(story) {
+  if (!story?.lessons) return '';
+  return `<div class="lessons">${SIDES.map((s) => `<div class="lesson ${s}"><h3>Where ${SIDE_LABEL[s]} went wrong</h3><p>${esc(story.lessons[s])}</p></div>`).join('')}</div>`;
+}
+
 // The pivotal battleground: that week's map around the city, with the true picture in the spotlight.
 function battleground(game, story) {
   if (!story?.pivotal) return '';
@@ -138,7 +144,7 @@ export function debriefHTML(game, story, { mood = 'even', reveal = false } = {})
       <div class="db-score">${SIDES.map((s) => { const x = o.score[s]; return `<div class="${s}"><span>${x.standing}</span><b>${SIDE_LABEL[s]}</b>
         <small class="sum-line">${x.loyal ?? x.standing} own${x.recruited ? ` + ${x.recruited} turned` : ''}</small></div>`; }).join('<i>vs</i>')}</div>
     </header>
-    <section class="db2-card"><h2>How it unfolded</h2>${storyChart(game, story, last)}${moments(story)}</section>
+    <section class="db2-card"><h2>How it unfolded</h2>${storyChart(game, story, last)}${moments(story)}${lessons(story)}</section>
     ${battleground(game, story)}
     ${rosters(game)}
     ${story?.via === 'rules' ? '<p class="db-note">Rules-engine analysis. <button class="link" data-act="reanalyze">Ask the analyst</button></p>' : ''}

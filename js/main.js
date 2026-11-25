@@ -483,7 +483,7 @@ let analyzing = false;
 function debriefScreen() {
   // The analyst runs once per game; the page shows the facts at once and the story when it's ready.
   // A story saved in the older shape (pivotal without an exchange) is redone.
-  if (app.story && !('receiver' in (app.story.pivotal || {}))) app.story = null;
+  if (app.story && (!('receiver' in (app.story.pivotal || {})) || !app.story.lessons)) app.story = null;
   // A game finished under the old scoring is re-scored, and its story rewritten to match.
   if (app.game.outcome && !('recruited' in app.game.outcome.score.control)) { rescore(app.game); app.story = null; save(); }
   if (!app.story && !analyzing) {

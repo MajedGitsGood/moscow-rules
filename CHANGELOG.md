@@ -4,6 +4,11 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 
 ## [Unreleased]
 
+### Added (debrief lessons)
+- Below the key moments: "Where Control went wrong" and "Where Karla went wrong", each side's
+  strategic lapse across the whole game and how it should have played, written by the analyst
+  (a rules-based version offline). Older debriefs are re-analysed once to add them.
+
 ### Added (debrief reveal)
 - While Claude writes the after-action report, a quiet waiting screen (a file being worked on,
   rotating lines: "Pulling the files…", "Working out who was really whose…").
