@@ -58,7 +58,9 @@ export const DEBRIEF = `${WORLD}
 
 You are the analyst writing the after-action report on a finished game, for the human who played it. You are given the full \
 truth: every agent's real role and loyalty, both sides' orders each week, and what each side was told the next morning \
-(including the lies moles told). Find the story: the moments that decided who ended with more agents standing.
+(including the lies moles told). Some orders carry the player's own one-line reason ([why: "..."]). Find the story: the \
+moments that decided who ended with more agents standing. Where a stated reason shows what a side believed (rightly or \
+wrongly), use it: quote or paraphrase it briefly in that moment's detail or in the pivotal "did".
 
 The reader sees mostly pictures, so keep every text short. Write:
 - headline: one line, under 10 words.

@@ -96,7 +96,7 @@ function record(game, found) {
     weeks: Array.from({ length: last }, (_, i) => i + 1).map((w) => ({
       week: w,
       standingAfter: standingAt(game, w),
-      orders: Object.fromEntries(SIDES.map((s) => [SIDE_LABEL[s], game.orderLog.filter((o) => o.week === w && o.side === s).map((o) => `${name(o.agentId)} (${cityAt(game.agents[o.agentId], w - 1)}): ${o.type === 'lie' ? describeOrder(o, game) + ' (lie told through a mole)' : describeOrder(o, game)}`)])),
+      orders: Object.fromEntries(SIDES.map((s) => [SIDE_LABEL[s], game.orderLog.filter((o) => o.week === w && o.side === s).map((o) => `${name(o.agentId)} (${cityAt(game.agents[o.agentId], w - 1)}): ${o.type === 'lie' ? describeOrder(o, game) + ' (lie told through a mole)' : describeOrder(o, game)}${o.why ? ` [why: "${o.why}"]` : ''}`)])),
       toldNextMorning: Object.fromEntries(SIDES.map((s) => [SIDE_LABEL[s], game.inbox[s].filter((m) => m.week === w + 1 && m.kind !== 'briefing').map((m) => `${m.from ? name(m.from) : 'Station'}${m.lie ? ' (a LIE planted by the other side through their mole)' : m.kind === 'source' ? ' (LEAKED by a mole inside the other side)' : ''}: ${m.text}`)])),
     })),
     outcome: game.outcome,

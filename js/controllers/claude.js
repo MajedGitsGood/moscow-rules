@@ -71,8 +71,9 @@ const ORDER_SCHEMA = {
           planCity: { type: ['string', 'null'], description: 'brief only' },
           lieKind: { type: 'string', enum: ['hide', 'frame', 'alarm', 'none'], description: "lie only (British agents working for you); 'none' for other orders" },
           lieTarget: { type: ['string', 'null'], description: 'lie frame: which British agent to frame' },
+          why: { type: 'string', description: 'your reason for this order: one short sentence, at most 15 words' },
         },
-        required: ['agent', 'type', 'city', 'target', 'when', 'planKind', 'planCity', 'lieKind', 'lieTarget'],
+        required: ['agent', 'type', 'city', 'target', 'when', 'planKind', 'planCity', 'lieKind', 'lieTarget', 'why'],
         additionalProperties: false,
       },
     },
@@ -94,6 +95,7 @@ function toOrders(game, side, r) {
     const o = { agentId: a.id, type: c.type };
     if (c.type === 'move') o.city = city(c.city);
     if (['prepare', 'strike', 'approach', 'vet'].includes(c.type)) o.targetId = byName(c.target)?.id;
+    if (c.why) o.why = String(c.why).replace(/\s+/g, ' ').replace(/['",\s]+$/, '').trim().slice(0, 120);
     if (c.type === 'trap') o.when = c.when === 'tonight' && a.archetype === 'ferret' ? 'tonight' : 'next';
     if (c.type === 'brief') o.plan = { kind: c.planKind === 'trap' ? 'trap' : 'strike', city: city(c.planCity) };
     if (c.type === 'lie') o.lie = { kind: ['frame', 'alarm'].includes(c.lieKind) ? c.lieKind : 'hide', targetId: byName(c.lieTarget)?.id };

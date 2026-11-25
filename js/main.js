@@ -88,6 +88,7 @@ async function morning() {
 
 async function endWeek() {
   const g = app.game, side = app.active;
+  app.whyFor = null;
   const orders = app.queued[side];
   const errors = validateOrders(g, side, orders);
   if (errors.length) { toast(errors[0]); return; }
@@ -119,7 +120,7 @@ function render() {
   if (!app) { root.innerHTML = titleScreen(); return; }
   const screens = { setup: playScreen, play: playScreen, handoff: handoffScreen, busy: busyScreen, debrief: debriefScreen };
   root.innerHTML = (screens[app.screen] || playScreen)();
-  if (app.screen === 'play') { tintCells(root, viewFor(app.game, app.active)); placeCityPanel(); placePop(); applyNavFocus(); }
+  if (app.screen === 'play') { tintCells(root, viewFor(app.game, app.active)); placeCityPanel(); placePop(); applyNavFocus(); $('#why-in')?.focus(); }
   if (app.screen === 'setup') tintCells(root, setupView());
 }
 function busy(text) { app.screen = 'busy'; app.busyText = text; render(); }
@@ -187,7 +188,7 @@ function playScreen() {
   const fresh = app.fresh && !setup; app.fresh = false;
   return `<div class="stage ${fresh ? 'fresh' : ''} ${side} ${setup ? 'is-setup' : ''} ${app.pick ? 'picking' : ''} ${!setup && app.traffic ? 'traffic-open' : ''}">
     <svg class="map" viewBox="0 0 ${MAP_SIZE.W} ${MAP_SIZE.H}" preserveAspectRatio="xMidYMid meet">${base(g)}
-      <g id="overlay">${mapOverlay({ view: v, selected: app.sel.city, orders: setup ? [] : app.queued[side], moveTargets, roleOf: roleInfo(side), numbers: null })}</g>
+      <g id="overlay">${mapOverlay({ view: v, selected: app.sel.city, orders: setup ? [] : app.queued[side], moveTargets, roleOf: roleInfo(side), trustOf: trustOf(side), numbers: null })}</g>
     </svg>
     ${hudTop(v, setup)}
     ${setup ? setupTray(v) : ''}
@@ -254,7 +255,7 @@ function cityPanel(v) {
     const q = app.queued[side].find((o) => o.agentId === a.id);
     const target = app.pick?.targets?.includes(a.id);
     return `<button class="cp-row ${mine ? 'mine' : a.asset ? 'asset' : 'theirs'} ${app.sel.agent === a.id ? 'sel' : ''} ${target ? 'targetable' : ''}" data-act="${target ? 'target' : 'pick-agent'}" data-agent="${a.id}">
-      ${portrait(a, { size: 38 })}<span class="cp-id"><b>${esc(a.first)} ${esc(a.name)}</b><small class="${ri.role ? `r-${ri.role}` : ''}">${ri.role ? `${roleLabel(ri.role)}${ri.sure ? '' : '?'}` : 'Unknown'}${a.asset ? ' · our source' : ''}</small></span>
+      ${portrait(a, { size: 38 })}<span class="cp-id"><b>${esc(a.first)} ${esc(a.name)}</b><small class="${ri.role ? `r-${ri.role}` : ''}">${ri.role ? `${roleLabel(ri.role)}${ri.sure ? '' : '?'}` : 'Unknown'}${a.asset ? ' · our source' : ''}${mine && trustOf(side)(a) !== 'trusted' ? ` <em class="tchip t-${trustOf(side)(a)}">${TRUST[trustOf(side)(a)].label}</em>` : ''}</small></span>
       ${roleTag(ri, 'cp-role')}
       ${q ? `<span class="cp-q" title="${esc(describeOrder(q, app.game))}">${ORDER_ICON[q.type]}</span>` : ''}</button>`;
   };
@@ -330,7 +331,8 @@ function orderPop(v) {
       ${q ? `<button class="link" data-act="unqueue">Cancel order</button>` : ''}${mine ? `<button class="link danger" data-act="execute" title="Execute">${ORDER_ICON.execute}</button>` : ''}</div>
     ${chips.length ? `<div class="chips">${chips.join('')}</div>` : ''}
     ${asset ? `<div class="pop-label">When ${SIDE_LABEL[a.side]} gives them orders</div><div class="stance"><button class="${stance !== 'obey' ? 'on' : ''}" data-act="stance" data-stance="sabotage" title="Their strikes, traps, approaches and vetting quietly fail">Let them fail</button><button class="${stance === 'obey' ? 'on' : ''}" data-act="stance" data-stance="obey" title="They carry out their orders, keeping their cover">Carry them out</button></div><div class="pop-label">Their report home this week</div>` : ''}
-    <div class="obs">${btns}</div>${sub}</div>`;
+    <div class="obs">${btns}</div>${sub}
+    ${mine ? trustPicker(a, side) : ''}</div>`;
 }
 // Keep the popover next to its token, inside the screen.
 // Screen boxes, relative to the stage.
@@ -433,10 +435,11 @@ function pickHint() {
 
 // ----- right panel: traffic and notebook -----
 function sidePanel(v) {
-  const tab = app.tab || 'traffic';
+  const tab = { notes: 'theirs' }[app.tab] || app.tab || 'traffic';
+  const t = (k, label) => `<button class="${tab === k ? 'on' : ''} tab-${k}" data-act="tab" data-tab="${k}">${label}</button>`;
   return `<aside class="panel traffic">
-    <div class="tabs"><button class="${tab === 'traffic' ? 'on' : ''}" data-act="tab" data-tab="traffic">Traffic <small>wk ${v.week}</small></button><button class="${tab === 'notes' ? 'on' : ''}" data-act="tab" data-tab="notes">Notebook</button></div>
-    <div class="tp-body">${tab === 'notes' ? notebook(v) : traffic(v)}</div></aside>`;
+    <div class="tabs">${t('traffic', `Traffic <small>wk ${v.week}</small>`)}${t('theirs', 'Theirs')}${t('ours', 'Ours')}</div>
+    <div class="tp-body">${tab === 'theirs' ? theirsList(v) : tab === 'ours' ? oursList(v) : traffic(v)}</div></aside>`;
 }
 function traffic(v) {
   const now = v.inbox.filter((m) => m.week === v.week);
@@ -456,24 +459,27 @@ function traffic(v) {
     ${now.length ? '' : '<p class="empty">A quiet night. Nothing came in.</p>'}
     ${earlier.length ? `<details><summary>Earlier traffic</summary>${earlier.map(msg).join('')}</details>` : ''}`;
 }
-function notebook(v) {
+// Your own verdict on each of your agents. Shown on their tokens so you don't have to remember.
+const TRUST = { trusted: { label: 'Trusted', mark: '' }, suspect: { label: 'Suspect', mark: '?' }, mole: { label: 'Mole', mark: 'M' } };
+const trustOf = (side) => (a) => (a.side === side ? app.notes[side].trust[a.id] || 'trusted' : null);
+const trustPicker = (a, side) => `<div class="trust3" role="group" aria-label="Your verdict on ${esc(a.name)}">${Object.entries(TRUST).map(([k, t]) =>
+  `<button class="t-${k} ${trustOf(side)(a) === k ? 'on' : ''}" data-act="trust" data-agent="${a.id}" data-trust="${k}">${t.label}</button>`).join('')}</div>`;
+
+function theirsList(v) {
   const side = v.side, notes = app.notes[side];
-  notes.text ||= {};
-  const note = (id) => `<input class="nb-note" data-note="${id}" value="${esc(notes.text[id] || '')}" placeholder="note…" autocomplete="off">`;
-  const ours = v.own.slice().sort((a, b) => b.alive - a.alive).map((a) => {
-    const t = notes.trust[a.id] || 'trusted';
-    return `<div class="nb-row ${a.alive ? '' : 'dead'}"><button class="nb-who" data-act="select" data-agent="${a.id}">${portrait(a, { size: 30, mood: a.alive ? null : 'dead' })}<span><b>${esc(a.name)}</b><small>${roleTag({ role: a.archetype, sure: true }, 'mini')}${a.alive ? a.city : esc(a.eliminated?.how || 'lost')}</small></span></button>
-      ${a.alive ? `<button class="trust ${t}" data-act="trust" data-agent="${a.id}">${t === 'suspect' ? 'Suspect' : 'Trusted'}</button>` : ''}${note(a.id)}</div>`;
-  }).join('');
-  const theirs = v.enemies.slice().sort((a, b) => b.alive - a.alive).map((e) => {
+  const rows = v.enemies.slice().sort((a, b) => b.alive - a.alive).map((e) => {
     const ri = roleInfo(side)(e);
     const guess = notes.roles[e.id] || 'unknown';
     return `<div class="nb-row ${e.alive ? '' : 'dead'}"><button class="nb-who" data-act="select" data-agent="${e.id}">${portrait(e, { size: 30, mood: e.alive ? null : 'dead' })}<span><b>${esc(e.name)}</b><small>${e.alive ? e.city : 'dead'}${e.asset ? ' · our source' : ''}</small></span></button>
-      <div class="role-picks small">${ri.sure ? `${roleTag(ri)}<span class="nb-known r-${ri.role}">${roleLabel(ri.role)}</span>` : ROLE_PICKS.map((k) => `<button class="rp ${k !== 'unknown' ? `r-${k}` : ''} ${guess === k ? 'on' : ''}" data-act="setrole" data-agent="${e.id}" data-role="${k}" title="${k === 'unknown' ? 'No idea yet' : roleLabel(k)}">${ROLE_ICON[k]}</button>`).join('')}</div>${note(e.id)}</div>`;
+      <div class="role-picks small">${ri.sure ? `${roleTag(ri)}<span class="nb-known r-${ri.role}">${roleLabel(ri.role)}</span>` : ROLE_PICKS.map((k) => `<button class="rp ${k !== 'unknown' ? `r-${k}` : ''} ${guess === k ? 'on' : ''}" data-act="setrole" data-agent="${e.id}" data-role="${k}" title="${k === 'unknown' ? 'No idea yet' : roleLabel(k)}">${ROLE_ICON[k]}</button>`).join('')}</div></div>`;
   }).join('');
-  const t = app.nbTab || 'theirs';
-  return `<div class="nb-tabs"><button class="theirs ${t === 'theirs' ? 'on' : ''}" data-act="nbtab" data-tab="theirs">Theirs</button><button class="ours ${t === 'ours' ? 'on' : ''}" data-act="nbtab" data-tab="ours">Ours</button></div>
-    ${t === 'theirs' ? `<div class="nb">${theirs}</div><p class="empty">Roles your Lamplighters report fill in by themselves. Your guesses show dashed.</p>` : `<div class="nb">${ours}</div>`}`;
+  return `<div class="nb">${rows}</div><p class="empty">Roles your Lamplighters report fill in by themselves. Your guesses show dashed.</p>`;
+}
+function oursList(v) {
+  const side = v.side;
+  const rows = v.own.slice().sort((a, b) => b.alive - a.alive).map((a) => `<div class="nb-row ${a.alive ? '' : 'dead'} trust-${trustOf(side)(a)}"><button class="nb-who" data-act="select" data-agent="${a.id}">${portrait(a, { size: 30, mood: a.alive ? null : 'dead' })}<span><b>${esc(a.name)}</b><small>${roleTag({ role: a.archetype, sure: true }, 'mini')}${a.alive ? a.city : esc(a.eliminated?.how || 'lost')}</small></span></button>
+      ${a.alive ? trustPicker(a, side) : ''}</div>`).join('');
+  return `<div class="nb">${rows}</div><p class="empty">Suspects and moles are marked on the map.</p>`;
 }
 
 // The week's orders, always visible: click one to revisit the agent, ✕ to cancel it.
@@ -483,7 +489,8 @@ function queueStrip(v) {
     const o = q[i];
     if (!o) return `<div class="qslot empty"><span>${i + 1}</span></div>`;
     const a = g.agents[o.agentId];
-    return `<div class="qslot ${app.sel.agent === a.id ? 'sel' : ''}"><button class="qbody" data-act="pick-agent" data-agent="${a.id}" title="${esc(`${a.first} ${a.name}: ${describeOrder(o, g)}`)}">${portrait(a, { size: 30 })}<span class="qtxt"><b>${esc(a.name)}</b><small>${ORDER_ICON[o.type]}${esc(describeOrder(o, g))}</small></span></button><button class="qx" data-act="unqueue-id" data-agent="${a.id}" title="Cancel this order">${UI_ICON.close}</button></div>`;
+    const ask = app.whyFor === a.id ? `<div class="why-ask"><input id="why-in" maxlength="${WHY_MAX}" autocomplete="off" placeholder="Why? One line, optional" value="${esc(o.why || '')}"><small>Enter to keep · for the debrief</small></div>` : '';
+    return `<div class="qslot ${app.sel.agent === a.id ? 'sel' : ''} ${o.why ? 'has-why' : ''}">${ask}<button class="qbody" data-act="why" data-agent="${a.id}" title="${esc(`${a.first} ${a.name}: ${describeOrder(o, g)}${o.why ? `\nWhy: ${o.why}` : ''}`)}">${portrait(a, { size: 30 })}<span class="qtxt"><b>${esc(a.name)}</b><small>${ORDER_ICON[o.type]}${esc(describeOrder(o, g))}</small>${o.why ? `<i class="qwhy">${esc(o.why)}</i>` : ''}</span></button><button class="qx" data-act="unqueue-id" data-agent="${a.id}" title="Cancel this order">${UI_ICON.close}</button></div>`;
   }).join('');
   return `<div class="queue">${slots}</div>`;
 }
@@ -508,10 +515,14 @@ function debriefScreen() {
 
 // ---------- interaction ----------
 
+const WHY_MAX = 90;
 function queue(order) {
   const side = app.active;
+  const prev = app.queued[side].find((o) => o.agentId === order.agentId);
+  if (prev?.why) order.why = prev.why;
   app.queued[side] = app.queued[side].filter((o) => o.agentId !== order.agentId);
   app.queued[side].push(order);
+  app.whyFor = order.agentId; // ask for the reason now, while it's fresh
   app.pick = null;
   app.sel = { city: app.game.agents[order.agentId].city, agent: null };
   save(); render();
@@ -543,8 +554,8 @@ function onAct(el, ev) {
     case 'place': return confirmPlacement();
     case 'traffic': app.traffic = !app.traffic; return render();
     case 'tab': app.tab = el.dataset.tab; app.traffic = true; return render();
-    case 'nbtab': app.nbTab = el.dataset.tab; return render();
     case 'stance': setStance(g, side, app.sel.agent, el.dataset.stance); save(); return render();
+    case 'why': { const a = g.agents[el.dataset.agent]; app.whyFor = a.id; app.sel = { city: a.city, agent: null }; app.pick = null; return render(); }
     case 'pick-agent': { const a = g.agents[el.dataset.agent]; app.sel = { city: a.city, agent: app.sel.agent === a.id ? null : a.id }; app.pick = null; if (app.nav) { app.nav.orders = 0; app.nav.roles = 0; } return render(); }
     case 'select': { const a = g.agents[el.dataset.agent]; if (!a.alive) return; app.sel = { city: a.city, agent: a.id }; app.pick = null; return render(); }
     case 'setrole': { const r = el.dataset.role; if (r === 'unknown') delete app.notes[side].roles[el.dataset.agent]; else app.notes[side].roles[el.dataset.agent] = r; save(); return render(); }
@@ -597,7 +608,7 @@ function onAct(el, ev) {
       save(); return render();
     }
     case 'cancel-pick': app.pick = null; return render();
-    case 'trust': { ev.stopPropagation(); const t = app.notes[side].trust; t[el.dataset.agent] = t[el.dataset.agent] === 'suspect' ? 'trusted' : 'suspect'; save(); return render(); }
+    case 'trust': { ev.stopPropagation(); const t = app.notes[side].trust; if (el.dataset.trust === 'trusted') delete t[el.dataset.agent]; else t[el.dataset.agent] = el.dataset.trust; save(); return render(); }
     case 'guess': {
       ev.stopPropagation();
       const id = el.dataset.agent;
@@ -622,6 +633,11 @@ function orderRoomFor(id) {
 }
 document.addEventListener('click', (ev) => {
   if (justDragged) return;
+  // Clicking anywhere outside the "why" bubble closes it (what was typed is already kept).
+  if (app?.whyFor && !ev.target.closest('.why-ask, [data-act="why"]')) {
+    app.whyFor = null;
+    if (!ev.target.closest('[data-act], .token, .city, .cell')) return render();
+  }
   const el = ev.target.closest('[data-act]');
   if (el && !el.disabled) { onAct(el, ev); return; }
   const tok = ev.target.closest('.token');
@@ -721,12 +737,17 @@ function placeSel(c) {
   save(); render();
 }
 // Notebook notes save as you type, without re-rendering (so focus stays in the field).
+// The optional one-line reason for an order, typed into the bubble above its slot.
 document.addEventListener('input', (ev) => {
-  const id = ev.target.dataset?.note;
-  if (!id || !app) return;
-  (app.notes[app.active].text ||= {})[id] = ev.target.value;
-  save();
+  if (ev.target.id !== 'why-in' || !app) return;
+  const o = app.queued[app.active].find((x) => x.agentId === app.whyFor);
+  if (o) { const w = ev.target.value.replace(/\s+/g, ' ').slice(0, WHY_MAX); if (w.trim()) o.why = w; else delete o.why; save(); }
 });
+document.addEventListener('keydown', (ev) => {
+  if (ev.target.id !== 'why-in' || !['Enter', 'Escape'].includes(ev.key)) return;
+  ev.preventDefault(); ev.stopImmediatePropagation();
+  app.whyFor = null; render();
+}, true);
 window.addEventListener('resize', () => { if (app?.screen === 'play') { placeCityPanel(); placePop(); } });
 // Debrief: a pin on the chart and its moment card light up together.
 document.addEventListener('pointerover', (ev) => {

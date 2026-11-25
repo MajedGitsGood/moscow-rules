@@ -65,7 +65,7 @@ export function mapBase(cities) {
 // Dynamic layer: cities, tokens, queued moves. `state` comes from the UI.
 //   view: viewFor(side); selected: city; orders: queued orders; moveTargets: Set of cities to
 //   highlight; roleOf(agent): { role, sure } to badge on a token (or a plain role string)
-export function mapOverlay({ view, selected, orders = [], moveTargets = null, roleOf, numbers = null }) {
+export function mapOverlay({ view, selected, orders = [], moveTargets = null, roleOf, trustOf = () => null, numbers = null }) {
   const out = [];
   // Queued moves as arcs.
   for (const o of orders.filter((x) => x.type === 'move')) {
@@ -92,6 +92,7 @@ export function mapOverlay({ view, selected, orders = [], moveTargets = null, ro
         <circle r="12.5" class="ring"/>
         <svg x="-11" y="-11" width="22" height="22" viewBox="0 0 64 64" clip-path="url(#tok)">${portraitBody(a, a.alive ? null : 'dead')}</svg>
         ${role ? `<g class="badge r-${role} ${sure ? '' : 'guess'}" transform="translate(${sideCls === 'ours' ? -13 : 13},5)"><circle r="8.5"/>${sized(ROLE_ICON[role], 12.5)}</g>` : ''}
+        ${['suspect', 'mole'].includes(trustOf(a)) ? `<g class="tmark t-${trustOf(a)}" transform="translate(10,-10)"><title>You marked them: ${trustOf(a)}</title><circle r="7"/><text y="3.5" text-anchor="middle">${trustOf(a) === 'mole' ? 'M' : '?'}</text></g>` : ''}
         ${queued ? `<g class="qmark" transform="translate(-9,-9)"><circle r="6.5"/>${sized(ORDER_ICON[queued.type] || '', 9)}</g>` : ''}
         <title>${a.first} ${a.name}</title>
       </g></g>`;

@@ -4,6 +4,13 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 
 ## [Unreleased]
 
+### Changed (notebook and reasons)
+- The right-hand panel has three tabs: Traffic, Theirs and Ours. Free-text notes are gone.
+- Mark each of your agents Trusted, Suspect or Mole in one click (in the Ours tab or their
+  popover); suspects and moles carry a "?" or "M" on their map token and in the city panel.
+- After giving an order, a one-line "why?" box opens above it. It's optional, and the debrief
+  uses your reasons, and Karla's (he now gives one for every order), to tell the story.
+
 ### Fixed
 - Karla's weekly orders now come from Claude. The order format Karla answers in was rejected by
   the API, so every week silently fell back to the offline bot (only his opening placement used

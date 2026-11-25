@@ -4,6 +4,15 @@ Why-this-not-that for this project, newest first. Companion to [CHANGELOG.md](CH
 
 ---
 
+## 2026-11-24: One-line reasons for orders; verdicts on tokens
+**Decision:** Each order can carry an optional reason (90 characters), asked for the moment the
+order is queued; Karla gives one per order. Both feed the debrief analyst. Your verdict on your own
+agents (trusted / suspect / mole) is shown on their tokens. Free-text notes were removed.
+**Why:** The user barely used notes, but reasons recorded at decision time make the debrief able to
+say what each side believed. Verdicts are only useful if you can see them where you act.
+**Rejected:** *A required reason* (friction every order). *Asking at end of week* (the reason is
+freshest at the click).
+
 ## 2026-11-24: The city panel finds open sea, or docks
 **Decision:** Every spot on the map is scored by how much land and how many other cities the panel
 would cover, plus its distance from the city; the clicked city is never covered. Land is sampled
