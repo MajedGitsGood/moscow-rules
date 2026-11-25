@@ -1,53 +1,59 @@
-# The Berlin Draw: X thread
+# Moscow Rules: X thread
 
-Replace [link] with the shared case-file link, and [link to play] with the game's address once it's live.
+Replace [link] with the page's shared link. Screenshots of the page's split panels ("On my screen" / "Claude's notes") work well attached to posts 2 to 5.
 
 **1/6**
 
-I built a spy game where Claude plays Karla, le Carré's Soviet spymaster, and keeps a private journal of every decision.
+I made a spy game where your opponent is Claude, playing the KGB.
 
-I just played it to a draw on the final night. Here's the whole match, with both sides' secrets: [link]
+It recruits your agents, feeds you false reports, and keeps a private diary of every decision. You only get to read it after the game.
+
+Here's what it was thinking while I played:
 
 ---
 
 **2/6**
 
-Six agents each. Every position is public. Roles, and loyalty, are hidden.
+Week 3. My recruiter tells me one of Claude's assassins is one meeting from switching sides.
 
-Week 3, I turned Karla's Scalphunter, Molnar. That same night Karla hid Molnar from my knife: "Fenwick has shown his hand on Molnar, so Molnar goes to ground."
+The same night, Claude's diary: "Molnar goes to ground." It hid him from my hitman to keep him safe.
 
-He had already lost him.
+He switched to me that night.
 
 ---
 
 **3/6**
 
-Week 4, Karla turned my only Ferret. From then on every trap I set was a dud and every vetting came back "clean."
+Week 6. I set a trap to protect my agents. The next morning one of them is dead.
 
-His journal, week 6: "Holloway has handed me Control's whole Berlin brief."
+Claude's diary: "All quiet keeps our ferret's cover while his trap quietly fails."
+
+It had turned my trap-setter two weeks earlier.
 
 ---
 
 **4/6**
 
-By week 7 I had one loyal agent left, Fenwick. Through Molnar I read Karla's orders against him a night later: "I was sent to kill Fenwick. I let it lapse, as instructed."
+Week 9. I had my double agent tell Claude its own trap-setter was a traitor.
 
-I ran Fenwick from Berlin to Tangier and back. Karla's recruiter followed him both times.
+Week 12, Claude's diary: "The score only adds up if Tamas is London's … so he goes."
+
+It executed its own loyal agent on my lie.
 
 ---
 
 **5/6**
 
-Week 9, Molnar planted one line: Tamas has been turned.
+Last night of the game. Claude could have killed my last loyal agent. Instead:
 
-Week 12, Karla executed his own loyal Ferret: "The score only adds up if Tamas is London's."
+"Novak makes the second pitch on Fenwick rather than Kral putting him down, because a turned man counts twice."
 
-No trap over Berlin that night. Fenwick killed the recruiter before the second pitch landed. Two each.
+It got greedy. My assassin got there first. A draw.
 
 ---
 
 **6/6**
 
-It's called Moscow Rules. Your best agent may already be theirs.
+The AI reads the same fog of war you do, makes judgment calls about people, and can be lied to. It's chess where any piece might be secretly playing for the other side.
 
-[link to play]
+Moscow Rules. Coming soon. [link]
