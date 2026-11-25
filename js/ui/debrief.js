@@ -93,7 +93,7 @@ function battleground(game, story) {
   const step = (cls, icon, label, text, extra = '') => `<li class="ch-step ${cls}"><span class="ch-dot">${icon}</span><div><small>${label}${extra}</small><p>${esc(text)}</p></div></li>`;
   const chain = p.receiver ? `<ol class="chain">
       ${step(`${p.source === 'true' ? p.receiver : other(p.receiver)} src-${p.source}`, UI_ICON.traffic, `${SIDE_LABEL[p.receiver]} heard`, p.told, ` <em class="src">${SRC[p.source] || ''}</em>`)}
-      ${step(p.receiver, ORDER_ICON.brief, `${SIDE_LABEL[p.receiver]} acted`, p.did)}
+      ${step(p.receiver, ORDER_ICON.feed, `${SIDE_LABEL[p.receiver]} acted`, p.did)}
       ${step(`${p.favoured} result`, UI_ICON.skull, 'Result', p.result)}
     </ol>` : '';
   return `<section class="db2-card bg">

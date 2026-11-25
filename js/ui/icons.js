@@ -19,7 +19,8 @@ export const ORDER_ICON = {
   trap: svg('<path d="M3 15c0-4 4-7 9-7s9 3 9 7"/><path d="M6 15l1.5-3 1.5 3 1.5-3 1.5 3 1.5-3 1.5 3 1.5-3 1.5 3"/><path d="M2 18h20"/>'),
   approach: svg('<path d="M3 12l4-4 4 2 3-2 7 4"/><path d="M7 15l3 3 2-1 2 2 2-1 3-3"/><path d="M11 10l-3 3"/>'),
   vet: svg('<path d="M12 3l7.5 3v5.5c0 4.5-3.2 8.1-7.5 9.5-4.3-1.4-7.5-5-7.5-9.5V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/>'),
-  brief: svg('<rect x="3" y="5.5" width="18" height="13" rx="1"/><path d="M3.5 6.5l8.5 6.5 8.5-6.5"/>'),
+  feed: svg('<rect x="3" y="5.5" width="18" height="13" rx="1"/><path d="M3.5 6.5l8.5 6.5 8.5-6.5"/>'),
+  get brief() { return this.feed; }, // older saves
   lie: svg('<path d="M3 7c3-2 6-2 9 0 3-2 6-2 9 0v3c0 5-4 9-9 9s-9-4-9-9z"/><path d="M7.5 11.5c1-.8 2-.8 3 0M13.5 11.5c1-.8 2-.8 3 0"/><path d="M9.5 15.5c1.5 1 3.5 1 5 0"/>'),
   execute: svg('<circle cx="12" cy="12" r="9"/><path d="M8 8l8 8M16 8l-8 8"/>'),
 };

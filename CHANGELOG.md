@@ -4,6 +4,16 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 
 ## [Unreleased]
 
+### Changed (Feed and approaches)
+- Brief is now **Feed**: tell an agent "we strike Zorin in Vienna next week" or "we have a trap in
+  Berlin next week". A loyal agent keeps it to themselves; a mole passes it on. One Feed a week is
+  free (its own slot beside the five orders).
+- Karla, and the offline bot, act on plans leaked to them: a named target runs or lies low, and
+  they avoid striking where a trap is said to wait. Karla is told to suspect bait.
+- The debrief spots taken bait: a fed target who ran gives the mole away.
+- Two approaches on the same agent must come in different weeks; a second pitch the same week
+  doesn't count.
+
 ### Changed (notebook and reasons)
 - The right-hand panel has three tabs: Traffic, Theirs and Ours. Free-text notes are gone.
 - Mark each of your agents Trusted, Suspect or Mole in one click (in the Ours tab or their

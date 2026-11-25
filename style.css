@@ -662,3 +662,11 @@ kbd { font-family: var(--ui); font-size: 9.5px; line-height: 1; padding: 2px 4px
 .why-ask input:focus { outline: none; border-color: var(--gold-hi); }
 .why-ask small { font-size: 10.5px; color: var(--text-dim); }
 .qwhy { font-family: var(--type); font-style: normal; font-size: 10.5px; color: var(--gold-hi); opacity: .8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ---------- Feed: the week's free one sits in its own slot ---------- */
+.queue.with-free { grid-template-columns: repeat(5, minmax(0, 1fr)) minmax(0, .9fr); }
+.qslot.free { border-style: dashed; border-color: var(--gold); }
+.qslot.free::before { content: 'free'; position: absolute; top: -9px; right: 6px; font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; padding: 0 5px; background: var(--gold); color: #1b140a; border-radius: 6px; }
+.feed-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 13px; }
+.feed-row select { max-width: 150px; }
+.queue:has(.why-ask) { z-index: 8; }

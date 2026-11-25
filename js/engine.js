@@ -119,7 +119,10 @@ function startPlay(game) {
 
 // ---------- orders ----------
 // { agentId, type, city?, targetId?, plan?: {kind:'strike'|'trap', city}, lie?: {kind:'hide'|'frame'|'alarm', targetId?} }
-export const ORDER_TYPES = ['move', 'surveil', 'lielow', 'prepare', 'strike', 'trap', 'approach', 'vet', 'brief', 'lie'];
+// { ..., plan?: {kind:'strike', targetId, city} | {kind:'trap', city} } for feed
+export const ORDER_TYPES = ['move', 'surveil', 'lielow', 'prepare', 'strike', 'trap', 'approach', 'vet', 'feed', 'lie'];
+// One Feed a week is free: it doesn't count against the weekly orders (the agent still uses its turn).
+export const countedOrders = (orders) => { let free = false; return orders.filter((o) => (o.type === 'feed' && !free ? !(free = true) : true)).length; };
 
 // What an agent can do right now, for UIs and bots. Each entry lists valid targets.
 export function legalOrders(game, side, agentId) {
@@ -143,13 +146,13 @@ export function legalOrders(game, side, agentId) {
     const mine = here(side);
     if (mine.length) out.push({ type: 'vet', targets: mine.map((x) => x.id) });
   }
-  out.push({ type: 'brief' });
+  out.push({ type: 'feed' });
   return out;
 }
 
 export function validateOrders(game, side, orders) {
   const errors = [];
-  if (orders.length > RULES.ordersPerWeek) errors.push(`Only ${RULES.ordersPerWeek} orders a week.`);
+  if (countedOrders(orders) > RULES.ordersPerWeek) errors.push(`Only ${RULES.ordersPerWeek} orders a week (plus one Feed).`);
   const seen = new Set();
   for (const o of orders) {
     const a = game.agents[o.agentId];
@@ -161,7 +164,11 @@ export function validateOrders(game, side, orders) {
     if (legal.targets && !legal.targets.includes(o.targetId)) errors.push(`${a.name}: invalid target.`);
     if (legal.cities && !legal.cities.includes(o.city)) errors.push(`${a.name}: invalid city.`);
     if (o.type === 'trap' && o.when && !legal.when.includes(o.when)) errors.push(`${a.name} can't trap ${o.when === 'tonight' ? 'tonight' : 'for next week'}.`);
-    if (o.type === 'brief' && !(o.plan && ['strike', 'trap'].includes(o.plan.kind) && game.cities.includes(o.plan.city))) errors.push(`${a.name}: brief needs a plan.`);
+    if (o.type === 'feed') {
+      const t = o.plan?.kind === 'strike' && game.agents[o.plan.targetId];
+      const ok = o.plan?.kind === 'strike' ? t && t.alive && t.side === other(side) : o.plan?.kind === 'trap' && game.cities.includes(o.plan.city);
+      if (!ok) errors.push(`${a.name}: feed them a strike on one of theirs, or a trap in a city.`);
+    }
     if (o.type === 'lie') {
       if (!o.lie || !['hide', 'frame', 'alarm'].includes(o.lie.kind)) errors.push(`${a.name}: choose a lie.`);
       if (o.lie?.kind === 'frame') {
@@ -223,7 +230,8 @@ export function describeOrder(o, game) {
     case 'trap': return trapWhen(o, game) === 'tonight' ? 'set a trap for tonight' : 'set a trap for next week';
     case 'approach': return `approach ${n(o.targetId)}`;
     case 'vet': return `vet ${n(o.targetId)}`;
-    case 'brief': return `be ready for our ${o.plan.kind} in ${o.plan.city}`;
+    case 'feed': return o.plan.kind === 'strike' ? `hear we'll strike ${n(o.plan.targetId)} in ${o.plan.city || game.agents[o.plan.targetId]?.city}` : `hear we have a trap in ${o.plan.city}`;
+    case 'brief': return `be ready for our ${o.plan.kind} in ${o.plan.city}`; // older saves
     case 'lie': return o.lie.kind === 'frame' ? `frame ${n(o.lie.targetId)}` : o.lie.kind === 'alarm' ? 'raise a false alarm' : 'report all quiet';
     default: return o.type;
   }
@@ -247,8 +255,10 @@ export function resolveWeek(game) {
     if (o.type !== 'lie' && a.turnedBy && a.turnedBy !== o.side) {
       send(game, a.turnedBy, {
         kind: 'source', from: a.id, city: a.city,
-        text: o.type === 'brief'
-          ? `${SIDE_LABEL[o.side]} has briefed me: there will be a ${o.plan.kind} in ${o.plan.city}.`
+        text: o.type === 'feed'
+          ? (o.plan.kind === 'strike'
+            ? `${SIDE_LABEL[o.side]} has told me: we strike ${game.agents[o.plan.targetId].name} in ${o.plan.city || game.agents[o.plan.targetId].city} next week.`
+            : `${SIDE_LABEL[o.side]} has told me: we have a trap waiting in ${o.plan.city} next week.`)
           : `My orders from ${SIDE_LABEL[o.side]} this week: ${describeOrder(o, game)}. ${['strike', 'trap', 'approach', 'vet'].includes(o.type) ? (game.stance?.[a.id] === 'obey' ? 'As you instructed, I am carrying them out. Tell me if you want them to fail.' : 'As you instructed, I will see they come to nothing. Tell me if you would rather I carry them out.') : ''}`.trim(),
         facts: { order: o.type, plan: o.plan || null, targetId: o.targetId || null, city: o.city || null },
       });
@@ -317,9 +327,15 @@ export function resolveWeek(game) {
 
   // 5. Approaches. Two approaches turn the target. Approaches are never reported: the only way to
   //    catch a mole is to notice it in the traffic. A turned Talent-spotter's pitches quietly go nowhere.
+  const pitched = new Set(); // one approach per target per side per week: two pitches take two weeks
   for (const o of withRng(game, (r) => r.shuffle(of('approach')))) {
     const ts = game.agents[o.agentId], t = game.agents[o.targetId];
     if (!t.alive || t.city !== ts.city || !obeys(game, ts)) continue;
+    if (pitched.has(`${o.side}:${t.id}`)) {
+      send(game, o.side, { kind: 'report', from: ts.id, city: ts.city, text: `One of ours was already with ${t.name} this week. Two of us at once would have scared them off.` });
+      continue;
+    }
+    pitched.add(`${o.side}:${t.id}`);
     // A loyal Ferret on the target's side keeps its people out of reach, silently.
     if (inCity(game, t.side, t.city).some((f) => f.archetype === 'ferret' && loyal(f) && f.id !== t.id)) {
       send(game, o.side, { kind: 'report', from: ts.id, city: ts.city, text: `I couldn't get near ${t.name}. Someone on their side is keeping their people close.` });
@@ -354,7 +370,7 @@ export function resolveWeek(game) {
     const o = orderOf[e.id];
     if (o?.type === 'strike') return null; // the strike itself is the only trace: same for every striker
     if (o?.type === 'trap') return trapWhen(o, game) === 'tonight' ? 'trapTonight' : 'trapNext';
-    if (['prepare', 'surveil', 'vet', 'brief'].includes(o?.type)) return o.type;
+    if (['prepare', 'surveil', 'vet', 'feed'].includes(o?.type)) return o.type;
     if (arrived.has(e.id)) return 'arrive';
     return 'idle'; // nothing, approaches (always unseen) and anything else
   };

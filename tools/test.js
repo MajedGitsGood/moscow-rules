@@ -1,5 +1,5 @@
 // v2 rule checks.   node tools/test.js
-import { newGame, submitOrders, resolveWeek, viewFor, executeAgent, surrender, legalOrders, setStance } from '../js/engine.js';
+import { newGame, submitOrders, resolveWeek, viewFor, executeAgent, surrender, legalOrders, setStance, validateOrders } from '../js/engine.js';
 import { factsCheck } from '../js/voices.js';
 
 let fails = 0;
@@ -101,13 +101,24 @@ const inbox = (g, side) => viewFor(g, side).inbox.map((m) => m.text).join(' | ')
   week(g, [], [{ agentId: ll0.id, type: 'lie', lie: { kind: 'frame', targetId: ll1.id } }]);
   ok(inbox(g, 'control').includes(`I don't like what I'm seeing from ${ll1.name}`), 'a mole can frame another mole');
 }
-{ const { g, get } = setup({ control: { lamplighter: 'A' } });
-  const ll = get('control', 'lamplighter');
-  week(g, [{ agentId: ll.id, type: 'brief', plan: { kind: 'strike', city: g.cities[2] } }]);
-  ok(!inbox(g, 'karla').includes('briefed'), 'briefing a loyal agent leaks nothing');
+{ const { g, get } = setup({ control: { lamplighter: 'A' }, karla: { scalphunter: 'B' } });
+  const ll = get('control', 'lamplighter'), z = get('karla', 'scalphunter');
+  const feed = { agentId: ll.id, type: 'feed', plan: { kind: 'strike', targetId: z.id, city: z.city } };
+  week(g, [feed]);
+  ok(!inbox(g, 'karla').includes('has told me'), 'feeding a loyal agent leaks nothing');
   ll.turnedBy = 'karla';
-  week(g, [{ agentId: ll.id, type: 'brief', plan: { kind: 'strike', city: g.cities[2] } }]);
-  ok(inbox(g, 'karla').includes(`there will be a strike in ${g.cities[2]}`), 'briefing a mole hands the plan to the other side');
+  week(g, [feed]);
+  ok(inbox(g, 'karla').includes(`we strike ${z.name} in ${z.city} next week`), 'feeding a mole hands the plan, with its target, to the other side');
+  const five = Object.values(g.agents).filter((a) => a.side === 'control' && a.alive && a.id !== ll.id).slice(0, 5).map((a) => ({ agentId: a.id, type: 'lielow' }));
+  ok(!validateOrders(g, 'control', [...five, feed]).length, 'one Feed a week is free on top of five orders');
+  ok(validateOrders(g, 'control', [...five, { agentId: ll.id, type: 'lielow' }]).length > 0, 'six ordinary orders are still too many');
+}
+{ const { g, get } = setup({ control: { lamplighter: 'A' }, karla: { talentspotter: 'A', 'talentspotter:1': 'A' } });
+  const ll = get('control', 'lamplighter'), t0 = get('karla', 'talentspotter', 0), t1 = get('karla', 'talentspotter', 1);
+  week(g, [{ agentId: ll.id, type: 'surveil' }], [{ agentId: t0.id, type: 'approach', targetId: ll.id }, { agentId: t1.id, type: 'approach', targetId: ll.id }]);
+  ok(!ll.turnedBy, 'two Talent-spotters pitching the same agent in one week count once');
+  week(g, [], [{ agentId: t0.id, type: 'approach', targetId: ll.id }]);
+  ok(ll.turnedBy === 'karla', 'a second week of approaches turns them');
 }
 { const { g, get } = setup();
   const loyalOne = get('control', 'ferret');

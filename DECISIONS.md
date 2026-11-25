@@ -4,6 +4,18 @@ Why-this-not-that for this project, newest first. Companion to [CHANGELOG.md](CH
 
 ---
 
+## 2026-11-24: Feed replaces Brief: named targets, one free a week, opponents react
+**Decision:** A Feed plan names a strike target (or a trap city). One Feed a week doesn't count
+against the five orders. Both Claude-Karla and the bot treat leaked plans as intelligence (the
+named target runs or hides; "trapped" cities are avoided). Approaches: one per target per side per
+week.
+**Why:** Briefs named only a city, so nobody could see a reaction; the bot ignored them; and they
+cost a full order. With a named target, the reaction shows on the public map, which makes the
+canary trap and the feint playable. Karla found that two Talent-spotters could turn an agent in
+one week.
+**Rejected:** *Feeds always free* (a canary on every suspect every week). *Doubling* a known mole
+(more rules; feeding covers most of it).
+
 ## 2026-11-24: One-line reasons for orders; verdicts on tokens
 **Decision:** Each order can carry an optional reason (90 characters), asked for the moment the
 order is queued; Karla gives one per order. Both feed the debrief analyst. Your verdict on your own

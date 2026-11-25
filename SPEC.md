@@ -19,11 +19,13 @@ Ten agents a side (2 Scalphunters, 3 Lamplighters, 3 Ferrets, 2 Talent-spotters)
   traps and surveillance in its city for what they are, and always witnesses attacks.
 - Ferret: can trap the same night; silently blocks approaches on its side's agents in its city;
   notices surveillance; vets your own agents.
-- Talent-spotter: turns an enemy after two approaches, never reported; cannot kill or trap.
+- Talent-spotter: turns an enemy after two approaches in different weeks (a side's second pitch on the
+  same target in one week doesn't count), never reported; cannot kill or trap.
 
 ## Orders (five a week, one per agent)
 Move, Surveil, Lie low, Prepare (a strike on someone in the same city), Strike, Set trap, Approach,
-Vet, Brief (tell an agent about a plan: only matters if they are a mole), and for enemy agents you
+Vet, Feed (tell an agent a plan: a strike on a named enemy, or a trap in a city; only matters if they
+are a mole, who passes it on; one Feed a week is free), and for enemy agents you
 have turned, choose their lie. Executing one of your own agents is free.
 
 ## Resolution

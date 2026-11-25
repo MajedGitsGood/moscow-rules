@@ -2,7 +2,7 @@
 // The engine owns the rules; this file owns who is at the desk and what they may see.
 import {
   newGame, placeAgents, validatePlacement, submitOrders, validateOrders, resolveWeek, viewFor, revealAll,
-  addJournal, legalOrders, executeAgent, surrender, describeOrder, setStance, trapWhen,
+  addJournal, legalOrders, executeAgent, surrender, describeOrder, setStance, trapWhen, countedOrders,
 } from './engine.js';
 import { SIDES, other, SIDE_LABEL, ARCHETYPES, ARCHETYPE_KEYS, RULES, HOME, LANDMARK } from './world.js';
 import { randomSeed } from './rng.js';
@@ -21,7 +21,7 @@ const SAVE = 'mr-save-v2';
 const $ = (s, r = document) => r.querySelector(s);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const roleLabel = (k) => ARCHETYPES[k]?.label || 'Unknown';
-const ORDER_LABEL = { move: 'Move', surveil: 'Surveil', lielow: 'Lie low', prepare: 'Prepare strike', strike: 'Strike', trap: 'Set trap', approach: 'Approach', vet: 'Vet', brief: 'Brief', lie: 'Choose lie' };
+const ORDER_LABEL = { move: 'Move', surveil: 'Surveil', lielow: 'Lie low', prepare: 'Prepare strike', strike: 'Strike', trap: 'Set trap', approach: 'Approach', vet: 'Vet', feed: 'Feed', lie: 'Choose lie' };
 const ORDER_HINT = {
   move: 'Any city, arriving tomorrow. Everyone sees the move.',
   surveil: 'Report on this city. Lamplighters learn every role.',
@@ -32,7 +32,7 @@ const ORDER_HINT = {
   trapTonight: 'Ferrets: catches anyone who strikes here tonight, one night only.',
   approach: 'One of two pitches needed to turn them. Unseen: looks like doing nothing.',
   vet: 'Find out if one of ours here is working for them.',
-  brief: 'Tell this agent a plan. Only matters if they are a mole.',
+  feed: 'Tell this agent a plan. If they are a mole, the other side hears it. One Feed a week is free.',
   lie: 'Decide what this source tells their masters this week.',
 };
 
@@ -211,7 +211,7 @@ function setupView() {
 
 function hudTop(v, setup) {
   const side = app.active, g = app.game;
-  const used = app.queued[side]?.length || 0;
+  const used = countedOrders(app.queued[side] || []);
   const pips = Array.from({ length: RULES.ordersPerWeek }, (_, i) => `<i class="${i < used ? 'on' : ''}"></i>`).join('');
   const st = llmStatus();
   return `<header class="hud-top">
@@ -297,12 +297,14 @@ function orderPop(v) {
       ${chips.length ? `<div class="chips">${chips.join('')}</div>` : ''}</div>`;
   }
   const legal = legalOrders(g, side, a.id);
-  const full = app.queued[side].length >= RULES.ordersPerWeek && !q;
+  // Full when the five ordinary orders are used; a first Feed still fits.
+  const qs = app.queued[side], full = !q && countedOrders(qs) >= RULES.ordersPerWeek;
+  const freeFeed = full && !qs.some((o) => o.type === 'feed');
   const btn = (l, when) => {
     const on = q?.type === l.type && (!when || trapWhen(q, g) === when);
     const label = when ? (when === 'tonight' ? 'Trap tonight' : 'Trap next week') : ORDER_LABEL[l.type];
     const hint = when === 'tonight' ? ORDER_HINT.trapTonight : ORDER_HINT[l.type];
-    return `<button class="ob ${on ? 'on' : ''} ${app.pick?.type === l.type ? 'picking' : ''}" data-act="order" data-type="${l.type}" ${when ? `data-when="${when}"` : ''} ${full ? 'disabled' : ''} title="${esc(hint)}">${ORDER_ICON[l.type]}<span>${label}</span></button>`;
+    return `<button class="ob ${on ? 'on' : ''} ${app.pick?.type === l.type ? 'picking' : ''}" data-act="order" data-type="${l.type}" ${when ? `data-when="${when}"` : ''} ${full && !(l.type === 'feed' && freeFeed) ? 'disabled' : ''} title="${esc(hint)}">${ORDER_ICON[l.type]}<span>${label}</span></button>`;
   };
   // A Ferret's trap comes in two timings; everyone else's is for next week.
   const btns = legal.flatMap((l) => (l.when ? l.when.map((w) => btn(l, w)) : [btn(l)])).join('');
@@ -313,8 +315,11 @@ function orderPop(v) {
       return `<button class="tg" data-act="target" data-agent="${id}">${portrait(t, { size: 38 })}<span>${esc(t.name)}</span>${ri.role ? roleTag(ri, 'tg-role') : ''}</button>`;
     }).join('')}</div>`;
   }
-  if (app.pick?.type === 'brief' && app.pick.agentId === a.id) {
-    sub = `<div class="pop-label">Tell ${esc(a.name)} about…</div><div class="inline">our <select id="brief-kind"><option value="strike">strike</option><option value="trap">trap</option></select> in <select id="brief-city">${g.cities.map((c) => `<option>${c}</option>`).join('')}</select><button class="btn small gold" data-act="brief-ok">Brief</button></div>`;
+  if (app.pick?.type === 'feed' && app.pick.agentId === a.id) {
+    const foes = v.enemies.filter((e) => e.alive && !e.asset);
+    sub = `<div class="pop-label">Tell ${esc(a.name)}, for next week…</div>
+      <div class="inline feed-row">we strike <select id="feed-target">${foes.map((e) => `<option value="${e.id}">${esc(e.name)} · ${e.city}</option>`).join('')}</select><button class="btn small gold" data-act="feed-ok" data-kind="strike" ${foes.length ? '' : 'disabled'}>Feed</button></div>
+      <div class="inline feed-row">we have a trap in <select id="feed-city">${g.cities.map((c) => `<option>${c}</option>`).join('')}</select><button class="btn small gold" data-act="feed-ok" data-kind="trap">Feed</button></div>`;
   }
   if (app.pick?.type === 'lie' && app.pick.agentId === a.id) {
     const colleagues = v.enemies.filter((x) => x.alive && x.id !== a.id);
@@ -484,15 +489,17 @@ function oursList(v) {
 
 // The week's orders, always visible: click one to revisit the agent, ✕ to cancel it.
 function queueStrip(v) {
-  const g = app.game, q = app.queued[v.side];
-  const slots = Array.from({ length: RULES.ordersPerWeek }, (_, i) => {
-    const o = q[i];
+  const g = app.game, all = app.queued[v.side];
+  const free = all.find((o) => o.type === 'feed'), q = all.filter((o) => o !== free);
+  const slot = (o, i) => {
     if (!o) return `<div class="qslot empty"><span>${i + 1}</span></div>`;
     const a = g.agents[o.agentId];
     const ask = app.whyFor === a.id ? `<div class="why-ask"><input id="why-in" maxlength="${WHY_MAX}" autocomplete="off" placeholder="Why? One line, optional" value="${esc(o.why || '')}"><small>Enter to keep · for the debrief</small></div>` : '';
     return `<div class="qslot ${app.sel.agent === a.id ? 'sel' : ''} ${o.why ? 'has-why' : ''}">${ask}<button class="qbody" data-act="why" data-agent="${a.id}" title="${esc(`${a.first} ${a.name}: ${describeOrder(o, g)}${o.why ? `\nWhy: ${o.why}` : ''}`)}">${portrait(a, { size: 30 })}<span class="qtxt"><b>${esc(a.name)}</b><small>${ORDER_ICON[o.type]}${esc(describeOrder(o, g))}</small>${o.why ? `<i class="qwhy">${esc(o.why)}</i>` : ''}</span></button><button class="qx" data-act="unqueue-id" data-agent="${a.id}" title="Cancel this order">${UI_ICON.close}</button></div>`;
-  }).join('');
-  return `<div class="queue">${slots}</div>`;
+  };
+  const slots = Array.from({ length: RULES.ordersPerWeek }, (_, i) => slot(q[i], i)).join('');
+  // The week's free Feed gets its own slot beside the five.
+  return `<div class="queue ${free ? 'with-free' : ''}">${slots}${free ? slot(free, 5).replace('class="qslot', 'class="qslot free') : ''}</div>`;
 }
 
 function endTurn() {
@@ -588,11 +595,15 @@ function onAct(el, ev) {
       if (app.nav) { app.nav.targets = 0; app.nav.city = a.city; }
       if (type === 'move') { app.pick = { type, agentId: a.id }; return render(); }
       if (l.targets) { app.pick = { type, agentId: a.id, targets: l.targets }; app.sel.city = a.city; return render(); }
-      if (type === 'brief' || type === 'lie') { app.pick = { type, agentId: a.id }; return render(); }
+      if (type === 'feed' || type === 'lie') { app.pick = { type, agentId: a.id }; return render(); }
       if (type === 'trap') return queue({ agentId: a.id, type, when: el.dataset.when || 'next' });
       return queue({ agentId: a.id, type });
     }
-    case 'brief-ok': return queue({ agentId: app.pick.agentId, type: 'brief', plan: { kind: $('#brief-kind').value, city: $('#brief-city').value } });
+    case 'feed-ok': {
+      if (el.dataset.kind === 'trap') return queue({ agentId: app.pick.agentId, type: 'feed', plan: { kind: 'trap', city: $('#feed-city').value } });
+      const t = g.agents[$('#feed-target').value];
+      return queue({ agentId: app.pick.agentId, type: 'feed', plan: { kind: 'strike', targetId: t.id, city: t.city } });
+    }
     case 'lie-ok': {
       const kind = el.dataset.kind;
       return queue({ agentId: app.pick.agentId, type: 'lie', lie: kind === 'frame' ? { kind, targetId: $('#lie-target').value } : { kind } });
@@ -628,7 +639,7 @@ function onAct(el, ev) {
 document.addEventListener('pointerdown', () => { if (app?.nav?.on) { app.nav.on = false; document.querySelectorAll('.kfocus').forEach((x) => x.classList.remove('kfocus')); } }, true);
 function orderRoomFor(id) {
   const q = app.queued[app.active];
-  if (q.length >= RULES.ordersPerWeek && !q.some((o) => o.agentId === id)) { render(); toast(`All ${RULES.ordersPerWeek} orders are used. Cancel one in the order bar first.`); return false; }
+  if (countedOrders(q) >= RULES.ordersPerWeek && !q.some((o) => o.agentId === id)) { render(); toast(`All ${RULES.ordersPerWeek} orders are used. Cancel one in the order bar first.`); return false; }
   return true;
 }
 document.addEventListener('click', (ev) => {
