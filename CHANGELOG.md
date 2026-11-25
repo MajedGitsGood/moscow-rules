@@ -16,6 +16,8 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 - **Orders, grouped:** the role's special first, in its colour (Instant strike, Instant trap and
   Vet, Surveil, Approach), then what everyone can do.
 - **Execute** appears only beside an agent you've marked Mole.
+- Notices (such as "will go to Rome. ✕ in the order bar to undo") now appear at the top of the
+  screen, so they no longer cover the "why" box above the order bar.
 - **Debrief:** the score shows just "own + turned"; moments are marked by their week; the decisive
   exchange shows only the people it names (everyone else is a dot); people columns lead with each
   fate (how, week, city), mark defectors "Turned wk N" in their original side's colour, and show
