@@ -152,3 +152,15 @@ to redo a rules-engine debrief.
 **Addressed (2026-11-24):** shared footprints with published odds (Field Manual), Lamplighters see
 the truth, one-night traps (Ferrets tonight or next week, others next week and loud), Scalphunters
 may prepare, identical news for every strike, about 7 messages a morning.
+
+## Playtest 3 (2026-11-24, second player, vs Karla: Claude for week 1 only)
+- The game server went down after week 1; Karla silently fell back to the offline bot for weeks
+  2-12 ("Proxy unreachable"), and the debrief came from the rules engine.
+- Control killed 7 of Karla's 10 (one Scalphunter, Pell, killed five without warning); the bot never
+  hunted him. Karla turned four Control agents, none detected. The only vetting Ferret was itself a
+  mole by then and cleared everyone; moles framed three loyal agents.
+- The debrief said Control won 4-2 on "own agents standing"; counting agents working for each side
+  it was Karla 6-5, which matched what the players felt.
+
+**Addressed (2026-11-24):** scoring counts turned agents for the side that turned them; the debrief
+groups people by allegiance; a visible "Offline Karla" warning; Save case file.

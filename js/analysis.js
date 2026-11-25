@@ -12,13 +12,13 @@ const role = (k) => ARCHETYPES[k].label;
 
 export const lastWeek = (game) => Math.max(1, ...game.orderLog.map((x) => x.week));
 
-// Agents standing (alive and loyal) for each side at the end of week w.
+// Agents working for each side at the end of week w: their own still loyal, plus enemies they turned.
 export function standingAt(game, w) {
   const out = { control: 0, karla: 0 };
   for (const a of Object.values(game.agents)) {
-    const dead = a.eliminated && a.eliminated.week <= w;
+    if (a.eliminated && a.eliminated.week <= w) continue;
     const turned = a.turnedBy && a.turnedWeek && a.turnedWeek <= w;
-    if (!dead && !turned) out[a.side]++;
+    out[turned ? a.turnedBy : a.side]++;
   }
   return out;
 }
@@ -157,7 +157,7 @@ const SCHEMA = {
 
 function fallbackStory(game, found) {
   const o = game.outcome, s = o.score;
-  const lead = o.winner ? `${SIDE_LABEL[o.winner]} finished with ${s[o.winner].standing} agents standing to ${s[other(o.winner)].standing}.` : `Both sides finished with ${s.control.standing} agents standing.`;
+  const lead = o.winner ? `${SIDE_LABEL[o.winner]} finished with ${s[o.winner].standing} agents working for them to ${s[other(o.winner)].standing}.` : `Both sides finished with ${s.control.standing} agents working for them.`;
   const recruits = found.moments.filter((m) => m.kind === 'recruitment').length;
   const mistakes = found.moments.filter((m) => m.kind === 'mistake').length;
   return {

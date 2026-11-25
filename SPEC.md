@@ -48,6 +48,7 @@ A mole also reports, each week, what each colleague in its city has been ordered
 The player is never shown suspicion tags.
 
 ## Scoring
-Every enemy agent who dies is a point, however they die (including executions). Every enemy agent
-still alive and turned by you at the end is a point. Twelve weeks, or until one side has no agents.
+The side with the most agents working for it at the end wins: its own agents still alive and loyal,
+plus enemy agents it turned who are still alive. Turning an agent is a two-agent swing; a death
+(including an execution) is one. Twelve weeks, or until one side has no agents.
 Human players can surrender.

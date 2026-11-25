@@ -2,7 +2,7 @@
 // The engine owns the rules; this file owns who is at the desk and what they may see.
 import {
   newGame, placeAgents, validatePlacement, submitOrders, validateOrders, resolveWeek, viewFor, revealAll,
-  addJournal, legalOrders, executeAgent, surrender, describeOrder, setStance, trapWhen, FEEDABLE,
+  addJournal, rescore, legalOrders, executeAgent, surrender, describeOrder, setStance, trapWhen, FEEDABLE,
 } from './engine.js';
 import { SIDES, other, SIDE_LABEL, ARCHETYPES, ARCHETYPE_KEYS, RULES, HOME, LANDMARK } from './world.js';
 import { randomSeed } from './rng.js';
@@ -100,6 +100,13 @@ async function endWeek() {
     busy('Moscow Centre is reading the traffic');
     const v = viewFor(g, opp);
     const r = app.mode === 'claude' ? await claudeOrders(g, opp, v) : { orders: heuristicOrders(g, v, g.seed), executions: [] };
+    // Never fall back silently: if Claude couldn't play Karla this week, say so until it can again.
+    if (app.mode === 'claude') {
+      const was = app.karlaDown;
+      app.karlaDown = r.via === 'bot' ? (r.error || 'Claude unavailable') : null;
+      if (app.karlaDown && !was) setTimeout(() => toast(`Karla lost his line to Claude (${app.karlaDown}). The offline bot played this week; Claude will be tried again each week.`, 8000), 600);
+      if (!app.karlaDown && was) setTimeout(() => toast('Karla is back on Claude.'), 600);
+    }
     for (const id of r.executions || []) { try { executeAgent(g, opp, id); } catch {} }
     for (const x of r.stances || []) { try { setStance(g, opp, x.id, x.stance); } catch {} }
     if (g.phase === 'over') { app.screen = 'debrief'; save(); render(); return; }
@@ -217,6 +224,7 @@ function hudTop(v, setup) {
   return `<header class="hud-top">
     <div class="plate who ${side}"><span class="crest">${side === 'control' ? 'C' : 'K'}</span><div><b>${SIDE_LABEL[side].toUpperCase()}</b><small>${side === 'control' ? 'The Circus, London' : 'Moscow Centre'}</small></div>
       ${setup ? '' : `<div class="tally"><span class="us" title="Our agents still alive">${v.score.ours}<small>ours</small></span><span class="them" title="Their agents still alive">${v.score.theirs}<small>theirs</small></span></div>`}</div>
+    ${app.mode === 'claude' && app.karlaDown ? `<div class="plate karla-down" title="${esc(app.karlaDown)}"><b>OFFLINE KARLA</b><small>Claude unreachable · the bot is playing</small></div>` : ''}
     <div class="plate week">${setup ? '<b>PLACE YOUR NETWORKS</b><small>Pick an agent, then a city · three per city</small>' : `<b>WEEK ${Math.min(g.week, RULES.weeks)} <span>/ ${RULES.weeks}</span></b><div class="pips" title="Orders this week">${pips}<small>${RULES.ordersPerWeek - used} orders left</small></div>`}</div>
     <div class="plate tools">
       ${setup ? '' : `<button class="icon-btn ${app.traffic ? 'on' : ''}" data-act="traffic" title="Traffic">${UI_ICON.traffic}</button>`}
@@ -510,6 +518,8 @@ function debriefScreen() {
   // The analyst runs once per game; the page shows the facts at once and the story when it's ready.
   // A story saved in the older shape (pivotal without an exchange) is redone.
   if (app.story && !('receiver' in (app.story.pivotal || {}))) app.story = null;
+  // A game finished under the old scoring is re-scored, and its story rewritten to match.
+  if (app.game.outcome && !('recruited' in app.game.outcome.score.control)) { rescore(app.game); app.story = null; save(); }
   if (!app.story && !analyzing) {
     analyzing = true;
     analyze(app.game).then((story) => { app.story = story; analyzing = false; save(); if (app.screen === 'debrief') render(); });
@@ -531,10 +541,10 @@ function queue(order) {
   app.sel = { city: app.game.agents[order.agentId].city, agent: null };
   save(); render();
 }
-function toast(text) {
+function toast(text, ms = 2600) {
   const t = $('#toast'); if (!t) return;
   t.textContent = text; t.hidden = false;
-  clearTimeout(toast.h); toast.h = setTimeout(() => { t.hidden = true; }, 2600);
+  clearTimeout(toast.h); toast.h = setTimeout(() => { t.hidden = true; }, ms);
 }
 
 function onAct(el, ev) {

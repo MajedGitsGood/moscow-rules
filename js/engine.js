@@ -7,7 +7,7 @@
 // countered by traps, which catch on one night only. Every order leaves footprints that enemies in
 // the same city may notice; the same footprints come from different orders, so they are clues, not
 // verdicts. Lamplighters see loud work for what it is. Talent-spotters turn an enemy agent after two
-// unseen approaches; turned agents leak orders and report lies. Most agents standing wins.
+// unseen approaches; turned agents leak orders and report lies. Most agents working for you wins.
 import { makeRng } from './rng.js';
 import { generateWorld, RULES, SIDES, other, ARCHETYPES, SIDE_LABEL, FOOTPRINTS, TELLS, PLACE } from './world.js';
 
@@ -487,12 +487,24 @@ function moleReport(game, side, m, lie) {
 }
 
 // ---------- end ----------
-// You win by having the most agents still alive and still yours at the end.
+// You win by having the most agents working for you at the end: your own who are alive and still
+// loyal, plus enemy agents you have turned who are still alive.
 function score(game, side) {
-  const mine = Object.values(game.agents).filter((a) => a.side === side);
-  const lost = mine.filter((a) => !a.alive).length;
-  const turned = mine.filter((a) => a.alive && a.turnedBy).length;
-  return { standing: mine.length - lost - turned, lost, turned, total: mine.length - lost - turned };
+  const all = Object.values(game.agents);
+  const mine = all.filter((a) => a.side === side);
+  const lost = mine.filter((a) => !a.alive).length;                         // killed or executed
+  const turned = mine.filter((a) => a.alive && a.turnedBy).length;          // alive, but working for them
+  const loyal = mine.length - lost - turned;                                // alive and still ours
+  const recruited = all.filter((a) => a.side !== side && a.alive && a.turnedBy === side).length; // theirs, working for us
+  return { standing: loyal + recruited, loyal, recruited, lost, turned, total: loyal + recruited };
+}
+// Re-score a finished game under the current rule (for games saved before a scoring change).
+export function rescore(game) {
+  if (!game.outcome) return;
+  const s = { control: score(game, 'control'), karla: score(game, 'karla') };
+  let winner = s.control.standing > s.karla.standing ? 'control' : s.karla.standing > s.control.standing ? 'karla' : null;
+  if (game.surrendered) winner = other(game.surrendered);
+  game.outcome = { ...game.outcome, score: s, winner };
 }
 function finish(game, reason) {
   game.phase = 'over';

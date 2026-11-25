@@ -4,6 +4,15 @@ Why-this-not-that for this project, newest first. Companion to [CHANGELOG.md](CH
 
 ---
 
+## 2026-11-24: Score is agents working for you, turned agents included
+**Decision:** Each side scores its own agents alive and loyal plus enemy agents it turned who are
+alive. The debrief groups people by the side they ended up working for.
+**Why:** In a playtest, Control killed seven of Karla's agents but lost four to undetected turning;
+"own agents standing" called it a Control win (4-2), while the players' intuition, and le Carré's,
+says Karla won (6-5). In 300 bot games the new rule halves draws (44 to 23) and keeps wins even.
+**Rejected:** *Keeping own-loyal-only and rewording* (the rule itself contradicted what players
+saw). *Turned agents worth one point to neither side* (the old rule; undervalues moles).
+
 ## 2026-11-24: Feed is a fake order; moles report their city-mates
 **Decision:** Feed gives one of your agents a fake order (one they could legally be given). The
 agent does nothing; any mole that hears of it (the agent, or a mole beside them) passes it on

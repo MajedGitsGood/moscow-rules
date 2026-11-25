@@ -4,6 +4,18 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 
 ## [Unreleased]
 
+### Changed (scoring)
+- The winner is the side with the most agents **working for it** at the end: its own still loyal,
+  plus enemy agents it has turned who are still alive. Turning an agent is a two-agent swing.
+- The debrief shows the arithmetic ("2 own + 4 turned") and lists people by allegiance: the
+  Russians you turned appear among your people, the Brits Karla turned among his, each marked
+  with where they came from. Games saved under the old rule are re-scored when opened.
+
+### Added
+- If Karla's Claude call fails, a red "Offline Karla" plate shows in the HUD and a notice explains
+  that the offline bot played the week; Claude is tried again each week.
+- Save case file (debrief): downloads the finished game for later analysis.
+
 ### Changed (Feed, moles and approaches)
 - Brief is now **Feed**: give an agent a fake order (any order they could really be given). They
   do nothing that week, but a mole who hears of it passes it on word for word like a real order,

@@ -119,7 +119,7 @@ export async function claudeOrders(game, side, view) {
   } catch (e) {
     console.warn('Karla fell back to the offline bot:', e.message);
     // Leave a trace in the debrief, so a passive week can be explained.
-    return { orders: heuristicOrders(game, view, game.seed), executions: [], stances: [], journal: `(This week's orders came from the offline bot: ${e.message})`, via: 'bot' };
+    return { orders: heuristicOrders(game, view, game.seed), executions: [], stances: [], journal: `(This week's orders came from the offline bot: ${e.message})`, via: 'bot', error: e.message };
   }
 }
 

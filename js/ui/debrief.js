@@ -107,18 +107,21 @@ function battleground(game, story) {
   </section>`;
 }
 
+// Two columns by allegiance at the end: each side's own loyal agents, then the enemy agents it turned
+// (marked with where they came from), then the dead.
 function rosters(game) {
   const HOW = { killed: ['strike', 'Killed'], trapped: ['trap', 'Trapped'], executed: ['execute', 'Executed by own side'] };
+  const camp = (a) => a.turnedBy || a.side;
   const fate = (a) => {
-    const mole = a.turnedBy ? `<span class="mole-chip ${a.turnedBy}" title="Worked for ${SIDE_LABEL[a.turnedBy]} from week ${a.turnedWeek}">M · wk ${a.turnedWeek}</span>` : '';
-    if (a.alive) return mole;
+    const from = a.turnedBy ? `<span class="from-chip ${a.side}" title="${SIDE_LABEL[a.side]}'s ${role(a.archetype)}, turned in week ${a.turnedWeek}">${a.side === 'control' ? 'Brit' : 'Russian'} · turned wk ${a.turnedWeek}</span>` : '';
+    if (a.alive) return from;
     const [ic, label] = HOW[a.eliminated.how] || ['strike', a.eliminated.how];
-    return `<span class="death" title="${label}">${ORDER_ICON[ic]}wk ${a.eliminated.week} · ${esc(a.eliminated.city)}</span>${mole}`;
+    return `<span class="death" title="${label}">${ORDER_ICON[ic]}wk ${a.eliminated.week} · ${esc(a.eliminated.city)}</span>${from}`;
   };
   const rank = (a) => (a.alive && !a.turnedBy ? 0 : a.alive ? 1 : 2);
-  const list = (side) => Object.values(game.agents).filter((a) => a.side === side)
+  const list = (side) => Object.values(game.agents).filter((a) => camp(a) === side)
     .sort((a, b) => rank(a) - rank(b) || (b.eliminated?.week || 0) - (a.eliminated?.week || 0))
-    .map((a) => `<div class="db-agent r${rank(a)}">${portrait(a, { size: 40, mood: a.alive ? null : 'dead' })}<div><b>${esc(a.first)} ${esc(a.name)}</b><span class="role">${ROLE_ICON[a.archetype]}${role(a.archetype)}</span><small>${fate(a)}</small></div></div>`).join('');
+    .map((a) => `<div class="db-agent r${rank(a)} ${a.turnedBy ? 'defector' : ''}">${portrait(a, { size: 40, mood: a.alive ? null : 'dead' })}<div><b>${esc(a.first)} ${esc(a.name)}</b><span class="role">${ROLE_ICON[a.archetype]}${role(a.archetype)}</span><small>${fate(a)}</small></div></div>`).join('');
   return `<section class="db2-card"><div class="db-cols">${SIDES.map((s) => `<div><h3 class="${s}">${SIDE_LABEL[s]}'s people</h3>${list(s)}</div>`).join('')}</div></section>`;
 }
 
@@ -128,7 +131,8 @@ export function debriefHTML(game, story) {
     <header class="db2-head">
       <div><div class="stamp">CASE CLOSED</div><h1>${o.winner ? `${SIDE_LABEL[o.winner]} wins` : 'Stalemate'}</h1>
         <p class="hl">${story ? esc(story.headline) : esc(o.reason)}</p>${story ? `<p class="sum">${esc(story.summary)}</p>` : ''}</div>
-      <div class="db-score">${SIDES.map((s) => `<div class="${s}"><span>${o.score[s].standing}</span><b>${SIDE_LABEL[s]}</b><small>${o.score[s].lost} lost · ${o.score[s].turned} turned</small></div>`).join('<i>vs</i>')}</div>
+      <div class="db-score">${SIDES.map((s) => { const x = o.score[s]; return `<div class="${s}"><span>${x.standing}</span><b>${SIDE_LABEL[s]}</b>
+        <small class="sum-line">${x.loyal ?? x.standing} own${x.recruited ? ` + ${x.recruited} turned` : ''}</small><small>${x.lost} lost · ${x.turned} went over</small></div>`; }).join('<i>vs</i>')}</div>
     </header>
     <section class="db2-card"><h2>How it unfolded</h2>${storyChart(game, story, last)}${moments(story)}</section>
     ${battleground(game, story)}

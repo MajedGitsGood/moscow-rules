@@ -144,6 +144,7 @@ const inbox = (g, side) => viewFor(g, side).inbox.map((m) => m.text).join(' | ')
   get('control', 'ferret').turnedBy = 'karla';
   for (let i = 0; i < 12; i++) week(g);
   ok(g.phase === 'over' && g.outcome.score.control.standing === 9 && g.outcome.score.control.turned === 1 && g.outcome.winner === 'karla', 'a mole alive at the end does not stand for its own side');
+  ok(g.outcome.score.karla.standing === 11 && g.outcome.score.karla.recruited === 1, 'a mole alive at the end counts for the side it works for');
 }
 { const { g } = setup();
   surrender(g, 'control');

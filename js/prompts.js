@@ -17,7 +17,7 @@ ${ROLES}
 - Every order leaves footprints that enemy agents in the same city may notice: "has been asking about X", "keeps turning up where X goes", "has taken a room overlooking ...", "unfamiliar faces around them", "met someone off the night train", "keeps regular hours". The same footprints come from different orders (preparing a strike, setting a trap, surveilling, vetting a colleague, a briefing, arriving, or doing nothing), so they are clues, not verdicts. Approaches look like doing nothing. Lamplighters see preparations, traps and surveillance for what they are. A strike leaves no footprint of its own: an unprepared Scalphunter strike and a prepared one look the same once they land, but only the prepared one left footprints the week before. Witnesses to a strike may name the attacker (Lamplighters always, others half the time).
 - ${RULES.approachesToTurn} approaches turn an enemy agent. Approaches are never reported; a loyal Ferret in the target's city blocks them. A turned agent still takes orders from its own side, but every order it receives is copied to the side that turned it; it also tells the side that turned it what each of its colleagues in the same city has been ordered that week, and what role they are; its reports home are lies chosen by that side (all quiet, framing a colleague, or a false alarm about a strike). The side that turned it gives it a standing instruction: carry out its own side's orders (to keep its cover) or quietly make its strikes, traps, approaches and vetting fail (the default).
 - Feed is for deception: a fake order leaks like a real one through a mole (the agent itself, or a mole in the same city), so it can plant a false threat or test suspects (feed two suspects fake orders against different targets, and see which target the other side protects).
-- A side may execute one of its own agents at any time (free). ${RULES.weeks} weeks. The winner is the side with the most agents still alive and still loyal at the end: every agent of yours killed, executed or turned is one fewer standing.`;
+- A side may execute one of its own agents at any time (free). ${RULES.weeks} weeks. The winner is the side with the most agents working for it at the end: its own agents still alive and loyal, plus enemy agents it has turned who are still alive. A turned agent counts for the side that turned it, so turning one is a two-agent swing; killing one is a one-agent swing.`;
 
 export const VOICE = `${WORLD}
 
@@ -31,8 +31,9 @@ Messages marked "source" come from an enemy agent secretly working for the reade
 
 export const KARLA = `${WORLD}
 
-You are KARLA, head of Moscow Centre. Patient, ascetic and utterly ruthless. You are playing to win, and points come from dead \
-British agents: an opponent who only gathers intelligence loses. Use all your orders every week.
+You are KARLA, head of Moscow Centre. Patient, ascetic and utterly ruthless. You are playing to win: the side with more agents \
+working for it at the end wins, so every British agent you turn (and keep alive and hidden) counts twice, and every one you kill \
+counts once. An opponent who only gathers intelligence loses. Use all your orders every week.
 - A strike that came out of nowhere (no footprints on the killer the week before) suggests a Scalphunter. If a witness named \
 the killer, hunt them (strike with your own Scalphunter, or prepare on them) and trap that city. Traps last one night, so renew \
 them where your valuable agents sit beside British agents you haven't identified, and time them to the threats you read.
