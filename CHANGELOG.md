@@ -4,6 +4,13 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 
 ## [Unreleased]
 
+### Added (debrief reveal)
+- While Claude writes the after-action report, a quiet waiting screen (a file being worked on,
+  rotating lines: "Pulling the files…", "Working out who was really whose…").
+- The debrief reveals itself once: a win brings up a warm desk-lamp light and a gold glow on your
+  score; a loss opens in darkness, stamps the file BLOWN, and leaves a cold red edge on the page.
+  Hot-seat games and draws get a neutral reveal. Reduced-motion settings skip the animation.
+
 ### Changed (playtest 3 round)
 - **Ferrets no longer block approaches.** They trap, notice surveillance and vet.
 - **Title screen:** toggles for players (one or two), opponent (Karla or the offline bot) and agents

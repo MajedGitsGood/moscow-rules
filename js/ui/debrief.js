@@ -129,11 +129,11 @@ function rosters(game) {
   return `<section class="db2-card"><div class="db-cols">${SIDES.map((s) => `<div><h3 class="${s}">${SIDE_LABEL[s]}'s people</h3>${list(s)}</div>`).join('')}</div></section>`;
 }
 
-export function debriefHTML(game, story) {
+export function debriefHTML(game, story, { mood = 'even', reveal = false } = {}) {
   const o = game.outcome, last = lastWeek(game);
-  return `<div class="debrief2">
+  return `<div class="debrief2 mood-${mood} ${reveal ? 'reveal' : ''}">
     <header class="db2-head">
-      <div><div class="stamp">CASE CLOSED</div><h1>${o.winner ? `${SIDE_LABEL[o.winner]} wins` : 'Stalemate'}</h1>
+      <div><div class="stamp">${mood === 'lose' ? 'BLOWN' : 'CASE CLOSED'}</div><h1>${o.winner ? `${SIDE_LABEL[o.winner]} wins` : 'Stalemate'}</h1>
         <p class="hl">${story ? esc(story.headline) : esc(o.reason)}</p>${story ? `<p class="sum">${esc(story.summary)}</p>` : ''}</div>
       <div class="db-score">${SIDES.map((s) => { const x = o.score[s]; return `<div class="${s}"><span>${x.standing}</span><b>${SIDE_LABEL[s]}</b>
         <small class="sum-line">${x.loyal ?? x.standing} own${x.recruited ? ` + ${x.recruited} turned` : ''}</small></div>`; }).join('<i>vs</i>')}</div>

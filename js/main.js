@@ -490,7 +490,24 @@ function debriefScreen() {
     analyzing = true;
     analyze(app.game).then((story) => { app.story = story; analyzing = false; save(); if (app.screen === 'debrief') render(); });
   }
-  return debriefHTML(app.game, app.story);
+  if (!app.story) return analystsScreen();
+  // The reveal plays once: a quiet win for Control, a dooming loss, or a neutral close (hot-seat, draws).
+  const o = app.game.outcome;
+  const mood = app.mode === 'hotseat' || !o.winner ? 'even' : o.winner === 'control' ? 'win' : 'lose';
+  const html = debriefHTML(app.game, app.story, { mood, reveal: !app.revealed });
+  if (!app.revealed) { app.revealed = true; save(); }
+  return html;
+}
+
+// While Claude writes the after-action report: a quiet waiting room, not a half-built page.
+function analystsScreen() {
+  const lines = ['Pulling the files', 'Reading the night traffic', 'Working out who was really whose', 'Weighing the lies against the losses', 'Typing up the report'];
+  return `<div class="analysts" role="status" aria-live="polite">
+    <svg class="an-folder" viewBox="0 0 64 48" aria-hidden="true"><path d="M4 8h20l5 5h31v31H4z"/><path class="an-sheet" d="M12 4h34v30H12z"/><path d="M4 16h56v28H4z"/><path class="an-tab" d="M24 26h16"/></svg>
+    <p class="an-head">After-action report</p>
+    <p class="an-lines">${lines.map((l, i) => `<span style="--i:${i}">${l}</span>`).join('')}</p>
+    <div class="an-bar"><i></i></div>
+  </div>`;
 }
 
 // ---------- interaction ----------
