@@ -134,6 +134,6 @@ export function debriefHTML(game, story) {
     ${battleground(game, story)}
     ${rosters(game)}
     ${story?.via === 'rules' ? '<p class="db-note">Rules-engine analysis. <button class="link" data-act="reanalyze">Ask the analyst</button></p>' : ''}
-    <button class="btn gold" data-act="again">Another operation</button>
+    <div class="db-actions"><button class="btn" data-act="casefile">Save case file</button><button class="btn gold" data-act="again">Another operation</button></div>
   </div>`;
 }

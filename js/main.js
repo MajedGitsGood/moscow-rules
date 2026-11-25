@@ -624,6 +624,12 @@ function onAct(el, ev) {
     case 'goto': if (el.dataset.city) { app.sel.city = el.dataset.city; app.sel.agent = null; render(); } return;
     case 'end': return endWeek();
     case 'again': clearSave(); app = null; return render();
+    case 'casefile': { // the whole finished game, for later analysis
+      const url = URL.createObjectURL(new Blob([JSON.stringify({ game: app.game, story: app.story, mode: app.mode }, null, 1)], { type: 'application/json' }));
+      const link = Object.assign(document.createElement('a'), { href: url, download: `moscow-rules-case-${app.game.seed}.json` });
+      document.body.append(link); link.click(); link.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+      return;
+    }
     case 'reanalyze': if (!analyzing) { app.story = null; checkLLM().then(render); } return;
 
   }

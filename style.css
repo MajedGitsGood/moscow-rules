@@ -667,3 +667,6 @@ kbd { font-family: var(--ui); font-size: 9.5px; line-height: 1; padding: 2px 4px
 .feed-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 13px; }
 .feed-row select { max-width: 230px; }
 .queue:has(.why-ask) { z-index: 8; }
+
+.db-actions { display: flex; gap: 10px; justify-content: center; }
+.debrief2 > .db-actions { width: auto; }
