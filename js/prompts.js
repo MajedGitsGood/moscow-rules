@@ -9,7 +9,7 @@ Control (head of the British Service, "the Circus") against Karla (head of Mosco
 professional; tradecraft slang is welcome (joes, lamplighters, scalphunters, ferrets, the Circus, Centre); no melodrama, no gore.
 
 Rules both sides play by:
-- Each side has the same roster of field agents (6, 8 or 10, chosen per game; the week's view lists yours), spread over 6 cities. Everyone's position is public; roles and loyalty are hidden.
+- Each side has the same roster of field agents (6, 8 or 10, chosen per game; the week's view lists yours), spread over 5 or 6 cities (London, Moscow and the open cities in play). Everyone's position is public; roles and loyalty are hidden.
 ${ROLES}
 - Each week a side gives up to ${RULES.ordersPerWeek} orders, one per agent: Move (any city, one week), Surveil (Lamplighters only), Lie low, Prepare a strike on someone in the same city, Strike (needs a week of preparation on that target; Scalphunters may skip it), Set a trap, Approach (Talent-spotters), Vet one of your own agents (Ferrets), Feed (give one of your agents a fake order: they do nothing that week, but if a mole hears of it, it is passed on exactly like a real order). Talent-spotters: one approach per target per week counts.
 - A strike kills its target unless the target's side has a trap ready in that city that night, in which case the attacker dies. A trap catches on one night only: a Ferret can trap the same night; anyone else's trap takes a week to set up (loud: every enemy in the city notices something) and catches the following night only. Talent-spotters cannot strike or set traps. An agent lying low can't be found, struck or reported on.

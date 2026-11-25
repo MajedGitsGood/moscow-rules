@@ -214,3 +214,9 @@ groups people by allegiance; a visible "Offline Karla" warning; Save case file.
   close." The Ferret approach block is still in the rules (it was discussed, not removed).
 
 **Addressed (2026-11-24):** follow-ups 7, 8 and 9 above, and the Ferret approach block is removed.
+
+### Follow-up 10
+- "Case closed" is detective language, not espionage. BLOWN (loss) is good; find words for a win
+  and for neutral reveals. **Done:** NETWORK HOLDS, STANDOFF, FILE CLOSED.
+- First impression of a 6-agent game: too many cities. Use one fewer so agents share cities from
+  the start. **Done:** 6 agents play on 5 cities.

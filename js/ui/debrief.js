@@ -133,7 +133,7 @@ export function debriefHTML(game, story, { mood = 'even', reveal = false } = {})
   const o = game.outcome, last = lastWeek(game);
   return `<div class="debrief2 mood-${mood} ${reveal ? 'reveal' : ''}">
     <header class="db2-head">
-      <div><div class="stamp">${mood === 'lose' ? 'BLOWN' : 'CASE CLOSED'}</div><h1>${o.winner ? `${SIDE_LABEL[o.winner]} wins` : 'Stalemate'}</h1>
+      <div><div class="stamp">${{ win: 'NETWORK HOLDS', lose: 'BLOWN' }[mood] || (o.winner ? 'FILE CLOSED' : 'STANDOFF')}</div><h1>${o.winner ? `${SIDE_LABEL[o.winner]} wins` : 'Stalemate'}</h1>
         <p class="hl">${story ? esc(story.headline) : esc(o.reason)}</p>${story ? `<p class="sum">${esc(story.summary)}</p>` : ''}</div>
       <div class="db-score">${SIDES.map((s) => { const x = o.score[s]; return `<div class="${s}"><span>${x.standing}</span><b>${SIDE_LABEL[s]}</b>
         <small class="sum-line">${x.loyal ?? x.standing} own${x.recruited ? ` + ${x.recruited} turned` : ''}</small></div>`; }).join('<i>vs</i>')}</div>

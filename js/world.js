@@ -80,16 +80,18 @@ const COVERS = ['trade attaché', 'journalist', 'professor', 'chauffeur', 'banke
   'pianist', 'travel agent', 'film critic', 'airline steward', 'shipping clerk'];
 
 // Agents per side, chosen at the start of a game.
+// Smaller networks play on fewer cities, so agents share cities from the first week.
+export const CONTESTED_FOR_SIZE = { 6: 3, 8: 4, 10: 4 };
 export const ROSTERS = {
   6: { scalphunter: 2, lamplighter: 2, ferret: 1, talentspotter: 1 },
   8: { scalphunter: 2, lamplighter: 2, ferret: 2, talentspotter: 2 },
   10: { scalphunter: 2, lamplighter: 3, ferret: 3, talentspotter: 2 },
 };
 
-export function generateWorld(rng, roster = RULES.roster) {
+export function generateWorld(rng, roster = RULES.roster, contestedCities = RULES.contestedCities) {
   const contested = [];
   for (const c of rng.shuffle(CONTESTED_POOL)) {
-    if (contested.length < RULES.contestedCities && !APART.some((p) => p.includes(c) && p.some((o) => o !== c && contested.includes(o)))) contested.push(c);
+    if (contested.length < contestedCities && !APART.some((p) => p.includes(c) && p.some((o) => o !== c && contested.includes(o)))) contested.push(c);
   }
   const cities = ['London', ...contested, 'Moscow'];
   const covers = rng.shuffle(COVERS);

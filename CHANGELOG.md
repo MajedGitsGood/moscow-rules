@@ -8,8 +8,12 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 - While Claude writes the after-action report, a quiet waiting screen (a file being worked on,
   rotating lines: "Pulling the files…", "Working out who was really whose…").
 - The debrief reveals itself once: a win brings up a warm desk-lamp light and a gold glow on your
-  score; a loss opens in darkness, stamps the file BLOWN, and leaves a cold red edge on the page.
-  Hot-seat games and draws get a neutral reveal. Reduced-motion settings skip the animation.
+  score; a loss opens in darkness and leaves a cold red edge on the page. Hot-seat games and draws
+  get a neutral reveal. Reduced-motion settings skip the animation.
+- The stamp speaks the trade: NETWORK HOLDS (you won), BLOWN (you lost), STANDOFF (a draw), FILE
+  CLOSED (hot-seat).
+- Six-agent games are played on five cities (London, Moscow and three open cities), so agents share
+  cities from the start.
 
 ### Changed (playtest 3 round)
 - **Ferrets no longer block approaches.** They trap, notice surveillance and vet.

@@ -9,7 +9,7 @@
 // verdicts. Lamplighters see loud work for what it is. Talent-spotters turn an enemy agent after two
 // unseen approaches; turned agents leak orders and report lies. Most agents working for you wins.
 import { makeRng } from './rng.js';
-import { generateWorld, RULES, ROSTERS, SIDES, other, ARCHETYPES, SIDE_LABEL, FOOTPRINTS, TELLS, PLACE } from './world.js';
+import { generateWorld, RULES, ROSTERS, CONTESTED_FOR_SIZE, SIDES, other, ARCHETYPES, SIDE_LABEL, FOOTPRINTS, TELLS, PLACE } from './world.js';
 
 // ---------- helpers ----------
 const withRng = (game, fn) => {
@@ -49,7 +49,7 @@ function eliminate(game, agent, how, bySide) {
 export function newGame(seed, { sleepers = false, size = 10 } = {}) {
   const rng = makeRng(seed);
   const roster = ROSTERS[size] || ROSTERS[10];
-  const { cities, agents } = generateWorld(rng, roster);
+  const { cities, agents } = generateWorld(rng, roster, CONTESTED_FOR_SIZE[size] || RULES.contestedCities);
   const game = {
     version: 2, seed, size: Object.values(roster).reduce((a, b) => a + b, 0), roster, rngState: rng.state(), week: 1, phase: 'setup', cities, agents,
     placed: { control: false, karla: false },
