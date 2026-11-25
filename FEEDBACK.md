@@ -164,3 +164,19 @@ may prepare, identical news for every strike, about 7 messages a morning.
 
 **Addressed (2026-11-24):** scoring counts turned agents for the side that turned them; the debrief
 groups people by allegiance; a visible "Offline Karla" warning; Save case file.
+
+### Follow-up 7: debrief (after playtest 3)
+- **Score header:** too much redundant text. Drop the bottom grey line ("2 lost · 4 went over").
+- **Moment numbers:** the numbered circles (1–7) read as week numbers to a first-time player. Show
+  the week itself, larger, instead of a sequence number. The second player didn't see that the
+  moments referred to specific weeks.
+- **Decisive exchange map:** too crowded with icons. Every role badge, mole tag and side ring at
+  once is overwhelming, a "clusterfuck of colour". Rethink what this visual should show.
+- **People columns:**
+  - Don't use "Brit" / "Russian" on the page (that was only shorthand in conversation).
+  - Keep the colour showing which side someone started on, and the week they turned. Capitalise
+    "Turned".
+  - How each person met their end (icon, week, city) matters more than their role, and is too
+    small. Make the fate the focus.
+  - Role: icon only, no label (players know the icons by now), moved to the right, away from the
+    name; the columns have plenty of empty space.
