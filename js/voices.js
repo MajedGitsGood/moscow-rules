@@ -1,7 +1,8 @@
 // Agent voices for the morning traffic (Haiku, template fallback). Claude only rewrites what the
 // engine already reported; factsCheck makes sure no rewrite adds, drops or changes a fact.
 import { callClaude, LLMUnavailable } from './llm.js';
-import { VOICE } from './prompts.js';
+import { VOICE, VOICE_PLAIN } from './prompts.js';
+import { lexMode } from './lexicon.js';
 import { ARCHETYPES } from './world.js';
 
 // Guard against invented intelligence. Text Claude writes for an agent may only mention the cities
@@ -53,7 +54,7 @@ export async function voiceMorning(game, side) {
       reader: side === 'control' ? 'Control, head of the Circus' : 'Karla, head of Moscow Centre',
       messages: fresh.map((m) => ({ id: m.id, kind: m.kind, from: senderOf(m).label, text: m.text })),
     });
-    const r = await callClaude('voice', { system: VOICE, user, schema: VOICE_SCHEMA, maxTokens: 2000 });
+    const r = await callClaude('voice', { system: lexMode() === 'smiley' ? VOICE : VOICE_PLAIN, user, schema: VOICE_SCHEMA, maxTokens: 2000 });
     for (const v of r.messages) {
       const m = fresh.find((x) => x.id === v.id);
       if (!m) continue;

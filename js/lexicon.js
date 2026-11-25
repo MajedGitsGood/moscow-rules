@@ -22,11 +22,13 @@ export const TERMS = [
   ['Moscow Centre', 'the KGB'], ['the Circus', 'MI6'], ['The Circus', 'MI6'], ['Circus', 'MI6'],
   ["Centre's", "the KGB's"], ['Centre', 'the KGB'],
   ['CONTROL', 'MI6'], ['Control', 'MI6'], ['KARLA', 'KGB'], ['Karla', 'the KGB'],
-  ['Scalphunters', 'Assassins'], ['Scalphunter', 'Assassin'], ['scalphunters', 'assassins'], ['scalphunter', 'assassin'],
-  ['Lamplighters', 'Watchers'], ['Lamplighter', 'Watcher'], ['lamplighters', 'watchers'], ['lamplighter', 'watcher'],
-  ['Ferrets', 'Counterspies'], ['Ferret', 'Counterspy'], ['ferrets', 'counterspies'], ['ferret', 'counterspy'],
-  ['Talent-spotters', 'Recruiters'], ['Talent-spotter', 'Recruiter'], ['talent-spotters', 'recruiters'], ['talent-spotter', 'recruiter'],
-  ['joes', 'agents'], ['joe', 'agent'],
+  ['Scalphunters', 'Assassins'], ['Scalphunter', 'Assassin'], ['scalphunters', 'Assassins'], ['scalphunter', 'Assassin'],
+  ['Lamplighters', 'Watchers'], ['Lamplighter', 'Watcher'], ['lamplighters', 'Watchers'], ['lamplighter', 'Watcher'],
+  ['Ferrets', 'Counterspies'], ['Ferret', 'Counterspy'], ['ferrets', 'Counterspies'], ['ferret', 'Counterspy'],
+  ['Talent-spotters', 'Recruiters'], ['Talent-spotter', 'Recruiter'], ['talent-spotters', 'Recruiters'], ['talent-spotter', 'Recruiter'],
+  ['joes', 'agents'], ['joe', 'agent'], ['the Cousins', 'the CIA'], ['Cousins', 'CIA'],
+  ['pavement artists', 'surveillance teams'], ['lamplighting', 'surveillance'], ['lamplit', 'watched'], ['lamplight', 'watch'],
+  ['burrowers', 'researchers'], ['babysitters', 'bodyguards'],
   ['Station reports', 'HQ reports'], ['Field Manual', 'How to play'], ['Traffic', 'Reports'], ['traffic', 'reports'],
 ];
 const RULES = TERMS.map(([from, to]) => [new RegExp(`(^|[^A-Za-z-])${from.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![A-Za-z-])`, 'g'), to]);

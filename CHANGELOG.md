@@ -9,8 +9,11 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
   Counterspies and Recruiters, Reports and City tabs, and orders such as Recruit, Plan attack,
   Fake order and Check loyalty. Everything on screen is translated, including Claude's reports and
   the debrief.
-- **Smiley mode**: a gold lighter hidden on the title screen switches to le Carré's own words
-  (Moscow Rules, Control and Karla, Scalphunters and Lamplighters, the Circus, morning traffic).
+- **Smiley mode**: Karla holds a gold lighter on the title screen; click it to switch to le Carré's
+  own words (Moscow Rules, Control and Karla, Scalphunters and Lamplighters, the Circus, morning
+  traffic). In plain mode, Claude's reports and debriefs are written without insider slang, and role
+  names are always capitalised (Counterspy, Recruiter) so they read as roles.
+- Smiley's silhouette wears a tie and spectacles rather than a hat.
 - The shareable highlight page and X thread use the plain vocabulary and the Spymaster name.
 
 ### Fixed (Karla refusals)

@@ -88,9 +88,11 @@ export const SPYMASTER = {
     <defs><radialGradient id="cLamp" cx="50%" cy="38%" r="60%"><stop offset="0" stop-color="#4a8bd1" stop-opacity=".75"/><stop offset=".45" stop-color="#2f5f93" stop-opacity=".35"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient></defs>
     <rect width="200" height="260" fill="url(#cLamp)"/>
     <path d="M100 38c-19 0-31 13-31 31 0 13 6 22 13 27-27 7-45 27-50 57l-8 107h152l-8-107c-5-30-23-50-50-57 7-5 13-14 13-27 0-18-12-31-31-31z" fill="#07090c" stroke="#8fb6e6" stroke-opacity=".7" stroke-width="1.6"/>
-    <path d="M68 60c0-16 13-26 32-26s32 10 32 26c-12 3-52 3-64 0z" fill="#07090c" stroke="#8fb6e6" stroke-opacity=".7" stroke-width="1.6"/><path d="M52 63c14 8 82 8 96 0-8 7-88 7-96 0z" fill="#07090c" stroke="#8fb6e6" stroke-opacity=".7" stroke-width="1.6"/>
+    <path d="M80 104l20 30 20-30" fill="none" stroke="#8fb6e6" stroke-opacity=".55" stroke-width="1.4"/>
+    <path d="M96 104h8l-1.5 7 5.5 46-8 11-8-11 5.5-46z" fill="#07090c" stroke="#8fb6e6" stroke-opacity=".75" stroke-width="1.5"/>
+    <path d="M66 118c10 14 22 30 34 44M134 118c-10 14-22 30-34 44" fill="none" stroke="#8fb6e6" stroke-opacity=".35" stroke-width="1.3"/>
     <path d="M112 84c4 2 8 2 11 0" stroke="#e8c77a" stroke-opacity=".5" stroke-width="1.5"/>
-    <circle cx="121" cy="76" r="5" fill="none" stroke="#e8c77a" stroke-opacity=".6" stroke-width="1.5"/>
+    <circle cx="121" cy="74" r="6" fill="none" stroke="#e8c77a" stroke-opacity=".7" stroke-width="1.6"/><path d="M115 73h-6" stroke="#e8c77a" stroke-opacity=".6" stroke-width="1.4"/>
     <path d="M140 108c10-2 18 1 22 8" stroke="#cfcfcf" stroke-opacity=".25" stroke-width="2" fill="none"/>
   </svg>`,
   karla: `<svg viewBox="0 0 200 260" class="spymaster" aria-hidden="true">
@@ -100,5 +102,10 @@ export const SPYMASTER = {
     <path d="M84 70c4-2 9-2 12 0" stroke="#e86a4f" stroke-opacity=".35" stroke-width="1.5"/>
     <path d="M60 228c12-6 20-14 22-26" stroke="#e86a4f" stroke-opacity=".2" stroke-width="2" fill="none"/>
     <circle cx="70" cy="214" r="3" fill="#e86a4f" opacity=".9"/><path d="M70 210c-4-10 6-14 0-24" stroke="#bbb" stroke-opacity=".3" stroke-width="1.5" fill="none"/>
+    <path d="M140 228c-10-6-16-13-18-24" stroke="#e86a4f" stroke-opacity=".2" stroke-width="2" fill="none"/>
+    <g class="lighter-g" data-act="smiley"><title>A gold lighter</title><rect x="111" y="182" width="26" height="40" fill="transparent"/>
+      <rect x="117" y="196" width="10" height="15" rx="1.5" fill="#e8c77a"/><rect x="117" y="192" width="10" height="4.5" rx="1" fill="#c9a24e"/>
+      <path d="M119.5 201.5h5M119.5 205h3.5" stroke="#8a6d33" stroke-width=".8"/>
+      <path class="lighter-flame" d="M122 183c2.6 2.6 2.8 5.2 0 8-2.8-2.8-2.6-5.4 0-8z" fill="#f4b04c"/></g>
   </svg>`,
 };

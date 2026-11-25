@@ -14,9 +14,9 @@ Here's what it was thinking while I played:
 
 **2/6**
 
-Week 3. My recruiter tells me one of Claude's assassins is one meeting from switching sides.
+Week 3. My Recruiter tells me one of Claude's Assassins is one meeting from switching sides.
 
-The same night, Claude's diary: "Molnar goes to ground." It hid him from my hitman to keep him safe.
+The same night, Claude's diary: "Molnar goes to ground." It hid him from my Assassin to keep him safe.
 
 He switched to me that night.
 
@@ -26,15 +26,15 @@ He switched to me that night.
 
 Week 6. I set a trap to protect my agents. The next morning one of them is dead.
 
-Claude's diary: "All quiet keeps our [counterspy]'s cover while his trap quietly fails."
+Claude's diary: "All quiet keeps our [Counterspy]'s cover while his trap quietly fails."
 
-It had turned my trap-setter two weeks earlier.
+It had turned my Counterspy, the agent who sets my traps, two weeks earlier.
 
 ---
 
 **4/6**
 
-Week 9. I had my double agent tell Claude its own trap-setter was a traitor.
+Week 9. I had my double agent tell Claude its own Counterspy was a traitor.
 
 Week 12, Claude's diary: "The score only adds up if Tamas is [secretly working for MI6] … so he goes."
 
@@ -48,7 +48,7 @@ Last night of the game. Claude could have killed my last loyal agent. Instead:
 
 "Novak makes the second pitch on Fenwick rather than Kral putting him down, because a turned man counts twice."
 
-It got greedy. My assassin got there first. A draw.
+It got greedy. My Assassin got there first. A draw.
 
 ---
 

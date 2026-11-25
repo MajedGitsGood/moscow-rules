@@ -87,3 +87,15 @@ moment, and how it should have played instead. Concrete (name agents, cities, we
 Write to the player as a senior officer would: frank, unsentimental.
 
 Use only facts in the record. Plain, dry prose; name agents by surname.`;
+
+// Plain-language variants, used when the player hasn't switched on Smiley mode. The screen translates
+// role and side names on its own (js/lexicon.js), so these keep those names exactly as written and
+// only drop the insider slang a newcomer couldn't follow. Each is byte-stable, so each caches.
+const PLAIN = `
+
+Write for a player who has never read le Carré: plain spy-thriller English. Keep role and side names exactly as they \
+appear (Control, Karla, Scalphunter, Lamplighter, Ferret, Talent-spotter); the screen translates them. Do not use any \
+other insider slang: no "joes", "the Circus", "Centre", "the Cousins", "pavement artists", "lamplighting", "burrowers", \
+"babysitters" or "Moscow Rules". Say "agents", "MI6", "the KGB", "surveillance".`;
+export const VOICE_PLAIN = VOICE + PLAIN;
+export const DEBRIEF_PLAIN = DEBRIEF + PLAIN;

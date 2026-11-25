@@ -163,8 +163,7 @@ const roleOf = (side) => (a) => roleInfo(side)(a).role;
 const roleTag = (ri, cls = '') => ri.role ? `<span class="rtag r-${ri.role} ${ri.sure ? 'sure' : 'guess'} ${cls}" title="${roleLabel(ri.role)}${ri.sure ? '' : ' (your guess)'}">${ROLE_ICON[ri.role]}</span>` : `<span class="rtag unknown ${cls}" title="Role unknown">${ROLE_ICON.unknown}</span>`;
 
 // ----- title -----
-// Karla's gold lighter (Smiley's People): the hidden switch into le Carré's own vocabulary.
-const LIGHTER = '<svg viewBox="0 0 32 48" aria-hidden="true"><rect x="5" y="14" width="22" height="32" rx="3"/><path d="M8 14V9a3 3 0 0 1 3-3h4v8"/><rect x="17" y="8" width="7" height="6" rx="1.5"/><path class="flame" d="M20.5 1c2.6 2.8 2.9 4.8 0 7-2.9-2.2-2.6-4.2 0-7z"/><path class="engrave" d="M10 24h12M10 29h9"/></svg>';
+// Karla holds a gold lighter on the title screen (portraits.js): the hidden switch into le Carré's vocabulary.
 
 // Title-screen choices, remembered between visits.
 const PREFS = 'mr-prefs';
@@ -175,7 +174,7 @@ function titleScreen() {
   const saved = load();
   const st = llmStatus();
   return `<div class="title">
-    <div class="title-figs"><div class="fig control">${SPYMASTER.control}<span>Control</span></div><div class="fig karla">${SPYMASTER.karla}<span>Karla</span></div></div>
+    <div class="title-figs"><div class="fig control">${SPYMASTER.control}<span>Control</span></div><div class="fig karla">${lexMode() === 'smiley' ? SPYMASTER.karla.replace('class="lighter-g"', 'class="lighter-g lit"') : SPYMASTER.karla}<span>Karla</span></div></div>
     <div class="title-text">
       <h1>${gameName().toUpperCase()}</h1>
       <p class="tagline">Your best agent may already be theirs.</p>
@@ -190,7 +189,7 @@ function titleScreen() {
     </div>
     <div id="toast" class="toast" hidden></div>
     <button class="link manual-link" data-act="manual">Field Manual</button>
-    <button class="lighter ${lexMode() === 'smiley' ? 'lit' : ''}" data-act="smiley" aria-label="${lexMode() === 'smiley' ? 'Plain language' : 'A gold cigarette lighter'}" title="${lexMode() === 'smiley' ? 'Back to plain language' : ''}">${LIGHTER}</button>
+
   </div>`;
 }
 

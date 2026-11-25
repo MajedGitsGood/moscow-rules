@@ -3,7 +3,8 @@
 // mattered with simple rules, then asks Claude (Opus) to write the story. Offline, the rule-based
 // moments are used directly.
 import { callClaude, LLMUnavailable } from './llm.js';
-import { DEBRIEF } from './prompts.js';
+import { DEBRIEF, DEBRIEF_PLAIN } from './prompts.js';
+import { lexMode } from './lexicon.js';
 import { ARCHETYPES, SIDES, SIDE_LABEL } from './world.js';
 import { describeOrder } from './engine.js';
 
@@ -195,7 +196,7 @@ function fallbackStory(game, found) {
 export async function analyze(game) {
   const found = findMoments(game);
   try {
-    const r = await callClaude('debrief', { system: DEBRIEF, user: JSON.stringify(record(game, found)), schema: SCHEMA, maxTokens: 6000 });
+    const r = await callClaude('debrief', { system: lexMode() === 'smiley' ? DEBRIEF : DEBRIEF_PLAIN, user: JSON.stringify(record(game, found)), schema: SCHEMA, maxTokens: 6000 });
     const last = lastWeek(game);
     const okCity = (c) => game.cities.find((x) => x.toLowerCase() === String(c).toLowerCase());
     const moments = r.moments.filter((m) => m.week >= 1 && m.week <= last).map((m) => ({ ...m, city: okCity(m.city) || null })).slice(0, 10);
