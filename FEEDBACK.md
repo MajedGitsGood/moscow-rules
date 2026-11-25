@@ -191,3 +191,4 @@ groups people by allegiance; a visible "Offline Karla" warning; Save case file.
   avoiding the typical AI two-sentence parallel phrasing.
 - Remove the Owner token link from the title screen entirely.
 - Move the Field Manual link to its own place at the bottom.
+- Roster for 6 agents: 2 Scalphunters, 2 Lamplighters, 1 Ferret, 1 Talent-spotter.
