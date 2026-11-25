@@ -192,3 +192,23 @@ groups people by allegiance; a visible "Offline Karla" warning; Save case file.
 - Remove the Owner token link from the title screen entirely.
 - Move the Field Manual link to its own place at the bottom.
 - Roster for 6 agents: 2 Scalphunters, 2 Lamplighters, 1 Ferret, 1 Talent-spotter.
+
+### Follow-up 9: playing screen
+- **The city panel overlapping Traffic is crappy and complicated.** Make the city a tab in the
+  right-hand panel instead, called **Station** (not "city view").
+  - Tab order: Traffic, Station, Ours, Theirs. Smaller tab text so all four fit.
+  - Traffic shows by default. Clicking a traffic item opens the Station tab for that city;
+    clicking a city on the map does too. You can always switch back to Traffic.
+  - Drop "wk 1" next to Traffic: each traffic item already shows its week.
+- **The order popover is unintuitive.** Group the orders so they're easier to digest, and so
+  players learn what each role can do. Two options:
+  - by intent: Attack (prepare, strike), Defend (trap next week / tonight), Evade (lie low, move),
+    and Feed;
+  - or common orders shared by everyone, plus a "special" group per role: Scalphunter "Instant
+    strike", Ferret "Instant trap" (use those words), Lamplighter "Surveil", Talent-spotter
+    "Approach".
+- Trusted / Suspect / Mole in the popover is good.
+- **Execute is ambiguous** (a lone icon). Show an Execute button only once an agent is marked Mole,
+  right beside that mark.
+- Playtest question: "I couldn't get near Molnar. Someone on their side is keeping their people
+  close." The Ferret approach block is still in the rules (it was discussed, not removed).
