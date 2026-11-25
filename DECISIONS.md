@@ -4,6 +4,17 @@ Why-this-not-that for this project, newest first. Companion to [CHANGELOG.md](CH
 
 ---
 
+## 2026-11-25: Plain language by default; le Carré as an Easter egg
+**Decision:** Show the game as **Spymaster** in plain terms (MI6, KGB, Assassin, Watcher, Counterspy,
+Recruiter, Reports). Karla's gold lighter on the title screen switches to **Moscow Rules** in le Carré's
+own vocabulary. The engine, prompts and Claude's writing stay in le Carré terms; a display layer
+(`js/lexicon.js`) translates all rendered text, so Claude-written reports and debriefs follow the mode.
+**Why:** Players who aren't le Carré fans couldn't keep Lamplighter, Ferret or "morning traffic" straight.
+Translating at display time keeps the prompts byte-stable and Claude's voice intact.
+**Rejected:** *Renaming everything in the engine and prompts* (breaks Smiley mode and the prompt cache).
+*A visible language toggle* (the user wanted it as a find for fans). *"Spy Master Simulator" in-game*
+(kept for store listings). *"Control vs KGB"* (mixes a person and an agency).
+
 ## 2026-11-24: Ferrets lose the approach block; roster size is a choice; city view is a tab
 **Decision:** Remove the Ferret's silent approach block. Offer 6, 8 or 10 agents a side. Replace the
 floating city panel with a Station tab in the right panel. Group a popover's orders into the role's

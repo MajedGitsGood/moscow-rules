@@ -16,12 +16,16 @@ import { ROLE_ICON, ORDER_ICON, UI_ICON, LANDMARK_ICON } from './ui/icons.js';
 import { manualHTML } from './ui/manual.js';
 import { debriefHTML } from './ui/debrief.js';
 import { analyze } from './analysis.js';
+import { lexHTML, lex, lexMode, setLexMode, gameName, label, crest } from './lexicon.js';
 
 const SAVE = 'mr-save-v2';
 const $ = (s, r = document) => r.querySelector(s);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const roleLabel = (k) => ARCHETYPES[k]?.label || 'Unknown';
-const ORDER_LABEL = { move: 'Move', surveil: 'Surveil', lielow: 'Lie low', prepare: 'Prepare strike', strike: 'Strike', trap: 'Set trap', approach: 'Approach', vet: 'Vet', feed: 'Feed', lie: 'Choose lie' };
+const ORDER_LABEL_SMILEY = { move: 'Move', surveil: 'Surveil', lielow: 'Lie low', prepare: 'Prepare strike', strike: 'Strike', trap: 'Set trap', approach: 'Approach', vet: 'Vet', feed: 'Feed', lie: 'Choose lie' };
+const ORDER_LABEL_PLAIN = { approach: 'Recruit', vet: 'Check loyalty', feed: 'Fake order', prepare: 'Plan attack', strike: 'Attack', lie: 'Choose their lie' };
+// Order names follow the vocabulary mode (Smiley mode keeps the trade's own words).
+const ORDER_LABEL = new Proxy(ORDER_LABEL_SMILEY, { get: (o, k) => (lexMode() === 'smiley' ? o[k] : ORDER_LABEL_PLAIN[k] || o[k]) });
 const ORDER_HINT = {
   move: 'Any city, arriving tomorrow. Everyone sees the move.',
   surveil: 'Report on this city. Lamplighters learn every role.',
@@ -125,12 +129,13 @@ async function endWeek() {
 let baseKey = null, baseSvg = '';
 function render() {
   const root = $('#app');
-  if (!app) { root.innerHTML = titleScreen(); return; }
+  document.title = gameName();
+  if (!app) { root.innerHTML = lexHTML(titleScreen()); return; }
   // Selecting a new city, however it happened, opens its Station tab.
   if (app.sel?.city && app.sel.city !== app.stationCity) { app.tab = 'station'; app.traffic = true; }
   if (app.sel) app.stationCity = app.sel.city;
   const screens = { setup: playScreen, play: playScreen, handoff: handoffScreen, busy: busyScreen, debrief: debriefScreen };
-  root.innerHTML = (screens[app.screen] || playScreen)();
+  root.innerHTML = lexHTML((screens[app.screen] || playScreen)());
   if (app.screen === 'play') { tintCells(root, viewFor(app.game, app.active)); placePop(); applyNavFocus(); $('#why-in')?.focus(); }
   if (app.screen === 'setup') tintCells(root, setupView());
 }
@@ -158,6 +163,9 @@ const roleOf = (side) => (a) => roleInfo(side)(a).role;
 const roleTag = (ri, cls = '') => ri.role ? `<span class="rtag r-${ri.role} ${ri.sure ? 'sure' : 'guess'} ${cls}" title="${roleLabel(ri.role)}${ri.sure ? '' : ' (your guess)'}">${ROLE_ICON[ri.role]}</span>` : `<span class="rtag unknown ${cls}" title="Role unknown">${ROLE_ICON.unknown}</span>`;
 
 // ----- title -----
+// Karla's gold lighter (Smiley's People): the hidden switch into le Carré's own vocabulary.
+const LIGHTER = '<svg viewBox="0 0 32 48" aria-hidden="true"><rect x="5" y="14" width="22" height="32" rx="3"/><path d="M8 14V9a3 3 0 0 1 3-3h4v8"/><rect x="17" y="8" width="7" height="6" rx="1.5"/><path class="flame" d="M20.5 1c2.6 2.8 2.9 4.8 0 7-2.9-2.2-2.6-4.2 0-7z"/><path class="engrave" d="M10 24h12M10 29h9"/></svg>';
+
 // Title-screen choices, remembered between visits.
 const PREFS = 'mr-prefs';
 let prefs = (() => { try { return { players: '1', opponent: 'claude', size: '10', ...JSON.parse(localStorage.getItem(PREFS) || '{}') }; } catch { return { players: '1', opponent: 'claude', size: '10' }; } })();
@@ -169,18 +177,20 @@ function titleScreen() {
   return `<div class="title">
     <div class="title-figs"><div class="fig control">${SPYMASTER.control}<span>Control</span></div><div class="fig karla">${SPYMASTER.karla}<span>Karla</span></div></div>
     <div class="title-text">
-      <h1>MOSCOW RULES</h1>
+      <h1>${gameName().toUpperCase()}</h1>
       <p class="tagline">Your best agent may already be theirs.</p>
       <div class="setup-opts">
         ${seg('players', [['1', 'One player'], ['2', 'Two players']])}
-        ${seg('opponent', [['claude', 'Karla'], ['bot', 'Offline bot']], prefs.players === '2')}
+        ${seg('opponent', [['claude', label('Karla', 'Claude')], ['bot', 'Offline bot']], prefs.players === '2')}
         ${seg('size', [['6', '6 agents'], ['8', '8'], ['10', '10']])}
       </div>
       <small class="opt-note">${prefs.players === '2' ? 'Hot-seat: pass the device between turns' : prefs.opponent === 'claude' ? (st.llm ? 'Claude plays Moscow Centre' : 'Claude is offline: the bot will play') : 'No Claude needed'}</small>
       <button class="btn gold begin" data-act="new">Begin</button>
       ${saved?.game?.version === 2 && saved.game.phase !== 'over' ? '<button class="btn ghost" data-act="continue">Continue the operation</button>' : ''}
     </div>
+    <div id="toast" class="toast" hidden></div>
     <button class="link manual-link" data-act="manual">Field Manual</button>
+    <button class="lighter ${lexMode() === 'smiley' ? 'lit' : ''}" data-act="smiley" aria-label="${lexMode() === 'smiley' ? 'Plain language' : 'A gold cigarette lighter'}" title="${lexMode() === 'smiley' ? 'Back to plain language' : ''}">${LIGHTER}</button>
   </div>`;
 }
 
@@ -232,7 +242,7 @@ function hudTop(v, setup) {
   const pips = Array.from({ length: ordersPerWeek(app.game) }, (_, i) => `<i class="${i < used ? 'on' : ''}"></i>`).join('');
   const st = llmStatus();
   return `<header class="hud-top">
-    <div class="plate who ${side}"><span class="crest">${side === 'control' ? 'C' : 'K'}</span><div><b>${SIDE_LABEL[side].toUpperCase()}</b><small>${side === 'control' ? 'The Circus, London' : 'Moscow Centre'}</small></div>
+    <div class="plate who ${side}"><span class="crest">${crest(side)}</span><div><b>${SIDE_LABEL[side].toUpperCase()}</b><small>${side === 'control' ? 'The Circus, London' : 'Moscow Centre'}</small></div>
       ${setup ? '' : `<div class="tally"><span class="us" title="Our agents still alive">${v.score.ours}<small>ours</small></span><span class="them" title="Their agents still alive">${v.score.theirs}<small>theirs</small></span></div>`}</div>
     ${app.mode === 'claude' && app.karlaDown ? `<div class="plate karla-down" title="${esc(app.karlaDown)}"><b>OFFLINE KARLA</b><small>${/refus/i.test(app.karlaDown) ? 'Claude declined last week · the bot played' : 'Claude unreachable · the bot is playing'}</small></div>` : ''}
     <div class="plate week">${setup ? '<b>PLACE YOUR NETWORKS</b><small>Pick an agent, then a city · three per city</small>' : `<b>WEEK ${Math.min(g.week, RULES.weeks)} <span>/ ${RULES.weeks}</span></b><div class="pips" title="Orders this week">${pips}<small>${ordersPerWeek(app.game) - used} orders left</small></div>`}</div>
@@ -417,7 +427,7 @@ function sidePanel(v) {
   const t = (k, label) => `<button class="${tab === k ? 'on' : ''} tab-${k}" data-act="tab" data-tab="${k}">${label}</button>`;
   const body = { station: stationView, ours: oursList, theirs: theirsList }[tab] || traffic;
   return `<aside class="panel traffic">
-    <div class="tabs">${t('traffic', 'Traffic')}${t('station', 'Station')}${t('ours', 'Ours')}${t('theirs', 'Theirs')}</div>
+    <div class="tabs">${t('traffic', 'Traffic')}${t('station', label('Station', 'City'))}${t('ours', 'Ours')}${t('theirs', 'Theirs')}</div>
     <div class="tp-body">${body(v)}</div></aside>`;
 }
 function traffic(v) {
@@ -425,8 +435,8 @@ function traffic(v) {
   const earlier = v.inbox.filter((m) => m.week < v.week).reverse();
   const msg = (m) => {
     const a = m.from ? app.game.agents[m.from] : null;
-    const who = a ? `${a.first} ${a.name}` : 'Station';
-    const tag = !a ? 'Station' : a.side === v.side ? roleLabel(a.archetype) : 'Source inside their network';
+    const who = a ? `${a.first} ${a.name}` : label('Station', 'HQ');
+    const tag = !a ? label('Station', 'Headquarters') : a.side === v.side ? roleLabel(a.archetype) : 'Source inside their network';
     return `<article class="msg ${m.kind} ${m.tone || ''}" data-act="goto" data-city="${m.city || ''}">
       <div class="msg-who">${a ? portrait(a, { size: 34 }) : `<span class="station">${UI_ICON.traffic}</span>`}<div><b>${esc(who)}</b><small>${esc(tag)}${m.city ? ` · ${m.city}` : ''}</small></div><em>wk ${m.week}</em></div>
       <p>${esc(m.voiced || m.text)}</p></article>`;
@@ -527,13 +537,21 @@ function queue(order) {
 }
 function toast(text, ms = 2600) {
   const t = $('#toast'); if (!t) return;
-  t.textContent = text; t.hidden = false;
+  t.textContent = lex(text); t.hidden = false;
   clearTimeout(toast.h); toast.h = setTimeout(() => { t.hidden = true; }, ms);
 }
 
 function onAct(el, ev) {
   const act = el.dataset.act, g = app?.game, side = app?.active;
   switch (act) {
+    case 'smiley': {
+      const on = lexMode() !== 'smiley';
+      setLexMode(on ? 'smiley' : 'plain');
+      render();
+      if (on) toast('Smiley mode. Control, Karla and the Circus, in le Carré\'s own words.', 4200);
+      else toast('Plain language: MI6, the KGB and their agents.', 3200);
+      return;
+    }
     case 'pref': { prefs[el.dataset.key] = el.dataset.val; try { localStorage.setItem(PREFS, JSON.stringify(prefs)); } catch {} return render(); }
     case 'new': return startNew(prefs.players === '2' ? 'hotseat' : prefs.opponent, Number(prefs.size));
     case 'continue': app = load(); app.tab = 'traffic'; app.stationCity = null; if (app.sel) app.sel = { city: null, agent: null }; if (app.screen === 'busy') { app.game.pending = { control: null, karla: null }; app.screen = app.game.phase === 'setup' ? 'setup' : 'play'; app.active = 'control'; } return render();
@@ -846,7 +864,7 @@ function nearestCity(ev) {
 }
 
 // ---------- modal ----------
-function openModal(html) { $('#modal-card').innerHTML = `<button class="icon-btn modal-x" data-act="close-modal">${UI_ICON.close}</button>${html}`; $('#modal').hidden = false; }
+function openModal(html) { $('#modal-card').innerHTML = lexHTML(`<button class="icon-btn modal-x" data-act="close-modal">${UI_ICON.close}</button>${html}`); $('#modal').hidden = false; }
 function closeModal() { $('#modal').hidden = true; }
 $('#modal').addEventListener('click', (e) => { if (e.target.id === 'modal') closeModal(); });
 

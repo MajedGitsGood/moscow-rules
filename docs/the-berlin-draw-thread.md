@@ -1,4 +1,4 @@
-# Moscow Rules: X thread
+# Spymaster: X thread
 
 Replace [link] with the page's shared link. Screenshots of the page's split panels ("On my screen" / "Claude's notes") work well attached to posts 2 to 5.
 
@@ -26,7 +26,7 @@ He switched to me that night.
 
 Week 6. I set a trap to protect my agents. The next morning one of them is dead.
 
-Claude's diary: "All quiet keeps our ferret's cover while his trap quietly fails."
+Claude's diary: "All quiet keeps our [counterspy]'s cover while his trap quietly fails."
 
 It had turned my trap-setter two weeks earlier.
 
@@ -36,7 +36,7 @@ It had turned my trap-setter two weeks earlier.
 
 Week 9. I had my double agent tell Claude its own trap-setter was a traitor.
 
-Week 12, Claude's diary: "The score only adds up if Tamas is London's … so he goes."
+Week 12, Claude's diary: "The score only adds up if Tamas is [secretly working for MI6] … so he goes."
 
 It executed its own loyal agent on my lie.
 
@@ -56,4 +56,4 @@ It got greedy. My assassin got there first. A draw.
 
 The AI reads the same fog of war you do, makes judgment calls about people, and can be lied to. It's chess where any piece might be secretly playing for the other side.
 
-Moscow Rules. Coming soon. [link]
+Spymaster. Coming soon. [link]

@@ -15,6 +15,16 @@ Run with `npm start` (port 8643; static files plus the `/api/claude` proxy). Sec
 - System prompts in `js/prompts.js` must stay byte-stable so they cache; put game data in the user message.
 - Every Claude call has an offline fallback. Keep it that way.
 
+## Vocabulary: plain by default, le Carré in Smiley mode
+- The game is **Spymaster** (plain language, the default) and **Moscow Rules** in Smiley mode (the hidden gold
+  lighter on the title screen). Internally (engine, prompts, Claude's own writing) everything stays in le Carré's
+  terms; `js/lexicon.js` translates what's shown on screen (`TERMS`, `label()`, `lexHTML`).
+- Change on-screen words in `js/lexicon.js`, not by renaming things in the engine or prompts.
+- **Whenever the vocabulary or the game's name changes, also update the shareable highlight page and thread**
+  (`docs/the-berlin-draw.html`, `docs/the-berlin-draw-thread.md`) to match, and republish the page to its
+  existing artifact: https://claude.ai/artifact/349nis6eZWsqwNqZeDxWRR. Claude's quotes there keep their
+  wording, with plain terms swapped in [brackets].
+
 ## Keep the two logs current
 - `CHANGELOG.md`: user-facing *what changed* (Keep a Changelog). New work goes under `[Unreleased]`.
 - `DECISIONS.md`: the *why*, with rejected alternatives, newest first.

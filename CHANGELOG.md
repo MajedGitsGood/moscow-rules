@@ -4,6 +4,15 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 
 ## [Unreleased]
 
+### Changed (plain language)
+- The game is now **Spymaster**, in plain language: MI6 vs the KGB, Assassins, Watchers,
+  Counterspies and Recruiters, Reports and City tabs, and orders such as Recruit, Plan attack,
+  Fake order and Check loyalty. Everything on screen is translated, including Claude's reports and
+  the debrief.
+- **Smiley mode**: a gold lighter hidden on the title screen switches to le Carré's own words
+  (Moscow Rules, Control and Karla, Scalphunters and Lamplighters, the Circus, morning traffic).
+- The shareable highlight page and X thread use the plain vocabulary and the Spymaster name.
+
 ### Fixed (Karla refusals)
 - If Claude declines a Karla turn (a refusal, not an outage), the game asks once more before the
   offline bot steps in, and the warning says "declined" rather than "unreachable". The shared rules
