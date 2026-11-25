@@ -4,17 +4,17 @@ Why-this-not-that for this project, newest first. Companion to [CHANGELOG.md](CH
 
 ---
 
-## 2026-11-24: Feed replaces Brief: named targets, one free a week, opponents react
-**Decision:** A Feed plan names a strike target (or a trap city). One Feed a week doesn't count
-against the five orders. Both Claude-Karla and the bot treat leaked plans as intelligence (the
-named target runs or hides; "trapped" cities are avoided). Approaches: one per target per side per
-week.
-**Why:** Briefs named only a city, so nobody could see a reaction; the bot ignored them; and they
-cost a full order. With a named target, the reaction shows on the public map, which makes the
-canary trap and the feint playable. Karla found that two Talent-spotters could turn an agent in
-one week.
-**Rejected:** *Feeds always free* (a canary on every suspect every week). *Doubling* a known mole
-(more rules; feeding covers most of it).
+## 2026-11-24: Feed is a fake order; moles report their city-mates
+**Decision:** Feed gives one of your agents a fake order (one they could legally be given). The
+agent does nothing; any mole that hears of it (the agent, or a mole beside them) passes it on
+exactly like a real order. It costs one of the five orders. Each week a mole reports its city-mates'
+orders and roles to the side that turned it. Approaches: one per target per side per week.
+**Why:** A "plan" message that only Feed could produce was recognisably bait (the user's point).
+Hiding fakes inside the real order-leak channel makes them indistinguishable. Moles reporting
+their neighbours makes a persistent mole the most dangerous thing on the board, as in le Carré,
+and gives the victim something to deduce from ("they always know what happens in Vienna").
+**Rejected:** *Plan messages naming a target* (only ever bait). *A free Feed each week* (more
+orders per round slows the game). *Doubling a known mole* (more rules).
 
 ## 2026-11-24: One-line reasons for orders; verdicts on tokens
 **Decision:** Each order can carry an optional reason (90 characters), asked for the moment the

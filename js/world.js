@@ -41,7 +41,6 @@ export const TELLS = {
   trapTonight: { label: 'Trapped tonight (Ferret)', notice: 0.5, signs: { room: 5, faces: 4, asking: 1 } },
   surveil: { label: 'Surveilled the city', notice: 1 / 3, signs: { room: 3.5, shadowing: 3, asking: 3.5 } },
   vet: { label: 'Vetted a colleague', notice: 1 / 3, signs: { asking: 6, courier: 4 } },
-  feed: { label: 'Was told a plan', notice: 1 / 3, signs: { courier: 6, faces: 4 } },
   arrive: { label: 'Arrived in the city', notice: 1 / 3, signs: { faces: 5, courier: 3, routine: 2 } },
   idle: { label: 'Nothing, or approached someone', notice: 0.25, signs: { routine: 6, courier: 3, asking: 1 } },
 };

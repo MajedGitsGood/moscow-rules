@@ -67,16 +67,18 @@ export function findMoments(game) {
         chain: frame && { receiver: a.side, source: 'planted', told: frame.text, did: `Executed ${a.name}.`, result: a.turnedBy ? `${a.name} really was a mole.` : `${a.name} was loyal. The frame worked.`, favoured: a.turnedBy ? a.side : other(a.side) } });
     }
   }
-  // Bait: a plan fed to a mole, and the other side moving or hiding the named target in response.
-  for (const side of SIDES) {
-    for (const m of game.inbox[side].filter((x) => x.kind === 'source' && x.facts?.order === 'feed' && x.facts.plan?.kind === 'strike')) {
-      const t = game.agents[m.facts.plan.targetId], feeder = other(side);
-      const o = t && game.orderLog.find((x) => x.week === m.week && x.agentId === t.id && ['lielow', 'move'].includes(x.type));
-      if (!o) continue;
-      moments.push({ week: m.week, side: feeder, kind: 'intel', city: m.facts.plan.city || t.city, title: `${SIDE_LABEL[side]} took the bait`,
-        detail: `${SIDE_LABEL[feeder]} fed ${game.agents[m.from]?.name} a strike on ${t.name}; ${t.name} ${o.type === 'move' ? 'ran' : 'went to ground'}, and ${game.agents[m.from]?.name}'s secret was out.`,
-        chain: { receiver: side, source: 'planted', told: m.text, did: o.type === 'move' ? `Moved ${t.name} to ${o.city}.` : `Hid ${t.name}.`, result: `${SIDE_LABEL[feeder]} learned ${game.agents[m.from]?.name} was a mole.`, favoured: feeder } });
-    }
+  // Bait: a fake order (Feed) aimed at one of theirs, leaked by a mole, and the target running or hiding.
+  for (const o of game.orderLog.filter((x) => x.type === 'feed' && ['prepare', 'strike'].includes(x.fake?.type))) {
+    const t = game.agents[o.fake.targetId], fed = game.agents[o.agentId], side = t?.side;
+    if (!t || !side) continue;
+    const city = cityAt(fed, o.week - 1);
+    const mole = Object.values(game.agents).find((m) => m.side === o.side && m.turnedBy === side && m.turnedWeek && m.turnedWeek < o.week
+      && cityAt(m, o.week - 1) === city && (!m.eliminated || m.eliminated.week >= o.week));
+    const ran = mole && game.orderLog.find((x) => x.week === o.week + 1 && x.agentId === t.id && ['lielow', 'move'].includes(x.type));
+    if (!ran) continue;
+    moments.push({ week: o.week + 1, side: o.side, kind: 'intel', city, title: `${SIDE_LABEL[side]} took the bait`,
+      detail: `${SIDE_LABEL[o.side]} gave ${fed.name} a fake order against ${t.name}; ${mole.name} passed it on and ${t.name} ${ran.type === 'move' ? 'ran' : 'went to ground'}.`,
+      chain: { receiver: side, source: 'planted', told: `${fed.name} is to ${describeOrder(o.fake.type ? { ...o.fake, agentId: o.agentId } : o, game)}.`, did: ran.type === 'move' ? `Moved ${t.name} to ${ran.city}.` : `Hid ${t.name}.`, result: `${SIDE_LABEL[o.side]} could see ${mole.name} was a mole.`, favoured: o.side } });
   }
   // The pivotal week: the biggest swing in who was ahead.
   let pw = 1, mag = -1;
@@ -107,8 +109,8 @@ function record(game, found) {
     weeks: Array.from({ length: last }, (_, i) => i + 1).map((w) => ({
       week: w,
       standingAfter: standingAt(game, w),
-      orders: Object.fromEntries(SIDES.map((s) => [SIDE_LABEL[s], game.orderLog.filter((o) => o.week === w && o.side === s).map((o) => `${name(o.agentId)} (${cityAt(game.agents[o.agentId], w - 1)}): ${o.type === 'lie' ? describeOrder(o, game) + ' (lie told through a mole)' : describeOrder(o, game)}${o.why ? ` [why: "${o.why}"]` : ''}`)])),
-      toldNextMorning: Object.fromEntries(SIDES.map((s) => [SIDE_LABEL[s], game.inbox[s].filter((m) => m.week === w + 1 && m.kind !== 'briefing').map((m) => `${m.from ? name(m.from) : 'Station'}${m.lie ? ' (a LIE planted by the other side through their mole)' : m.kind === 'source' && m.facts?.order === 'feed' ? ' (a PLAN the other side told its agent, who is secretly a mole: real, or fed as bait)' : m.kind === 'source' ? ' (LEAKED by a mole inside the other side)' : ''}: ${m.text}`)])),
+      orders: Object.fromEntries(SIDES.map((s) => [SIDE_LABEL[s], game.orderLog.filter((o) => o.week === w && o.side === s).map((o) => `${name(o.agentId)} (${cityAt(game.agents[o.agentId], w - 1)}): ${o.type === 'lie' ? describeOrder(o, game) + ' (lie told through a mole)' : describeOrder(o, game)}${o.type === 'feed' ? ' (a FAKE order, to see whether it leaks)' : ''}${o.why ? ` [why: "${o.why}"]` : ''}`)])),
+      toldNextMorning: Object.fromEntries(SIDES.map((s) => [SIDE_LABEL[s], game.inbox[s].filter((m) => m.week === w + 1 && m.kind !== 'briefing').map((m) => `${m.from ? name(m.from) : 'Station'}${m.lie ? ' (a LIE planted by the other side through their mole)' : m.kind === 'source' ? ' (LEAKED by a mole inside the other side)' : ''}: ${m.text}`)])),
     })),
     outcome: game.outcome,
     rulesFound: found.moments.map((m) => `wk ${m.week}, ${m.city}: ${m.title}`),

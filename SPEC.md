@@ -24,8 +24,8 @@ Ten agents a side (2 Scalphunters, 3 Lamplighters, 3 Ferrets, 2 Talent-spotters)
 
 ## Orders (five a week, one per agent)
 Move, Surveil, Lie low, Prepare (a strike on someone in the same city), Strike, Set trap, Approach,
-Vet, Feed (tell an agent a plan: a strike on a named enemy, or a trap in a city; only matters if they
-are a mole, who passes it on; one Feed a week is free), and for enemy agents you
+Vet, Feed (give an agent a fake order: they do nothing, but a mole who hears of it passes it on exactly
+like a real one), and for enemy agents you
 have turned, choose their lie. Executing one of your own agents is free.
 
 ## Resolution
@@ -44,6 +44,7 @@ sends at most one report a week, with up to three observations. Roles are learne
 invisible to reports and strikes. Turned agents leak, lie (all quiet, false alarm, frame a
 colleague, other moles included), and follow a standing instruction from the side that turned
 them: carry out their own side's orders, or quietly let strikes, traps, approaches and vetting fail.
+A mole also reports, each week, what each colleague in its city has been ordered and what role they are.
 The player is never shown suspicion tags.
 
 ## Scoring

@@ -119,10 +119,10 @@ function startPlay(game) {
 
 // ---------- orders ----------
 // { agentId, type, city?, targetId?, plan?: {kind:'strike'|'trap', city}, lie?: {kind:'hide'|'frame'|'alarm', targetId?} }
-// { ..., plan?: {kind:'strike', targetId, city} | {kind:'trap', city} } for feed
 export const ORDER_TYPES = ['move', 'surveil', 'lielow', 'prepare', 'strike', 'trap', 'approach', 'vet', 'feed', 'lie'];
-// One Feed a week is free: it doesn't count against the weekly orders (the agent still uses its turn).
-export const countedOrders = (orders) => { let free = false; return orders.filter((o) => (o.type === 'feed' && !free ? !(free = true) : true)).length; };
+// Feed: give an agent a fake order. They do nothing this week, but anyone leaking their orders (they
+// themselves, or a mole beside them) passes it on as if it were real. { type:'feed', fake: {type, ...} }
+export const FEEDABLE = ['move', 'surveil', 'prepare', 'strike', 'trap', 'approach', 'vet'];
 
 // What an agent can do right now, for UIs and bots. Each entry lists valid targets.
 export function legalOrders(game, side, agentId) {
@@ -152,7 +152,7 @@ export function legalOrders(game, side, agentId) {
 
 export function validateOrders(game, side, orders) {
   const errors = [];
-  if (countedOrders(orders) > RULES.ordersPerWeek) errors.push(`Only ${RULES.ordersPerWeek} orders a week (plus one Feed).`);
+  if (orders.length > RULES.ordersPerWeek) errors.push(`Only ${RULES.ordersPerWeek} orders a week.`);
   const seen = new Set();
   for (const o of orders) {
     const a = game.agents[o.agentId];
@@ -165,9 +165,10 @@ export function validateOrders(game, side, orders) {
     if (legal.cities && !legal.cities.includes(o.city)) errors.push(`${a.name}: invalid city.`);
     if (o.type === 'trap' && o.when && !legal.when.includes(o.when)) errors.push(`${a.name} can't trap ${o.when === 'tonight' ? 'tonight' : 'for next week'}.`);
     if (o.type === 'feed') {
-      const t = o.plan?.kind === 'strike' && game.agents[o.plan.targetId];
-      const ok = o.plan?.kind === 'strike' ? t && t.alive && t.side === other(side) : o.plan?.kind === 'trap' && game.cities.includes(o.plan.city);
-      if (!ok) errors.push(`${a.name}: feed them a strike on one of theirs, or a trap in a city.`);
+      // The fake order must be one this agent could really be given, so it reads as genuine.
+      const f = o.fake, fl = f && FEEDABLE.includes(f.type) && legalOrders(game, side, a.id).find((l) => l.type === f.type);
+      const ok = fl && (!fl.targets || fl.targets.includes(f.targetId)) && (!fl.cities || fl.cities.includes(f.city)) && (!fl.when || !f.when || fl.when.includes(f.when));
+      if (!ok) errors.push(`${a.name}: choose a fake order they could really be given.`);
     }
     if (o.type === 'lie') {
       if (!o.lie || !['hide', 'frame', 'alarm'].includes(o.lie.kind)) errors.push(`${a.name}: choose a lie.`);
@@ -230,7 +231,7 @@ export function describeOrder(o, game) {
     case 'trap': return trapWhen(o, game) === 'tonight' ? 'set a trap for tonight' : 'set a trap for next week';
     case 'approach': return `approach ${n(o.targetId)}`;
     case 'vet': return `vet ${n(o.targetId)}`;
-    case 'feed': return o.plan.kind === 'strike' ? `hear we'll strike ${n(o.plan.targetId)} in ${o.plan.city || game.agents[o.plan.targetId]?.city}` : `hear we have a trap in ${o.plan.city}`;
+    case 'feed': return `be told to ${describeOrder({ ...o.fake, agentId: o.agentId }, game)} (fake)`;
     case 'brief': return `be ready for our ${o.plan.kind} in ${o.plan.city}`; // older saves
     case 'lie': return o.lie.kind === 'frame' ? `frame ${n(o.lie.targetId)}` : o.lie.kind === 'alarm' ? 'raise a false alarm' : 'report all quiet';
     default: return o.type;
@@ -249,19 +250,25 @@ export function resolveWeek(game) {
   const lieFor = {};
   for (const o of of('lie')) lieFor[o.agentId] = o.lie;
 
-  // 0. Leaks: every order given to a turned agent reaches the side that turned them.
-  for (const o of all) {
-    const a = game.agents[o.agentId];
-    if (o.type !== 'lie' && a.turnedBy && a.turnedBy !== o.side) {
-      send(game, a.turnedBy, {
-        kind: 'source', from: a.id, city: a.city,
-        text: o.type === 'feed'
-          ? (o.plan.kind === 'strike'
-            ? `${SIDE_LABEL[o.side]} has told me: we strike ${game.agents[o.plan.targetId].name} in ${o.plan.city || game.agents[o.plan.targetId].city} next week.`
-            : `${SIDE_LABEL[o.side]} has told me: we have a trap waiting in ${o.plan.city} next week.`)
-          : `My orders from ${SIDE_LABEL[o.side]} this week: ${describeOrder(o, game)}. ${['strike', 'trap', 'approach', 'vet'].includes(o.type) ? (game.stance?.[a.id] === 'obey' ? 'As you instructed, I am carrying them out. Tell me if you want them to fail.' : 'As you instructed, I will see they come to nothing. Tell me if you would rather I carry them out.') : ''}`.trim(),
-        facts: { order: o.type, plan: o.plan || null, targetId: o.targetId || null, city: o.city || null },
-      });
+  // 0. Leaks. A fed order looks exactly like a real one from the outside: `shown` is what an agent
+  //    appears to have been ordered. A turned agent passes on its own orders, word for word, and
+  //    reports what each of its colleagues in the same city has been ordered, and what they are.
+  const shown = (o) => (o.type === 'feed' ? { ...o.fake, agentId: o.agentId, side: o.side } : o);
+  const stanceNote = (a, t) => (['strike', 'trap', 'approach', 'vet'].includes(t)
+    ? (game.stance?.[a.id] === 'obey' ? ' As you instructed, I am carrying them out. Tell me if you want them to fail.' : ' As you instructed, I will see they come to nothing. Tell me if you would rather I carry them out.')
+    : '');
+  for (const m of Object.values(game.agents).filter((x) => x.alive && x.turnedBy && x.turnedBy !== x.side)) {
+    const own = all.find((o) => o.agentId === m.id && o.type !== 'lie');
+    if (own) {
+      const so = shown(own);
+      send(game, m.turnedBy, { kind: 'source', from: m.id, city: m.city, text: `My orders from ${SIDE_LABEL[own.side]} this week: ${describeOrder(so, game)}.${stanceNote(m, so.type)}`,
+        facts: { order: so.type, targetId: so.targetId || null, city: so.city || null } });
+    }
+    const mates = all.filter((o) => o.side === m.side && o.agentId !== m.id && o.type !== 'lie' && game.agents[o.agentId].city === m.city);
+    if (mates.length) {
+      const lines = mates.map((o) => { const a = game.agents[o.agentId]; claim(game, m.turnedBy, a.id, a.archetype, `${m.name} (our source)`); return `${a.name}, their ${role(a.archetype)}, is to ${describeOrder(shown(o), game)}.`; });
+      send(game, m.turnedBy, { kind: 'source', from: m.id, city: m.city, text: `In ${m.city}: ${lines.join(' ')}`,
+        facts: { mates: mates.map((o) => { const so = shown(o); return { id: o.agentId, order: so.type, targetId: so.targetId || null, city: so.city || null }; }) } });
     }
   }
 
@@ -370,7 +377,7 @@ export function resolveWeek(game) {
     const o = orderOf[e.id];
     if (o?.type === 'strike') return null; // the strike itself is the only trace: same for every striker
     if (o?.type === 'trap') return trapWhen(o, game) === 'tonight' ? 'trapTonight' : 'trapNext';
-    if (['prepare', 'surveil', 'vet', 'feed'].includes(o?.type)) return o.type;
+    if (['prepare', 'surveil', 'vet'].includes(o?.type)) return o.type;
     if (arrived.has(e.id)) return 'arrive';
     return 'idle'; // nothing, approaches (always unseen) and anything else
   };

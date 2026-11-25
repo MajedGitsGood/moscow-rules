@@ -4,12 +4,14 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 
 ## [Unreleased]
 
-### Changed (Feed and approaches)
-- Brief is now **Feed**: tell an agent "we strike Zorin in Vienna next week" or "we have a trap in
-  Berlin next week". A loyal agent keeps it to themselves; a mole passes it on. One Feed a week is
-  free (its own slot beside the five orders).
-- Karla, and the offline bot, act on plans leaked to them: a named target runs or lies low, and
-  they avoid striking where a trap is said to wait. Karla is told to suspect bait.
+### Changed (Feed, moles and approaches)
+- Brief is now **Feed**: give an agent a fake order (any order they could really be given). They
+  do nothing that week, but a mole who hears of it passes it on word for word like a real order,
+  so the other side can't tell it apart. It costs one of the five orders.
+- Moles are far more valuable: each week a mole also reports what every colleague in its city has
+  been ordered, and what role they are. Fed orders to those colleagues leak the same way.
+- Karla, and the offline bot, act on leaked orders: a named target runs or lies low, and they avoid
+  striking where a trap is being set. Karla is told a leak may be bait.
 - The debrief spots taken bait: a fed target who ran gives the mole away.
 - Two approaches on the same agent must come in different weeks; a second pitch the same week
   doesn't count.

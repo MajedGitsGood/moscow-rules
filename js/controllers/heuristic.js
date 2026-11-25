@@ -28,7 +28,7 @@ export function heuristicOrders(game, view, seed = 1) {
   const side = view.side;
   const me = view.own.filter((a) => a.alive);
   const orders = [], used = new Set();
-  const add = (o) => { if ((orders.length < RULES.ordersPerWeek || (o.type === 'feed' && !orders.some((x) => x.type === 'feed'))) && !used.has(o.agentId)) { orders.push(o); used.add(o.agentId); } };
+  const add = (o) => { if (orders.length < RULES.ordersPerWeek && !used.has(o.agentId)) { orders.push(o); used.add(o.agentId); } };
   const legal = (a, type) => legalOrders(game, side, a.id).find((l) => l.type === type);
   const fresh = view.inbox.filter((m) => m.week === view.week);
   // Warnings: a Lamplighter's word is certain; a footprint near one of ours is taken seriously half the time.
@@ -39,14 +39,18 @@ export function heuristicOrders(game, view, seed = 1) {
   ].filter((x, i, all) => all.findIndex((y) => y.targetId === x.targetId) === i);
   const trapCities = new Set(fresh.filter((m) => (m.facts?.activities || []).some((x) => x.kind === 'trap')
     || (m.facts?.signs || []).some((x) => ['room', 'faces'].includes(x.sign))).map((m) => m.city));
-  // Plans leaked by enemy agents working for us: believe them (the bot doesn't suspect bait).
-  const leaked = fresh.filter((m) => m.kind === 'source' && m.facts?.plan).map((m) => m.facts.plan);
-  for (const p of leaked) if (p.kind === 'trap') trapCities.add(p.city);
+  // Orders leaked by enemy agents working for us (their own, and their city-mates'): the bot
+  // believes them; it can't tell a fed order from a real one either.
+  const leaked = fresh.filter((m) => m.kind === 'source').flatMap((m) => [
+    ...(m.facts?.order ? [{ order: m.facts.order, targetId: m.facts.targetId, city: m.city }] : []),
+    ...(m.facts?.mates || []).map((x) => ({ ...x, city: m.city })),
+  ]);
+  for (const l of leaked) if (l.order === 'trap') trapCities.add(l.city);
   // The bot's own suspicion: anyone accused in recent reports or failed by a vet.
   const suspects = new Set(view.inbox.filter((m) => m.week >= view.week - 3).flatMap((m) => [m.facts?.accused, m.facts?.verdict === 'turned' ? m.facts.vet : null]).filter(Boolean));
 
   // 0. A leaked strike on one of ours: the target goes to ground.
-  for (const p of leaked.filter((x) => x.kind === 'strike')) {
+  for (const p of leaked.filter((x) => ['strike', 'prepare'].includes(x.order))) {
     const t = me.find((a) => a.id === p.targetId);
     if (t) add(rng() < 0.5 ? { agentId: t.id, type: 'lielow' } : { agentId: t.id, type: 'move', city: rng.pick(view.cities.filter((c) => c !== t.city)) });
   }
@@ -100,10 +104,10 @@ export function heuristicOrders(game, view, seed = 1) {
     const ongoing = open.find((id) => view.approachProgress[id]);
     add({ agentId: a.id, type: 'approach', targetId: ongoing || rng.pick(open) });
   }
-  // 4b. Feed a suspect a strike on a named enemy: if the target then runs, the suspect is a mole.
+  // 4b. Feed a suspect a fake preparation on someone beside them: if the target then runs, the suspect is a mole.
   const suspect = me.find((a) => suspects.has(a.id) && !used.has(a.id));
-  const foes = view.enemies.filter((e) => e.alive && !e.asset);
-  if (suspect && foes.length) { const t = rng.pick(foes); add({ agentId: suspect.id, type: 'feed', plan: { kind: 'strike', targetId: t.id, city: t.city } }); }
+  const prep = suspect && legal(suspect, 'prepare');
+  if (prep) add({ agentId: suspect.id, type: 'feed', fake: { type: 'prepare', targetId: rng.pick(prep.targets) } });
   // 5. Vet a suspect with a Ferret.
   for (const a of me.filter((x) => x.archetype === 'ferret')) {
     const l = legal(a, 'vet');

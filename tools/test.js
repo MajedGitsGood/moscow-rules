@@ -101,17 +101,31 @@ const inbox = (g, side) => viewFor(g, side).inbox.map((m) => m.text).join(' | ')
   week(g, [], [{ agentId: ll0.id, type: 'lie', lie: { kind: 'frame', targetId: ll1.id } }]);
   ok(inbox(g, 'control').includes(`I don't like what I'm seeing from ${ll1.name}`), 'a mole can frame another mole');
 }
-{ const { g, get } = setup({ control: { lamplighter: 'A' }, karla: { scalphunter: 'B' } });
-  const ll = get('control', 'lamplighter'), z = get('karla', 'scalphunter');
-  const feed = { agentId: ll.id, type: 'feed', plan: { kind: 'strike', targetId: z.id, city: z.city } };
-  week(g, [feed]);
-  ok(!inbox(g, 'karla').includes('has told me'), 'feeding a loyal agent leaks nothing');
-  ll.turnedBy = 'karla';
-  week(g, [feed]);
-  ok(inbox(g, 'karla').includes(`we strike ${z.name} in ${z.city} next week`), 'feeding a mole hands the plan, with its target, to the other side');
-  const five = Object.values(g.agents).filter((a) => a.side === 'control' && a.alive && a.id !== ll.id).slice(0, 5).map((a) => ({ agentId: a.id, type: 'lielow' }));
-  ok(!validateOrders(g, 'control', [...five, feed]).length, 'one Feed a week is free on top of five orders');
-  ok(validateOrders(g, 'control', [...five, { agentId: ll.id, type: 'lielow' }]).length > 0, 'six ordinary orders are still too many');
+{ // Feed: a fake order reads exactly like a real one when a mole passes it on.
+  const run = (fed) => {
+    const { g, get } = setup({ control: { lamplighter: 'A' }, karla: { scalphunter: 'A' } });
+    const ll = get('control', 'lamplighter'), z = get('karla', 'scalphunter');
+    ll.turnedBy = 'karla';
+    week(g, [fed ? { agentId: ll.id, type: 'feed', fake: { type: 'prepare', targetId: z.id } } : { agentId: ll.id, type: 'prepare', targetId: z.id }]);
+    return { text: g.inbox.karla.filter((m) => m.kind === 'source').map((m) => m.text).join(' | '), prepared: !!ll.prep };
+  };
+  const real = run(false), fake = run(true);
+  ok(fake.text.includes('prepare a strike on') && fake.text === real.text, 'a fed order leaks word for word like a real one');
+  ok(real.prepared && !fake.prepared, 'the fed agent does nothing');
+  const { g, get } = setup({ control: { lamplighter: 'A' }, karla: { scalphunter: 'A' } });
+  const five = Object.values(g.agents).filter((a) => a.side === 'control').slice(0, 5).map((a) => ({ agentId: a.id, type: 'lielow' }));
+  const ll = get('control', 'lamplighter');
+  ok(validateOrders(g, 'control', [...five.filter((o) => o.agentId !== ll.id), { agentId: ll.id, type: 'feed', fake: { type: 'surveil' } }]).length === 0, 'a Feed is one of the five orders');
+  ok(validateOrders(g, 'control', [{ agentId: ll.id, type: 'feed', fake: { type: 'strike', targetId: get('karla', 'scalphunter').id } }]).length > 0, "a fake order must be one they could really be given");
+}
+{ // A mole reports what its city-mates are ordered, and what they are.
+  const { g, get } = setup({ control: { ferret: 'A', scalphunter: 'A', lamplighter: 'B' } });
+  const fe = get('control', 'ferret'), sh = get('control', 'scalphunter'), ll = get('control', 'lamplighter');
+  fe.turnedBy = 'karla';
+  week(g, [{ agentId: sh.id, type: 'lielow' }, { agentId: ll.id, type: 'surveil' }]);
+  const t = inbox(g, 'karla');
+  ok(t.includes(`${sh.name}, their Scalphunter, is to lie low`) && !t.includes(ll.name), "a mole reports its city-mates' orders, and only theirs");
+  ok(viewFor(g, 'karla').intel[sh.id]?.roles.at(-1).archetype === 'scalphunter', "the mole's handlers learn its city-mates' roles");
 }
 { const { g, get } = setup({ control: { lamplighter: 'A' }, karla: { talentspotter: 'A', 'talentspotter:1': 'A' } });
   const ll = get('control', 'lamplighter'), t0 = get('karla', 'talentspotter', 0), t1 = get('karla', 'talentspotter', 1);

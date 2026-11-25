@@ -4,7 +4,7 @@
 import { callClaude } from '../llm.js';
 import { KARLA, KARLA_PLACEMENT } from '../prompts.js';
 import { ARCHETYPES, RULES } from '../world.js';
-import { validateOrders, validatePlacement, legalOrders, countedOrders } from '../engine.js';
+import { validateOrders, validatePlacement, legalOrders, FEEDABLE } from '../engine.js';
 import { heuristicOrders, heuristicPlacement } from './heuristic.js';
 
 const label = (k) => ARCHETYPES[k].label;
@@ -31,9 +31,7 @@ function summarize(game, view) {
     return { reportedRole: r ? `${label(r.archetype)} (per ${r.source}, wk ${r.week})` : undefined };
   };
   return {
-    week: view.week, weeksTotal: RULES.weeks, ordersAllowed: `${RULES.ordersPerWeek}, plus one free feed`, cities: view.cities,
-    // Plans Control told agents who secretly work for you: real intelligence, or bait.
-    leakedPlans: view.inbox.filter((m) => m.week === view.week && m.kind === 'source' && m.facts?.plan).map((m) => `${name(m.from)} was told: ${m.facts.plan.kind === 'strike' ? `strike on ${name(m.facts.plan.targetId)} in ${m.facts.plan.city || game.agents[m.facts.plan.targetId]?.city}` : `trap in ${m.facts.plan.city}`} next week`),
+    week: view.week, weeksTotal: RULES.weeks, ordersAllowed: RULES.ordersPerWeek, cities: view.cities,
     score: view.score,
     yourAgents: view.own.filter((a) => a.alive).map((a) => ({
       name: a.name, role: label(a.archetype), city: a.city,
@@ -69,14 +67,12 @@ const ORDER_SCHEMA = {
           city: { type: ['string', 'null'], description: 'move: destination' },
           target: { type: ['string', 'null'], description: 'prepare/strike/approach/vet: agent name' },
           when: { type: 'string', enum: ['tonight', 'next', 'none'], description: "trap only: tonight (Ferrets only) or next; 'none' for other orders" },
-          planKind: { type: 'string', enum: ['strike', 'trap', 'none'], description: "feed only: the plan you tell them; 'none' for other orders" },
-          planCity: { type: ['string', 'null'], description: 'feed trap: the city' },
-          planTarget: { type: ['string', 'null'], description: 'feed strike: the British agent you say you will strike' },
+          fakeType: { type: 'string', enum: [...FEEDABLE, 'none'], description: "feed only: the fake order they are told (its target, city or when go in those fields); 'none' for other orders" },
           lieKind: { type: 'string', enum: ['hide', 'frame', 'alarm', 'none'], description: "lie only (British agents working for you); 'none' for other orders" },
           lieTarget: { type: ['string', 'null'], description: 'lie frame: which British agent to frame' },
           why: { type: 'string', description: 'your reason for this order: one short sentence, at most 15 words' },
         },
-        required: ['agent', 'type', 'city', 'target', 'when', 'planKind', 'planCity', 'planTarget', 'lieKind', 'lieTarget', 'why'],
+        required: ['agent', 'type', 'city', 'target', 'when', 'fakeType', 'lieKind', 'lieTarget', 'why'],
         additionalProperties: false,
       },
     },
@@ -101,12 +97,15 @@ function toOrders(game, side, r) {
     if (c.why) o.why = String(c.why).replace(/\s+/g, ' ').replace(/['",\s]+$/, '').trim().slice(0, 120);
     if (c.type === 'trap') o.when = c.when === 'tonight' && a.archetype === 'ferret' ? 'tonight' : 'next';
     if (c.type === 'feed') {
-      const t = byName(c.planTarget);
-      o.plan = c.planKind === 'trap' ? { kind: 'trap', city: city(c.planCity) } : { kind: 'strike', targetId: t?.id, city: t?.city };
+      const f = { type: c.fakeType };
+      if (['prepare', 'strike', 'approach', 'vet'].includes(f.type)) f.targetId = byName(c.target)?.id;
+      if (f.type === 'move') f.city = city(c.city);
+      if (f.type === 'trap') f.when = c.when === 'tonight' && a.archetype === 'ferret' ? 'tonight' : 'next';
+      o.fake = f;
     }
     if (c.type === 'lie') o.lie = { kind: ['frame', 'alarm'].includes(c.lieKind) ? c.lieKind : 'hide', targetId: byName(c.lieTarget)?.id };
     if (!validateOrders(game, side, [...valid, o]).length) valid.push(o);
-    if (countedOrders(valid) >= RULES.ordersPerWeek && valid.some((x) => x.type === 'feed')) break;
+    if (valid.length >= RULES.ordersPerWeek) break;
   }
   const executions = (r.execute || []).map(byName).filter((a) => a && a.side === side && a.alive).map((a) => a.id);
   const stances = (r.instructions || []).map((x) => ({ id: byName(x.agent)?.id, stance: x.stance })).filter((x) => x.id && game.agents[x.id].turnedBy === side);

@@ -4,7 +4,7 @@ import { ROLE_ICON, ORDER_ICON, sized } from './icons.js';
 
 // The footprint table, as one running example: Pell (ours) watches Halas (theirs) in Vienna.
 const EX = { e: 'Halas', ours: 'Ashby', theirs: 'Novak', place: 'the Riesenrad' };
-const ICON_FOR = { trapNext: 'trap', prepare: 'prepare', trapTonight: 'trap', surveil: 'surveil', vet: 'vet', feed: 'feed', arrive: 'move', idle: 'lielow' };
+const ICON_FOR = { trapNext: 'trap', prepare: 'prepare', trapTonight: 'trap', surveil: 'surveil', vet: 'vet', arrive: 'move', idle: 'lielow' };
 const odds = (p) => (p >= 1 ? 'always' : `1 in ${Math.round(1 / p)}`);
 function footprintTable() {
   const row = ([k, t]) => {
@@ -37,7 +37,7 @@ const ORDERS = [
   ['trap', 'Trap', 'One night. Ferrets: tonight. Others: next week (loud)'],
   ['approach', 'Approach', `${RULES.approachesToTurn} pitches turn them, unseen`],
   ['vet', 'Vet', 'Test one of ours'],
-  ['feed', 'Feed', 'Tell a suspect a plan. One a week is free'],
+  ['feed', 'Feed', 'A fake order. Only a mole passes it on'],
 ];
 
 export function manualHTML() {
@@ -68,20 +68,20 @@ export function manualHTML() {
   <div class="man-h">Moles</div>
   <div class="man-orders">
     <div class="man-order">${ORDER_ICON.lie}<div><b>Their mole, your voice</b>Pick the lie they report home: all quiet, a false alarm, or framing a colleague (even another mole). Tell them whether to carry out their own side's orders or quietly let them fail.</div></div>
-    <div class="man-order">${ORDER_ICON.vet}<div><b>Your mole, their ears</b>Every order you give a mole reaches the other side. A Ferret can vet them.</div></div>
+    <div class="man-order">${ORDER_ICON.vet}<div><b>Your mole, their ears</b>A mole passes on its own orders, and the orders and roles of everyone beside it. A Ferret can vet them.</div></div>
     <div class="man-order">${ORDER_ICON.execute}<div><b>Execute</b>Free. The other side scores either way. You'll know if you were right at the debrief.</div></div>
   </div>
 
   <div class="man-h">Tradecraft</div>
   <div class="tips">
-    <div><b>Canary trap</b>Feed two suspects strikes on different targets. Whichever target moves or vanishes names the mole.</div>
+    <div><b>Canary trap</b>Feed two suspects fake strikes on different targets. Whichever target runs names the mole.</div>
     <div><b>Sequencing</b>Surveil first. Strike only what you know, where no one is setting a trap.</div>
     <div><b>Go quiet</b>Someone asking about your agent? Lie low and any strike finds no one.</div>
     <div><b>Out of nowhere</b>A kill with no footprints the week before smells of a Scalphunter.</div>
     <div><b>Read twice</b>Asking about a colleague can be a vet. A room with a view can be a watcher.</div>
     <div><b>Read the dead</b>When one of yours dies, a witness may name the killer. Trap that city, or send a Scalphunter.</div>
     <div><b>Moles are silent</b>No one reports an approach. Watch for reports that never match what happens.</div>
-    <div><b>Feint</b>Feed a known mole a strike in the wrong city, or a trap that isn't there. Karla guards the wrong street.</div>
+    <div><b>Feint</b>Feed a known mole a fake trap or a fake strike. Karla guards the wrong street.</div>
   </div>
   </div>`;
 }
