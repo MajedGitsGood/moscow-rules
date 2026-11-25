@@ -180,3 +180,14 @@ groups people by allegiance; a visible "Offline Karla" warning; Save case file.
     small. Make the fate the focus.
   - Role: icon only, no label (players know the icons by now), moved to the right, away from the
     name; the columns have plenty of empty space.
+
+### Follow-up 8: title screen
+- Replace the three mode buttons with toggles or sliders of set options:
+  - opponent: Claude or the offline bot;
+  - players: one or two.
+- New option: number of agents per side (6, 8 or 10). Watching the second player, 10 agents felt
+  like too many to keep track of, and too long and slow a game. To experiment with.
+- The tagline ("Know who they are. Know who is still yours.") is weak. Find something cleverer,
+  avoiding the typical AI two-sentence parallel phrasing.
+- Remove the Owner token link from the title screen entirely.
+- Move the Field Manual link to its own place at the bottom.
