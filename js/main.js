@@ -119,7 +119,7 @@ function render() {
   if (!app) { root.innerHTML = titleScreen(); return; }
   const screens = { setup: playScreen, play: playScreen, handoff: handoffScreen, busy: busyScreen, debrief: debriefScreen };
   root.innerHTML = (screens[app.screen] || playScreen)();
-  if (app.screen === 'play') { tintCells(root, viewFor(app.game, app.active)); placePop(); applyNavFocus(); }
+  if (app.screen === 'play') { tintCells(root, viewFor(app.game, app.active)); placeCityPanel(); placePop(); applyNavFocus(); }
   if (app.screen === 'setup') tintCells(root, setupView());
 }
 function busy(text) { app.screen = 'busy'; app.busyText = text; render(); }
@@ -333,13 +333,77 @@ function orderPop(v) {
     <div class="obs">${btns}</div>${sub}</div>`;
 }
 // Keep the popover next to its token, inside the screen.
+// Screen boxes, relative to the stage.
+const stageBox = (el, stage) => { const r = el.getBoundingClientRect(); return { l: r.left - stage.left, t: r.top - stage.top, r: r.right - stage.left, b: r.bottom - stage.top }; };
+const overlap = (a, b) => Math.max(0, Math.min(a.r, b.r) - Math.max(a.l, b.l)) * Math.max(0, Math.min(a.b, b.b) - Math.max(a.t, b.t));
+const usable = (stage) => ({ l: 12, t: 80, r: stage.width - (app.traffic ? 404 : 12), b: stage.height - 84 });
+
+// The city panel opens over open sea where it can, never on top of its city or the city's agents.
+// Every spot on the map is scored by how much land and how many other cities the panel would cover,
+// plus how far it sits from its city; land comes from a grid sampled once against the map's own
+// land shape (rebuilt when the map moves or resizes).
+let landGrid = null;
+function landMask(stage) {
+  const land = document.querySelector('path.land');
+  if (!land) return null;
+  const svg = land.ownerSVGElement, m = svg.getScreenCTM(), cell = 16;
+  const key = [stage.width, stage.height, m.a, m.e, m.f].map((v) => Math.round(v * 100)).join(',');
+  if (landGrid?.key === key) return landGrid;
+  const inv = m.inverse(), pt = svg.createSVGPoint(), cols = Math.ceil(stage.width / cell), rows = Math.ceil(stage.height / cell);
+  const sum = new Float32Array((cols + 1) * (rows + 1)); // summed-area table of land cells
+  for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) {
+    pt.x = stage.left + (i + 0.5) * cell; pt.y = stage.top + (j + 0.5) * cell;
+    const v = land.isPointInFill(pt.matrixTransform(inv)) ? 1 : 0;
+    sum[(j + 1) * (cols + 1) + i + 1] = v + sum[j * (cols + 1) + i + 1] + sum[(j + 1) * (cols + 1) + i] - sum[j * (cols + 1) + i];
+  }
+  const at = (i, j) => sum[Math.max(0, Math.min(rows, j)) * (cols + 1) + Math.max(0, Math.min(cols, i))];
+  const fraction = (b) => {
+    const i0 = Math.round(b.l / cell), i1 = Math.round(b.r / cell), j0 = Math.round(b.t / cell), j1 = Math.round(b.b / cell);
+    const area = Math.max(1, (i1 - i0) * (j1 - j0));
+    return (at(i1, j1) - at(i0, j1) - at(i1, j0) + at(i0, j0)) / area;
+  };
+  return (landGrid = { key, fraction });
+}
+function placeCityPanel() {
+  const panel = $('.city-panel');
+  if (!panel) return;
+  if (window.innerWidth <= 820) { panel.style.left = panel.style.top = ''; return; } // phones: bottom sheet
+  const stage = $('.stage').getBoundingClientRect();
+  const cityEl = document.querySelector(`.city[data-city="${app.sel.city}"]`);
+  const mask = landMask(stage);
+  if (!cityEl || !mask) return;
+  const pad = 10, c0 = stageBox(cityEl, stage), c = { l: c0.l - pad, t: c0.t - pad, r: c0.r + pad, b: c0.b + pad };
+  const others = [...document.querySelectorAll('.city')].filter((e) => e !== cityEl).map((e) => stageBox(e, stage));
+  const pw = panel.offsetWidth, ph = panel.offsetHeight, U = usable(stage), step = 16;
+  const cx = (c.l + c.r) / 2, cy = (c.t + c.b) / 2;
+  let best = null;
+  for (let x = U.l; x <= U.r - pw; x += step) for (let y = U.t; y <= U.b - ph; y += step) {
+    const box = { l: x, t: y, r: x + pw, b: y + ph };
+    if (overlap(box, c) > 0) continue;
+    // Covering any part of another city costs a lot; covering more of it costs more.
+    const cities = others.reduce((n, o) => { const f = overlap(box, o) / ((o.r - o.l) * (o.b - o.t)); return n + (f > 0 ? 0.6 + f : 0); }, 0);
+    // The gap between panel and city, so the panel stays close to what it describes.
+    const dx = Math.max(0, box.l - c.r, c.l - box.r), dy = Math.max(0, box.t - c.b, c.t - box.b);
+    const near = Math.hypot(dx, dy) / 300;
+    const land = mask.fraction(box), score = land + cities * 1.5 + near * 1.2;
+    if (!best || score < best.score) best = { score, x, y, land, cities, near };
+  }
+  // No clear sea near the city (a small window): dock over the right-hand column instead, so the
+  // map itself stays uncovered.
+  const docked = !best || best.cities > 0 || best.near > 0.5 || best.land > 0.6;
+  panel.classList.toggle('docked', docked);
+  if (docked) best = { x: stage.width - pw - 12, y: U.t };
+  panel.style.left = `${best.x}px`; panel.style.top = `${best.y}px`;
+}
+
 function placePop() {
   const pop = $('#pop'); if (!pop) return;
   const tok = document.querySelector(`.cp-row[data-agent="${app.sel.agent}"]`) || document.querySelector(`.token[data-agent="${app.sel.agent}"]`);
   const stage = $('.stage').getBoundingClientRect();
   const r = tok ? tok.getBoundingClientRect() : { left: stage.width / 2, right: stage.width / 2, top: stage.height / 2, bottom: stage.height / 2 };
   const pw = pop.offsetWidth, ph = pop.offsetHeight, gap = 14, top = 80;
-  const limitR = stage.width - (app.traffic ? 404 : 12);
+  const docked = $('.city-panel.docked');
+  const limitR = docked ? stage.width - 12 : stage.width - (app.traffic ? 404 : 12);
   // Open away from the city (tokens sit to its left or right), else above or below the token.
   const city = tok?.closest('.city')?.querySelector('.medal')?.getBoundingClientRect();
   const awayLeft = tok?.classList.contains('cp-row') ? false : (city ? r.left < city.left : false);
@@ -349,9 +413,16 @@ function placePop() {
     [cx - pw / 2, r.top - ph - gap],
     [cx - pw / 2, r.bottom + gap],
     awayLeft ? [r.right + gap, (r.top + r.bottom) / 2 - ph / 2] : [r.left - pw - gap, (r.top + r.bottom) / 2 - ph / 2],
+    ...[r.left - pw - gap, r.right + gap].flatMap((px) => [[px, r.top], [px, r.bottom - ph], [px, top], [px, stage.height - 96 - ph]]),
   ];
-  const fits = ([px, py]) => px >= 12 && px + pw <= limitR && py >= top && py + ph <= stage.height - 12;
-  let [x, y] = options.find(fits) || options[0];
+  const sel = document.querySelector(`.city[data-city="${app.sel.city || app.game.agents[app.sel.agent]?.city}"]`);
+  const cityBox = sel && stageBox(sel, stage);
+  const fits = ([px, py]) => px >= 12 && px + pw <= limitR && py >= top && py + ph <= stage.height - 12
+    && !(cityBox && overlap({ l: px, t: py, r: px + pw, b: py + ph }, cityBox) > 0);
+  // Prefer a spot that covers no city (and not the city panel); failing that, one that leaves this city clear.
+  const cityBoxes = [...document.querySelectorAll('.city, .city-panel')].map((e) => stageBox(e, stage));
+  const clear = (o) => fits(o) && !cityBoxes.some((b) => overlap({ l: o[0], t: o[1], r: o[0] + pw, b: o[1] + ph }, b) > 0);
+  let [x, y] = options.find(clear) || options.find(fits) || options[0];
   x = Math.max(12, Math.min(x, limitR - pw)); y = Math.max(top, Math.min(y, stage.height - ph - 12));
   pop.style.left = `${x}px`; pop.style.top = `${y}px`;
 }
@@ -400,8 +471,9 @@ function notebook(v) {
     return `<div class="nb-row ${e.alive ? '' : 'dead'}"><button class="nb-who" data-act="select" data-agent="${e.id}">${portrait(e, { size: 30, mood: e.alive ? null : 'dead' })}<span><b>${esc(e.name)}</b><small>${e.alive ? e.city : 'dead'}${e.asset ? ' · our source' : ''}</small></span></button>
       <div class="role-picks small">${ri.sure ? `${roleTag(ri)}<span class="nb-known r-${ri.role}">${roleLabel(ri.role)}</span>` : ROLE_PICKS.map((k) => `<button class="rp ${k !== 'unknown' ? `r-${k}` : ''} ${guess === k ? 'on' : ''}" data-act="setrole" data-agent="${e.id}" data-role="${k}" title="${k === 'unknown' ? 'No idea yet' : roleLabel(k)}">${ROLE_ICON[k]}</button>`).join('')}</div>${note(e.id)}</div>`;
   }).join('');
-  return `<h3 class="h-report">Ours</h3><div class="nb">${ours}</div><h3 class="h-event">Theirs</h3><div class="nb">${theirs}</div>
-    <p class="empty">Roles your Lamplighters report fill in by themselves. Your own guesses show on the map as dashed badges.</p>`;
+  const t = app.nbTab || 'theirs';
+  return `<div class="nb-tabs"><button class="theirs ${t === 'theirs' ? 'on' : ''}" data-act="nbtab" data-tab="theirs">Theirs</button><button class="ours ${t === 'ours' ? 'on' : ''}" data-act="nbtab" data-tab="ours">Ours</button></div>
+    ${t === 'theirs' ? `<div class="nb">${theirs}</div><p class="empty">Roles your Lamplighters report fill in by themselves. Your guesses show dashed.</p>` : `<div class="nb">${ours}</div>`}`;
 }
 
 // The week's orders, always visible: click one to revisit the agent, ✕ to cancel it.
@@ -471,6 +543,7 @@ function onAct(el, ev) {
     case 'place': return confirmPlacement();
     case 'traffic': app.traffic = !app.traffic; return render();
     case 'tab': app.tab = el.dataset.tab; app.traffic = true; return render();
+    case 'nbtab': app.nbTab = el.dataset.tab; return render();
     case 'stance': setStance(g, side, app.sel.agent, el.dataset.stance); save(); return render();
     case 'pick-agent': { const a = g.agents[el.dataset.agent]; app.sel = { city: a.city, agent: app.sel.agent === a.id ? null : a.id }; app.pick = null; if (app.nav) { app.nav.orders = 0; app.nav.roles = 0; } return render(); }
     case 'select': { const a = g.agents[el.dataset.agent]; if (!a.alive) return; app.sel = { city: a.city, agent: a.id }; app.pick = null; return render(); }
@@ -654,7 +727,7 @@ document.addEventListener('input', (ev) => {
   (app.notes[app.active].text ||= {})[id] = ev.target.value;
   save();
 });
-window.addEventListener('resize', () => { if (app?.screen === 'play') placePop(); });
+window.addEventListener('resize', () => { if (app?.screen === 'play') { placeCityPanel(); placePop(); } });
 // Debrief: a pin on the chart and its moment card light up together.
 document.addEventListener('pointerover', (ev) => {
   const p = ev.target.closest?.('[data-pin]');

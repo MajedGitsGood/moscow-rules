@@ -4,6 +4,13 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 
 ## [Unreleased]
 
+### Changed (panels)
+- The city panel opens beside its city, over open sea where it can, and never covers the city
+  itself or any other city. On smaller windows, where there's no clear sea nearby, it docks over
+  the right-hand column instead. It's narrower too.
+- An agent's order popover avoids covering any city or the city panel.
+- The Notebook has two tabs, Theirs (first) and Ours.
+
 ### Changed (roles at a glance)
 - A role your Lamplighter reports is filled in for you everywhere (map, city panel, notebook).
   These reports are always true, so there's nothing to confirm. You only mark your own guesses,

@@ -4,6 +4,16 @@ Why-this-not-that for this project, newest first. Companion to [CHANGELOG.md](CH
 
 ---
 
+## 2026-11-24: The city panel finds open sea, or docks
+**Decision:** Every spot on the map is scored by how much land and how many other cities the panel
+would cover, plus its distance from the city; the clicked city is never covered. Land is sampled
+once into a grid from the map's own land shape. If nothing clear sits near the city, the panel
+docks over the right-hand column.
+**Why:** The fixed top-left panel covered London. Hand-placed anchors per city break as the window
+size changes; scoring adapts.
+**Rejected:** *Per-city fixed anchors* (fragile across window sizes). *Allowing far-away spots* (a
+panel over the Black Sea for London is disorienting).
+
 ## 2026-11-24: Reported roles apply themselves; colour per role; no covers on screen
 **Decision:** A role reported by a Lamplighter (or a new source) is shown as known everywhere, with
 its source; the player marks only guesses, drawn dashed. Each role has its own colour on a larger
