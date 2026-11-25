@@ -4,6 +4,16 @@ Why-this-not-that for this project, newest first. Companion to [CHANGELOG.md](CH
 
 ---
 
+## 2026-11-24: Ferrets lose the approach block; roster size is a choice; city view is a tab
+**Decision:** Remove the Ferret's silent approach block. Offer 6, 8 or 10 agents a side. Replace the
+floating city panel with a Station tab in the right panel. Group a popover's orders into the role's
+special and the common orders.
+**Why:** The block only stopped 13-15% of approaches but read as an invisible wall; ten agents was a
+lot to track in a 30-45 minute game; the floating panel competed with Traffic for the same space;
+an ungrouped grid of orders didn't teach what each role is for.
+**Rejected:** *Grouping by intent (attack/defend/evade)* (the user's alternative: role specials
+teach the roles better). *Replacing the block with Ferret approach detection* (not asked for yet).
+
 ## 2026-11-24: Score is agents working for you, turned agents included
 **Decision:** Each side scores its own agents alive and loyal plus enemy agents it turned who are
 alive. The debrief groups people by the side they ended up working for.

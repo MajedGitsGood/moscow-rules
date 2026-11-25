@@ -212,3 +212,5 @@ groups people by allegiance; a visible "Offline Karla" warning; Save case file.
   right beside that mark.
 - Playtest question: "I couldn't get near Molnar. Someone on their side is keeping their people
   close." The Ferret approach block is still in the rules (it was discussed, not removed).
+
+**Addressed (2026-11-24):** follow-ups 7, 8 and 9 above, and the Ferret approach block is removed.

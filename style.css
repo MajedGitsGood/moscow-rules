@@ -680,3 +680,49 @@ kbd { font-family: var(--ui); font-size: 9.5px; line-height: 1; padding: 2px 4px
 .plate.karla-down { border-color: #e0675c; background: linear-gradient(180deg, rgba(90,30,26,.95), rgba(50,18,16,.96)); display: flex; flex-direction: column; justify-content: center; padding: 6px 12px; }
 .plate.karla-down b { color: #f19a91; font-family: var(--serif); letter-spacing: .14em; font-size: 12px; }
 .plate.karla-down small { color: #e9c2bd; font-size: 11px; }
+
+/* ---------- title: choices as segmented toggles ---------- */
+.setup-opts { display: flex; flex-direction: column; gap: 10px; align-items: center; }
+.seg { display: inline-flex; border: 1px solid rgba(201,162,78,.4); border-radius: 3px; overflow: hidden; background: rgba(10,15,20,.55); }
+.seg button { background: transparent; border: none; padding: 9px 18px; min-width: 96px; color: var(--text-dim); cursor: pointer; font-family: var(--serif); font-size: 12.5px; letter-spacing: .14em; text-transform: uppercase; transition: background .15s, color .15s; }
+.seg button + button { border-left: 1px solid rgba(201,162,78,.25); }
+.seg button.on { background: linear-gradient(180deg, #e7c46c, #b98f3c); color: #1b140a; }
+.seg button:not(.on):not(:disabled):hover { color: var(--gold-hi); }
+.seg.off { opacity: .35; }
+.opt-note { color: var(--text-dim); font-size: 12.5px; margin-top: -4px; }
+.btn.begin { min-width: 220px; padding: 14px 18px; font-size: 15px; }
+.manual-link { position: absolute; bottom: 28px; left: 50%; transform: translateX(-50%); font-size: 14px; }
+
+/* ---------- right panel: Traffic · Station · Ours · Theirs ---------- */
+.tabs button { padding: 11px 2px; font-size: 11px; letter-spacing: .14em; }
+.stn { margin: 0 -12px; }
+.stn .cp-head { padding: 12px 14px; }
+.stn .cp-head h2 { font-size: 18px; }
+.stn .cp-list { overflow: visible; padding: 0 12px; }
+.station-empty { padding: 18px 4px; }
+
+/* ---------- order popover: the role's special, then what everyone can do ---------- */
+.og { display: flex; flex-direction: column; gap: 5px; }
+.og-label { font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: var(--text-dim); }
+.og.special .og-label { color: var(--rc); }
+.og.special .ob { border-color: color-mix(in srgb, var(--rc) 55%, transparent); }
+.og.special .ob .ico { color: var(--rc); }
+.verdict { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.verdict .btn.red { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; }
+.verdict .btn.red .ico { width: 14px; height: 14px; }
+.seg { width: 330px; } .seg button { flex: 1; min-width: 0; padding: 9px 6px; }
+
+/* ---------- debrief, round 3 ---------- */
+.mo-n { width: auto; min-width: 40px; height: 40px; border-radius: 6px; flex-direction: column; gap: 0; line-height: 1; font-family: var(--serif); font-size: 20px; padding: 3px 6px; }
+.mo-n small { font-family: var(--ui); font-size: 9px; letter-spacing: .12em; text-transform: uppercase; opacity: .75; }
+.mo-n { display: flex; align-items: center; justify-content: center; }
+.bg-dot circle { stroke: #0a0f14; stroke-width: 1.5; } .bg-dot.control circle { fill: #8fb6e6; } .bg-dot.karla circle { fill: #ee8c82; }
+.bg-label { font-family: var(--ui); font-size: 9px; font-weight: 700; fill: var(--text); paint-order: stroke; stroke: #0a0f14; stroke-width: 3px; }
+.debrief2 .db-agent { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; gap: 12px; align-items: center; }
+.db-who { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.db-fate { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 13.5px; color: var(--text); }
+.db-fate .death { gap: 6px; } .db-fate .death .ico { width: 18px; height: 18px; color: #ef8a80; } .db-fate .death b { font-weight: 600; }
+.db-fate .from-chip { margin-left: 0; font-size: 11.5px; padding: 1px 8px; }
+.db-role { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: var(--rc); color: #0a0f14; margin-right: 8px; }
+.db-role .ico { width: 17px; height: 17px; stroke-width: 2.4; }
+.debrief2 .db-agent.r2 .db-role { opacity: .55; }

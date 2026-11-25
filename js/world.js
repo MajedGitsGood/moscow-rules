@@ -48,14 +48,14 @@ export const TELLS = {
 export const ARCHETYPES = {
   scalphunter: { label: 'Scalphunter', short: 'SH', power: 'Can strike without preparing first: no footprints beforehand.' },
   lamplighter: { label: 'Lamplighter', short: 'LL', power: 'The only one who can surveil: learns every role in the city. Sees preparations, traps and surveillance for what they are.' },
-  ferret: { label: 'Ferret', short: 'FE', power: 'Can trap the same night. Keeps your agents in its city safe from approaches. Notices surveillance. Vets your own agents.' },
+  ferret: { label: 'Ferret', short: 'FE', power: 'Can trap the same night. Notices surveillance. Vets your own agents.' },
   talentspotter: { label: 'Talent-spotter', short: 'TS', power: 'Turns an enemy agent after two approaches, unseen. Cannot kill or set traps.' },
 };
 export const ARCHETYPE_KEYS = Object.keys(ARCHETYPES);
 
 export const RULES = {
   weeks: 12,
-  roster: { scalphunter: 2, lamplighter: 3, ferret: 3, talentspotter: 2 }, // 10 agents per side
+  roster: { scalphunter: 2, lamplighter: 3, ferret: 3, talentspotter: 2 }, // the default (10 agents per side)
   maxPerCityAtSetup: 3,
   ordersPerWeek: 5,
   approachesToTurn: 2,
@@ -79,7 +79,14 @@ const COVERS = ['trade attaché', 'journalist', 'professor', 'chauffeur', 'banke
   'cultural attaché', 'chess coach', 'wine merchant', 'priest', 'nurse', 'engineer', 'art dealer', 'embassy clerk',
   'pianist', 'travel agent', 'film critic', 'airline steward', 'shipping clerk'];
 
-export function generateWorld(rng) {
+// Agents per side, chosen at the start of a game.
+export const ROSTERS = {
+  6: { scalphunter: 2, lamplighter: 2, ferret: 1, talentspotter: 1 },
+  8: { scalphunter: 2, lamplighter: 2, ferret: 2, talentspotter: 2 },
+  10: { scalphunter: 2, lamplighter: 3, ferret: 3, talentspotter: 2 },
+};
+
+export function generateWorld(rng, roster = RULES.roster) {
   const contested = [];
   for (const c of rng.shuffle(CONTESTED_POOL)) {
     if (contested.length < RULES.contestedCities && !APART.some((p) => p.includes(c) && p.some((o) => o !== c && contested.includes(o)))) contested.push(c);
@@ -93,7 +100,7 @@ export function generateWorld(rng) {
     const firsts = rng.shuffle(FIRST[side]);
     let i = 0;
     for (const arch of ARCHETYPE_KEYS) {
-      for (let k = 0; k < RULES.roster[arch]; k++) {
+      for (let k = 0; k < (roster[arch] || 0); k++) {
         const id = `${side[0]}${i}`;
         const first = firsts[i % firsts.length];
         agents[id] = {

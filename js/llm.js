@@ -13,6 +13,11 @@ function sessionId() {
     return id;
   } catch { return 'nostorage'; }
 }
+// The owner's budget-free token is set once from the address bar (?owner=...), never in the UI.
+try {
+  const u = new URL(location.href), t = u.searchParams.get('owner');
+  if (t) { localStorage.setItem('mr-owner', t); u.searchParams.delete('owner'); history.replaceState(null, '', u.pathname + u.search + u.hash); }
+} catch {}
 function ownerToken() {
   try { return localStorage.getItem('mr-owner') || ''; } catch { return ''; }
 }

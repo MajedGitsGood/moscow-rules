@@ -17,7 +17,7 @@ Ten agents a side (2 Scalphunters, 3 Lamplighters, 3 Ferrets, 2 Talent-spotters)
 - Scalphunter: may strike without preparing (no footprints beforehand), or prepare like anyone.
 - Lamplighter: the only one who can surveil (reveals every role in the city); sees preparations,
   traps and surveillance in its city for what they are, and always witnesses attacks.
-- Ferret: can trap the same night; silently blocks approaches on its side's agents in its city;
+- Ferret: can trap the same night;
   notices surveillance; vets your own agents.
 - Talent-spotter: turns an enemy after two approaches in different weeks (a side's second pitch on the
   same target in one week doesn't count), never reported; cannot kill or trap.

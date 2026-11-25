@@ -9,7 +9,7 @@
 // verdicts. Lamplighters see loud work for what it is. Talent-spotters turn an enemy agent after two
 // unseen approaches; turned agents leak orders and report lies. Most agents working for you wins.
 import { makeRng } from './rng.js';
-import { generateWorld, RULES, SIDES, other, ARCHETYPES, SIDE_LABEL, FOOTPRINTS, TELLS, PLACE } from './world.js';
+import { generateWorld, RULES, ROSTERS, SIDES, other, ARCHETYPES, SIDE_LABEL, FOOTPRINTS, TELLS, PLACE } from './world.js';
 
 // ---------- helpers ----------
 const withRng = (game, fn) => {
@@ -46,11 +46,12 @@ function eliminate(game, agent, how, bySide) {
 }
 
 // ---------- setup ----------
-export function newGame(seed, { sleepers = false } = {}) {
+export function newGame(seed, { sleepers = false, size = 10 } = {}) {
   const rng = makeRng(seed);
-  const { cities, agents } = generateWorld(rng);
+  const roster = ROSTERS[size] || ROSTERS[10];
+  const { cities, agents } = generateWorld(rng, roster);
   const game = {
-    version: 2, seed, rngState: rng.state(), week: 1, phase: 'setup', cities, agents,
+    version: 2, seed, size: Object.values(roster).reduce((a, b) => a + b, 0), roster, rngState: rng.state(), week: 1, phase: 'setup', cities, agents,
     placed: { control: false, karla: false },
     pending: { control: null, karla: null },
     approaches: {},   // targetId -> { side, count }
@@ -343,11 +344,6 @@ export function resolveWeek(game) {
       continue;
     }
     pitched.add(`${o.side}:${t.id}`);
-    // A loyal Ferret on the target's side keeps its people out of reach, silently.
-    if (inCity(game, t.side, t.city).some((f) => f.archetype === 'ferret' && loyal(f) && f.id !== t.id)) {
-      send(game, o.side, { kind: 'report', from: ts.id, city: ts.city, text: `I couldn't get near ${t.name}. Someone on their side is keeping their people close.` });
-      continue;
-    }
     if (t.turnedBy === o.side) continue;
     const prev = game.approaches[t.id];
     const rec = prev && prev.side === o.side ? prev : (game.approaches[t.id] = { side: o.side, count: 0 });

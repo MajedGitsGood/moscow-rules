@@ -32,6 +32,7 @@ function summarize(game, view) {
   };
   return {
     week: view.week, weeksTotal: RULES.weeks, ordersAllowed: RULES.ordersPerWeek, cities: view.cities,
+    rosterPerSide: Object.entries(game.roster || RULES.roster).map(([k, n]) => `${n} ${label(k)}${n > 1 ? 's' : ''}`).join(', '),
     score: view.score,
     yourAgents: view.own.filter((a) => a.alive).map((a) => ({
       name: a.name, role: label(a.archetype), city: a.city,

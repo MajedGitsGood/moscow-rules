@@ -48,8 +48,8 @@ const humanSides = () => (app.mode === 'hotseat' ? SIDES : ['control']);
 const isHuman = (side) => humanSides().includes(side);
 
 // ---------- flow ----------
-function startNew(mode) {
-  const game = newGame(randomSeed());
+function startNew(mode, size = 10) {
+  const game = newGame(randomSeed(), { size });
   app = {
     game, mode, screen: 'setup', active: 'control',
     queued: { control: [], karla: [] },
@@ -125,9 +125,12 @@ let baseKey = null, baseSvg = '';
 function render() {
   const root = $('#app');
   if (!app) { root.innerHTML = titleScreen(); return; }
+  // Selecting a new city, however it happened, opens its Station tab.
+  if (app.sel?.city && app.sel.city !== app.stationCity) { app.tab = 'station'; app.traffic = true; }
+  if (app.sel) app.stationCity = app.sel.city;
   const screens = { setup: playScreen, play: playScreen, handoff: handoffScreen, busy: busyScreen, debrief: debriefScreen };
   root.innerHTML = (screens[app.screen] || playScreen)();
-  if (app.screen === 'play') { tintCells(root, viewFor(app.game, app.active)); placeCityPanel(); placePop(); applyNavFocus(); $('#why-in')?.focus(); }
+  if (app.screen === 'play') { tintCells(root, viewFor(app.game, app.active)); placePop(); applyNavFocus(); $('#why-in')?.focus(); }
   if (app.screen === 'setup') tintCells(root, setupView());
 }
 function busy(text) { app.screen = 'busy'; app.busyText = text; render(); }
@@ -154,6 +157,11 @@ const roleOf = (side) => (a) => roleInfo(side)(a).role;
 const roleTag = (ri, cls = '') => ri.role ? `<span class="rtag r-${ri.role} ${ri.sure ? 'sure' : 'guess'} ${cls}" title="${roleLabel(ri.role)}${ri.sure ? '' : ' (your guess)'}">${ROLE_ICON[ri.role]}</span>` : `<span class="rtag unknown ${cls}" title="Role unknown">${ROLE_ICON.unknown}</span>`;
 
 // ----- title -----
+// Title-screen choices, remembered between visits.
+const PREFS = 'mr-prefs';
+let prefs = (() => { try { return { players: '1', opponent: 'claude', size: '10', ...JSON.parse(localStorage.getItem(PREFS) || '{}') }; } catch { return { players: '1', opponent: 'claude', size: '10' }; } })();
+const seg = (key, opts, off = false) => `<div class="seg ${off ? 'off' : ''}" role="radiogroup">${opts.map(([v, label]) => `<button role="radio" aria-checked="${prefs[key] === v}" class="${prefs[key] === v ? 'on' : ''}" data-act="pref" data-key="${key}" data-val="${v}" ${off ? 'disabled' : ''}>${label}</button>`).join('')}</div>`;
+
 function titleScreen() {
   const saved = load();
   const st = llmStatus();
@@ -161,15 +169,17 @@ function titleScreen() {
     <div class="title-figs"><div class="fig control">${SPYMASTER.control}<span>Control</span></div><div class="fig karla">${SPYMASTER.karla}<span>Karla</span></div></div>
     <div class="title-text">
       <h1>MOSCOW RULES</h1>
-      <p class="tagline">Know who they are. Know who is still yours.</p>
-      <div class="modes">
-        <button class="btn gold" data-act="new" data-mode="claude">Against Karla<small>${st.llm ? 'Claude plays Moscow Centre' : 'Offline: the bot plays'}</small></button>
-        <button class="btn" data-act="new" data-mode="bot">Against the bot<small>No Claude needed</small></button>
-        <button class="btn" data-act="new" data-mode="hotseat">Two players<small>Hot-seat, one device</small></button>
+      <p class="tagline">Your best agent may already be theirs.</p>
+      <div class="setup-opts">
+        ${seg('players', [['1', 'One player'], ['2', 'Two players']])}
+        ${seg('opponent', [['claude', 'Karla'], ['bot', 'Offline bot']], prefs.players === '2')}
+        ${seg('size', [['6', '6 agents'], ['8', '8'], ['10', '10']])}
       </div>
+      <small class="opt-note">${prefs.players === '2' ? 'Hot-seat: pass the device between turns' : prefs.opponent === 'claude' ? (st.llm ? 'Claude plays Moscow Centre' : 'Claude is offline: the bot will play') : 'No Claude needed'}</small>
+      <button class="btn gold begin" data-act="new">Begin</button>
       ${saved?.game?.version === 2 && saved.game.phase !== 'over' ? '<button class="btn ghost" data-act="continue">Continue the operation</button>' : ''}
-      <div class="title-links"><button class="link" data-act="manual">Field Manual</button><button class="link" data-act="owner">Owner token</button></div>
     </div>
+    <button class="link manual-link" data-act="manual">Field Manual</button>
   </div>`;
 }
 
@@ -200,7 +210,6 @@ function playScreen() {
     ${hudTop(v, setup)}
     ${setup ? setupTray(v) : ''}
     ${!setup && app.traffic ? sidePanel(v) : ''}
-    ${!setup && app.sel.city && app.pick?.type !== 'move' ? cityPanel(v) : ''}
     ${!setup && app.sel.agent ? orderPop(v) : ''}
     ${!setup ? queueStrip(v) + endTurn(v) : ''}
     ${app.pick?.type === 'move' ? `<div class="pick-hint">${pickHint()}<button class="btn small ghost" data-act="cancel-pick">Cancel</button></div>` : ''}
@@ -252,8 +261,10 @@ function setupTray(v) {
 }
 
 // ----- city panel: everyone in the selected city -----
-function cityPanel(v) {
+// ----- the Station tab: everyone in the selected city -----
+function stationView(v) {
   const c = app.sel.city, side = v.side;
+  if (!c) return `<p class="empty station-empty">Pick a city on the map to see who is there.</p>`;
   const ours = v.own.filter((a) => a.alive && a.city === c);
   const theirs = v.enemies.filter((a) => a.alive && a.city === c);
   const trap = v.traps.find((t) => t.city === c);
@@ -267,13 +278,12 @@ function cityPanel(v) {
       ${roleTag(ri, 'cp-role')}
       ${q ? `<span class="cp-q" title="${esc(describeOrder(q, app.game))}">${ORDER_ICON[q.type]}</span>` : ''}</button>`;
   };
-  return `<aside class="panel city-panel">
-    <div class="cp-head"><div class="cp-landmark">${LANDMARK_ICON[LANDMARK[c]]}</div><div><h2>${c}</h2><small>${HOME[c] ? (HOME[c] === 'control' ? 'Home of the Circus' : 'Home of Moscow Centre') : 'Open city'}${trap ? ` · our trap catches ${trap.active ? 'this week' : 'next week'}` : ''}</small></div>
-      <button class="icon-btn" data-act="close-city">${UI_ICON.close}</button></div>
+  return `<div class="stn">
+    <div class="cp-head"><div class="cp-landmark">${LANDMARK_ICON[LANDMARK[c]]}</div><div><h2>${c}</h2><small>${HOME[c] ? (HOME[c] === 'control' ? 'Home of the Circus' : 'Home of Moscow Centre') : 'Open city'}${trap ? ` · our trap catches ${trap.active ? 'this week' : 'next week'}` : ''}</small></div></div>
     <div class="cp-list">
       <h3 class="ours">Ours · ${ours.length}</h3>${ours.map(row).join('') || '<p class="empty">No one here.</p>'}
       <h3 class="theirs">Theirs · ${theirs.length}</h3>${theirs.map(row).join('') || '<p class="empty">No one here.</p>'}
-    </div></aside>`;
+    </div></div>`;
 }
 
 // ----- the order popover: beside the agent's row in the city panel (or its token) -----
@@ -306,14 +316,21 @@ function orderPop(v) {
   }
   const legal = legalOrders(g, side, a.id);
   const full = app.queued[side].length >= RULES.ordersPerWeek && !q;
+  // Orders in two groups: what only this role can do (its special), and what everyone can do.
+  const instantStrike = a.archetype === 'scalphunter';
+  const isSpecial = (l, when) => ['surveil', 'approach', 'vet'].includes(l.type) || (l.type === 'strike' && instantStrike) || when === 'tonight';
   const btn = (l, when) => {
     const on = q?.type === l.type && (!when || trapWhen(q, g) === when);
-    const label = when ? (when === 'tonight' ? 'Trap tonight' : 'Trap next week') : ORDER_LABEL[l.type];
+    const label = when === 'tonight' ? 'Instant trap' : when ? 'Trap next week' : l.type === 'strike' && instantStrike ? 'Instant strike' : ORDER_LABEL[l.type];
     const hint = when === 'tonight' ? ORDER_HINT.trapTonight : ORDER_HINT[l.type];
     return `<button class="ob ${on ? 'on' : ''} ${app.pick?.type === l.type ? 'picking' : ''}" data-act="order" data-type="${l.type}" ${when ? `data-when="${when}"` : ''} ${full ? 'disabled' : ''} title="${esc(hint)}">${ORDER_ICON[l.type]}<span>${label}</span></button>`;
   };
-  // A Ferret's trap comes in two timings; everyone else's is for next week.
-  const btns = legal.flatMap((l) => (l.when ? l.when.map((w) => btn(l, w)) : [btn(l)])).join('');
+  const all = legal.flatMap((l) => (l.when ? l.when.map((w) => [l, w]) : [[l, undefined]]));
+  const special = all.filter(([l, w]) => isSpecial(l, w)).map(([l, w]) => btn(l, w)).join('');
+  const common = all.filter(([l, w]) => !isSpecial(l, w)).map(([l, w]) => btn(l, w)).join('');
+  const btns = mine
+    ? `${special ? `<div class="og special r-${a.archetype}"><span class="og-label">${roleLabel(a.archetype)}</span><div class="obs">${special}</div></div>` : ''}<div class="og"><span class="og-label">Everyone</span><div class="obs">${common}</div></div>`
+    : `<div class="obs">${common}${special}</div>`;
   let sub = '';
   if (app.pick?.targets && app.pick.agentId === a.id) {
     sub = `<div class="pop-label">${ORDER_LABEL[app.pick.type]}: who?</div><div class="targets">${app.pick.targets.map((id) => {
@@ -340,75 +357,16 @@ function orderPop(v) {
   }
   return `<div class="pop ${asset ? 'asset' : ''}" id="pop">${head}
     <div class="pop-role">${ROLE_ICON[a.archetype]}${asset ? `Their ${roleLabel(a.archetype)} · our source` : roleLabel(a.archetype)}
-      ${q ? `<button class="link" data-act="unqueue">Cancel order</button>` : ''}${mine ? `<button class="link danger" data-act="execute" title="Execute">${ORDER_ICON.execute}</button>` : ''}</div>
+      ${q ? `<button class="link" data-act="unqueue">Cancel order</button>` : ''}</div>
     ${chips.length ? `<div class="chips">${chips.join('')}</div>` : ''}
     ${asset ? `<div class="pop-label">When ${SIDE_LABEL[a.side]} gives them orders</div><div class="stance"><button class="${stance !== 'obey' ? 'on' : ''}" data-act="stance" data-stance="sabotage" title="Their strikes, traps, approaches and vetting quietly fail">Let them fail</button><button class="${stance === 'obey' ? 'on' : ''}" data-act="stance" data-stance="obey" title="They carry out their orders, keeping their cover">Carry them out</button></div><div class="pop-label">Their report home this week</div>` : ''}
-    <div class="obs">${btns}</div>${sub}
-    ${mine ? trustPicker(a, side) : ''}</div>`;
+    ${btns}${sub}
+    ${mine ? `<div class="verdict">${trustPicker(a, side)}${trustOf(side)(a) === 'mole' ? `<button class="btn small red" data-act="execute">${ORDER_ICON.execute}Execute</button>` : ''}</div>` : ''}</div>`;
 }
 // Keep the popover next to its token, inside the screen.
 // Screen boxes, relative to the stage.
 const stageBox = (el, stage) => { const r = el.getBoundingClientRect(); return { l: r.left - stage.left, t: r.top - stage.top, r: r.right - stage.left, b: r.bottom - stage.top }; };
 const overlap = (a, b) => Math.max(0, Math.min(a.r, b.r) - Math.max(a.l, b.l)) * Math.max(0, Math.min(a.b, b.b) - Math.max(a.t, b.t));
-const usable = (stage) => ({ l: 12, t: 80, r: stage.width - (app.traffic ? 404 : 12), b: stage.height - 84 });
-
-// The city panel opens over open sea where it can, never on top of its city or the city's agents.
-// Every spot on the map is scored by how much land and how many other cities the panel would cover,
-// plus how far it sits from its city; land comes from a grid sampled once against the map's own
-// land shape (rebuilt when the map moves or resizes).
-let landGrid = null;
-function landMask(stage) {
-  const land = document.querySelector('path.land');
-  if (!land) return null;
-  const svg = land.ownerSVGElement, m = svg.getScreenCTM(), cell = 16;
-  const key = [stage.width, stage.height, m.a, m.e, m.f].map((v) => Math.round(v * 100)).join(',');
-  if (landGrid?.key === key) return landGrid;
-  const inv = m.inverse(), pt = svg.createSVGPoint(), cols = Math.ceil(stage.width / cell), rows = Math.ceil(stage.height / cell);
-  const sum = new Float32Array((cols + 1) * (rows + 1)); // summed-area table of land cells
-  for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) {
-    pt.x = stage.left + (i + 0.5) * cell; pt.y = stage.top + (j + 0.5) * cell;
-    const v = land.isPointInFill(pt.matrixTransform(inv)) ? 1 : 0;
-    sum[(j + 1) * (cols + 1) + i + 1] = v + sum[j * (cols + 1) + i + 1] + sum[(j + 1) * (cols + 1) + i] - sum[j * (cols + 1) + i];
-  }
-  const at = (i, j) => sum[Math.max(0, Math.min(rows, j)) * (cols + 1) + Math.max(0, Math.min(cols, i))];
-  const fraction = (b) => {
-    const i0 = Math.round(b.l / cell), i1 = Math.round(b.r / cell), j0 = Math.round(b.t / cell), j1 = Math.round(b.b / cell);
-    const area = Math.max(1, (i1 - i0) * (j1 - j0));
-    return (at(i1, j1) - at(i0, j1) - at(i1, j0) + at(i0, j0)) / area;
-  };
-  return (landGrid = { key, fraction });
-}
-function placeCityPanel() {
-  const panel = $('.city-panel');
-  if (!panel) return;
-  if (window.innerWidth <= 820) { panel.style.left = panel.style.top = ''; return; } // phones: bottom sheet
-  const stage = $('.stage').getBoundingClientRect();
-  const cityEl = document.querySelector(`.city[data-city="${app.sel.city}"]`);
-  const mask = landMask(stage);
-  if (!cityEl || !mask) return;
-  const pad = 10, c0 = stageBox(cityEl, stage), c = { l: c0.l - pad, t: c0.t - pad, r: c0.r + pad, b: c0.b + pad };
-  const others = [...document.querySelectorAll('.city')].filter((e) => e !== cityEl).map((e) => stageBox(e, stage));
-  const pw = panel.offsetWidth, ph = panel.offsetHeight, U = usable(stage), step = 16;
-  const cx = (c.l + c.r) / 2, cy = (c.t + c.b) / 2;
-  let best = null;
-  for (let x = U.l; x <= U.r - pw; x += step) for (let y = U.t; y <= U.b - ph; y += step) {
-    const box = { l: x, t: y, r: x + pw, b: y + ph };
-    if (overlap(box, c) > 0) continue;
-    // Covering any part of another city costs a lot; covering more of it costs more.
-    const cities = others.reduce((n, o) => { const f = overlap(box, o) / ((o.r - o.l) * (o.b - o.t)); return n + (f > 0 ? 0.6 + f : 0); }, 0);
-    // The gap between panel and city, so the panel stays close to what it describes.
-    const dx = Math.max(0, box.l - c.r, c.l - box.r), dy = Math.max(0, box.t - c.b, c.t - box.b);
-    const near = Math.hypot(dx, dy) / 300;
-    const land = mask.fraction(box), score = land + cities * 1.5 + near * 1.2;
-    if (!best || score < best.score) best = { score, x, y, land, cities, near };
-  }
-  // No clear sea near the city (a small window): dock over the right-hand column instead, so the
-  // map itself stays uncovered.
-  const docked = !best || best.cities > 0 || best.near > 0.5 || best.land > 0.6;
-  panel.classList.toggle('docked', docked);
-  if (docked) best = { x: stage.width - pw - 12, y: U.t };
-  panel.style.left = `${best.x}px`; panel.style.top = `${best.y}px`;
-}
 
 function placePop() {
   const pop = $('#pop'); if (!pop) return;
@@ -416,8 +374,8 @@ function placePop() {
   const stage = $('.stage').getBoundingClientRect();
   const r = tok ? tok.getBoundingClientRect() : { left: stage.width / 2, right: stage.width / 2, top: stage.height / 2, bottom: stage.height / 2 };
   const pw = pop.offsetWidth, ph = pop.offsetHeight, gap = 14, top = 80;
-  const docked = $('.city-panel.docked');
-  const limitR = docked ? stage.width - 12 : stage.width - (app.traffic ? 404 : 12);
+  const side = $('.panel.traffic')?.getBoundingClientRect();
+  const limitR = side ? side.left - stage.left - 4 : stage.width - 12;
   // Open away from the city (tokens sit to its left or right), else above or below the token.
   const city = tok?.closest('.city')?.querySelector('.medal')?.getBoundingClientRect();
   const awayLeft = tok?.classList.contains('cp-row') ? false : (city ? r.left < city.left : false);
@@ -434,9 +392,16 @@ function placePop() {
   const fits = ([px, py]) => px >= 12 && px + pw <= limitR && py >= top && py + ph <= stage.height - 12
     && !(cityBox && overlap({ l: px, t: py, r: px + pw, b: py + ph }, cityBox) > 0);
   // Prefer a spot that covers no city (and not the city panel); failing that, one that leaves this city clear.
-  const cityBoxes = [...document.querySelectorAll('.city, .city-panel')].map((e) => stageBox(e, stage));
+  const cityBoxes = [...document.querySelectorAll('.city')].map((e) => stageBox(e, stage));
   const clear = (o) => fits(o) && !cityBoxes.some((b) => overlap({ l: o[0], t: o[1], r: o[0] + pw, b: o[1] + ph }, b) > 0);
-  let [x, y] = options.find(clear) || options.find(fits) || options[0];
+  // If the spots beside the anchor all cover a city, search the map for the clear spot nearest to it.
+  let pick = options.find(clear);
+  if (!pick) {
+    const ax = (r.left + r.right) / 2, ay = (r.top + r.bottom) / 2, grid = [];
+    for (let gx = 12; gx + pw <= limitR; gx += 24) for (let gy = top; gy + ph <= stage.height - 12; gy += 24) grid.push([gx, gy]);
+    pick = grid.filter(clear).sort((p, q) => Math.hypot(p[0] + pw / 2 - ax, p[1] + ph / 2 - ay) - Math.hypot(q[0] + pw / 2 - ax, q[1] + ph / 2 - ay))[0];
+  }
+  let [x, y] = pick || options.find(fits) || options[0];
   x = Math.max(12, Math.min(x, limitR - pw)); y = Math.max(top, Math.min(y, stage.height - ph - 12));
   pop.style.left = `${x}px`; pop.style.top = `${y}px`;
 }
@@ -449,9 +414,10 @@ function pickHint() {
 function sidePanel(v) {
   const tab = { notes: 'theirs' }[app.tab] || app.tab || 'traffic';
   const t = (k, label) => `<button class="${tab === k ? 'on' : ''} tab-${k}" data-act="tab" data-tab="${k}">${label}</button>`;
+  const body = { station: stationView, ours: oursList, theirs: theirsList }[tab] || traffic;
   return `<aside class="panel traffic">
-    <div class="tabs">${t('traffic', `Traffic <small>wk ${v.week}</small>`)}${t('theirs', 'Theirs')}${t('ours', 'Ours')}</div>
-    <div class="tp-body">${tab === 'theirs' ? theirsList(v) : tab === 'ours' ? oursList(v) : traffic(v)}</div></aside>`;
+    <div class="tabs">${t('traffic', 'Traffic')}${t('station', 'Station')}${t('ours', 'Ours')}${t('theirs', 'Theirs')}</div>
+    <div class="tp-body">${body(v)}</div></aside>`;
 }
 function traffic(v) {
   const now = v.inbox.filter((m) => m.week === v.week);
@@ -550,14 +516,10 @@ function toast(text, ms = 2600) {
 function onAct(el, ev) {
   const act = el.dataset.act, g = app?.game, side = app?.active;
   switch (act) {
-    case 'new': return startNew(el.dataset.mode);
+    case 'pref': { prefs[el.dataset.key] = el.dataset.val; try { localStorage.setItem(PREFS, JSON.stringify(prefs)); } catch {} return render(); }
+    case 'new': return startNew(prefs.players === '2' ? 'hotseat' : prefs.opponent, Number(prefs.size));
     case 'continue': app = load(); if (app.screen === 'busy') { app.game.pending = { control: null, karla: null }; app.screen = app.game.phase === 'setup' ? 'setup' : 'play'; app.active = 'control'; } return render();
     case 'manual': return openModal(manualHTML());
-    case 'owner': {
-      openModal(`<h2>Owner token</h2><p>Skips the guest token budget on your own server.</p><input id="owner-in" type="password" autocomplete="off"><button class="btn gold" data-act="owner-ok">Save</button>`);
-      return;
-    }
-    case 'owner-ok': { try { localStorage.setItem('mr-owner', $('#owner-in').value.trim()); } catch {} closeModal(); return checkLLM().then(render); }
     case 'quit': openModal(`<h2>Abandon this operation?</h2><p>The current game will be lost.</p><button class="btn red" data-act="quit-ok">Abandon</button> <button class="btn" data-act="close-modal">Keep playing</button>`); return;
     case 'quit-ok': clearSave(); app = null; closeModal(); return render();
     case 'surrender': openModal(`<h2>Raise the white flag?</h2><p>${SIDE_LABEL[other(side)]} wins immediately.</p><button class="btn red" data-act="surrender-ok">Surrender</button> <button class="btn" data-act="close-modal">Fight on</button>`); return;
@@ -577,7 +539,9 @@ function onAct(el, ev) {
       const c = el.dataset.city;
       if (app.screen === 'setup') return placeSel(c);
       if (app.pick?.type === 'move') { if (c !== g.agents[app.pick.agentId].city) queue({ agentId: app.pick.agentId, type: 'move', city: c }); return; }
-      app.sel = { city: app.sel.city === c ? null : c, agent: null }; app.pick = null; return render();
+      if (app.sel.city === c && app.tab === 'station') app.sel = { city: null, agent: null };
+      else { app.sel = { city: c, agent: null }; app.tab = 'station'; app.traffic = true; }
+      app.pick = null; return render();
     }
     case 'close-city': app.sel.city = null; app.sel.agent = null; app.pick = null; return render();
     case 'close-agent': app.sel.agent = null; app.pick = null; return render();
@@ -631,7 +595,7 @@ function onAct(el, ev) {
     }
     case 'guess-ok': { const r = el.dataset.role; if (r === 'unknown') delete app.notes[side].roles[el.dataset.agent]; else app.notes[side].roles[el.dataset.agent] = r; closeModal(); save(); return render(); }
     case 'accept': ev.stopPropagation(); app.notes[side].roles[el.dataset.agent] = el.dataset.role; save(); return render();
-    case 'goto': if (el.dataset.city) { app.sel.city = el.dataset.city; app.sel.agent = null; render(); } return;
+    case 'goto': if (el.dataset.city) { app.sel = { city: el.dataset.city, agent: null }; app.tab = 'station'; app.traffic = true; render(); } return;
     case 'end': return endWeek();
     case 'again': clearSave(); app = null; return render();
     case 'casefile': { // the whole finished game, for later analysis
@@ -768,7 +732,7 @@ document.addEventListener('keydown', (ev) => {
   ev.preventDefault(); ev.stopImmediatePropagation();
   app.whyFor = null; render();
 }, true);
-window.addEventListener('resize', () => { if (app?.screen === 'play') { placeCityPanel(); placePop(); } });
+window.addEventListener('resize', () => { if (app?.screen === 'play') placePop(); });
 // Debrief: a pin on the chart and its moment card light up together.
 document.addEventListener('pointerover', (ev) => {
   const p = ev.target.closest?.('[data-pin]');

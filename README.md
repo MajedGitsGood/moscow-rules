@@ -31,7 +31,7 @@ Modes: **Against Karla** (Claude Opus 5.5), **Against the bot** (offline), **Two
 The rules engine decides everything that is true. Karla sees only his own fog-of-war view, and
 every report rewrite is fact-checked in code before it reaches you. The browser never sees the key:
 `server.js` proxies `/api/claude`, picks the model, caps tokens and gives guests a token budget
-(`MR_GUEST_BUDGET`); `MR_OWNER_TOKEN` skips it. With no key or no budget the game plays offline.
+(`MR_GUEST_BUDGET`); `MR_OWNER_TOKEN` skips it (open the game once with `?owner=<token>`). With no key or no budget the game plays offline.
 
 ## Files
 

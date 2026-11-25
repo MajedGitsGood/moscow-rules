@@ -1,13 +1,13 @@
-// Bot-vs-bot balance runs + determinism check.  node tools/simulate.js [--games 500] [--seed 1]
+// Bot-vs-bot balance runs + determinism check.  node tools/simulate.js [--games 500] [--seed 1] [--size 6|8|10]
 import { newGame, placeAgents, submitOrders, resolveWeek, viewFor } from '../js/engine.js';
 import { heuristicPlacement, heuristicOrders } from '../js/controllers/heuristic.js';
 import { SIDES } from '../js/world.js';
 
 const arg = (k, d) => { const i = process.argv.indexOf(`--${k}`); return i > 0 ? Number(process.argv[i + 1]) : d; };
-const N = arg('games', 500), BASE = arg('seed', 1);
+const N = arg('games', 500), BASE = arg('seed', 1), SIZE = arg('size', 10);
 
 export function playBotGame(seed) {
-  const g = newGame(seed);
+  const g = newGame(seed, { size: SIZE });
   for (const side of SIDES) placeAgents(g, side, heuristicPlacement(viewFor(g, side), seed + side.length));
   while (g.phase === 'orders') {
     for (const side of SIDES) submitOrders(g, side, heuristicOrders(g, viewFor(g, side), seed + side.length));

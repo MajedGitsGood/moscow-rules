@@ -4,6 +4,23 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 
 ## [Unreleased]
 
+### Changed (playtest 3 round)
+- **Ferrets no longer block approaches.** They trap, notice surveillance and vet.
+- **Title screen:** toggles for players (one or two), opponent (Karla or the offline bot) and agents
+  per side (6, 8 or 10), then Begin. New tagline. Field Manual sits at the bottom; the Owner token
+  link is gone (open the game once with `?owner=<token>` instead).
+- **Agents per side:** 6 (2 Scalphunters, 2 Lamplighters, 1 Ferret, 1 Talent-spotter), 8 (two of
+  each) or 10 (as before).
+- **Station tab:** the city view is now a tab in the right panel: Traffic, Station, Ours, Theirs.
+  Clicking a city, or a traffic item, opens its Station. The floating city panel is gone.
+- **Orders, grouped:** the role's special first, in its colour (Instant strike, Instant trap and
+  Vet, Surveil, Approach), then what everyone can do.
+- **Execute** appears only beside an agent you've marked Mole.
+- **Debrief:** the score shows just "own + turned"; moments are marked by their week; the decisive
+  exchange shows only the people it names (everyone else is a dot); people columns lead with each
+  fate (how, week, city), mark defectors "Turned wk N" in their original side's colour, and show
+  the role as a coloured icon on the right.
+
 ### Changed (scoring)
 - The winner is the side with the most agents **working for it** at the end: its own still loyal,
   plus enemy agents it has turned who are still alive. Turning an agent is a two-agent swing.
