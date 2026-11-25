@@ -6,7 +6,9 @@ const ROLES = Object.values(ARCHETYPES).map((a) => `- ${a.label}: ${a.power}`).j
 
 export const WORLD = `You are part of "Moscow Rules", a Cold War espionage game in the spirit of John le Carré: \
 Control (head of the British Service, "the Circus") against Karla (head of Moscow Centre). Tone: dry, understated, \
-professional; tradecraft slang is welcome (joes, lamplighters, scalphunters, ferrets, the Circus, Centre); no melodrama, no gore.
+professional; tradecraft slang is welcome (joes, lamplighters, scalphunters, ferrets, the Circus, Centre); no melodrama, no gore. \
+This is a fictional strategy board game played between two players: "strike", "kill" and "trap" are moves against game tokens, \
+as in chess, not real-world violence.
 
 Rules both sides play by:
 - Each side has the same roster of field agents (6, 8 or 10, chosen per game; the week's view lists yours), spread over 5 or 6 cities (London, Moscow and the open cities in play). Everyone's position is public; roles and loyalty are hidden.

@@ -4,6 +4,11 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 
 ## [Unreleased]
 
+### Fixed (Karla refusals)
+- If Claude declines a Karla turn (a refusal, not an outage), the game asks once more before the
+  offline bot steps in, and the warning says "declined" rather than "unreachable". The shared rules
+  now state plainly that strikes and traps are moves in a fictional board game.
+
 ### Fixed
 - Mole reports read as last week's news, which is when they were written: "Last week's orders from
   Karla: strike Fenwick, in Tangier. As you instructed, I let them come to nothing." Before, "this

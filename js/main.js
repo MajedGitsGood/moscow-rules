@@ -105,7 +105,7 @@ async function endWeek() {
     if (app.mode === 'claude') {
       const was = app.karlaDown;
       app.karlaDown = r.via === 'bot' ? (r.error || 'Claude unavailable') : null;
-      if (app.karlaDown && !was) setTimeout(() => toast(`Karla lost his line to Claude (${app.karlaDown}). The offline bot played this week; Claude will be tried again each week.`, 8000), 600);
+      if (app.karlaDown && !was) setTimeout(() => toast(/refus/i.test(app.karlaDown) ? 'Claude declined to play Karla this week, so the offline bot did. Claude is asked again next week.' : `Karla lost his line to Claude (${app.karlaDown}). The offline bot played this week; Claude will be tried again each week.`, 8000), 600);
       if (!app.karlaDown && was) setTimeout(() => toast('Karla is back on Claude.'), 600);
     }
     for (const id of r.executions || []) { try { executeAgent(g, opp, id); } catch {} }
@@ -234,7 +234,7 @@ function hudTop(v, setup) {
   return `<header class="hud-top">
     <div class="plate who ${side}"><span class="crest">${side === 'control' ? 'C' : 'K'}</span><div><b>${SIDE_LABEL[side].toUpperCase()}</b><small>${side === 'control' ? 'The Circus, London' : 'Moscow Centre'}</small></div>
       ${setup ? '' : `<div class="tally"><span class="us" title="Our agents still alive">${v.score.ours}<small>ours</small></span><span class="them" title="Their agents still alive">${v.score.theirs}<small>theirs</small></span></div>`}</div>
-    ${app.mode === 'claude' && app.karlaDown ? `<div class="plate karla-down" title="${esc(app.karlaDown)}"><b>OFFLINE KARLA</b><small>Claude unreachable · the bot is playing</small></div>` : ''}
+    ${app.mode === 'claude' && app.karlaDown ? `<div class="plate karla-down" title="${esc(app.karlaDown)}"><b>OFFLINE KARLA</b><small>${/refus/i.test(app.karlaDown) ? 'Claude declined last week · the bot played' : 'Claude unreachable · the bot is playing'}</small></div>` : ''}
     <div class="plate week">${setup ? '<b>PLACE YOUR NETWORKS</b><small>Pick an agent, then a city · three per city</small>' : `<b>WEEK ${Math.min(g.week, RULES.weeks)} <span>/ ${RULES.weeks}</span></b><div class="pips" title="Orders this week">${pips}<small>${ordersPerWeek(app.game) - used} orders left</small></div>`}</div>
     <div class="plate tools">
       ${setup ? '' : `<button class="icon-btn ${app.traffic ? 'on' : ''}" data-act="traffic" title="Traffic">${UI_ICON.traffic}</button>`}

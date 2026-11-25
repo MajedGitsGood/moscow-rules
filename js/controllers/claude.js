@@ -115,7 +115,10 @@ function toOrders(game, side, r) {
 
 export async function claudeOrders(game, side, view) {
   try {
-    const r = await callClaude('karla', { system: KARLA, user: JSON.stringify(summarize(game, view)), schema: ORDER_SCHEMA, maxTokens: 8000 });
+    // A refusal is usually a one-off: ask once more before handing the week to the offline bot.
+    const ask = () => callClaude('karla', { system: KARLA, user: JSON.stringify(summarize(game, view)), schema: ORDER_SCHEMA, maxTokens: 8000 });
+    let r;
+    try { r = await ask(); } catch (e) { if (!/refus/i.test(e.message)) throw e; r = await ask(); }
     return { ...toOrders(game, side, r), journal: r.journal, via: 'claude' };
   } catch (e) {
     console.warn('Karla fell back to the offline bot:', e.message);
