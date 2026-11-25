@@ -258,19 +258,20 @@ export function resolveWeek(game) {
   //    reports what each of its colleagues in the same city has been ordered, and what they are.
   const shown = (o) => (o.type === 'feed' ? { ...o.fake, agentId: o.agentId, side: o.side } : o);
   const stanceNote = (a, t) => (['strike', 'trap', 'approach', 'vet'].includes(t)
-    ? (game.stance?.[a.id] === 'obey' ? ' As you instructed, I am carrying them out. Tell me if you want them to fail.' : ' As you instructed, I will see they come to nothing. Tell me if you would rather I carry them out.')
+    ? (game.stance?.[a.id] === 'obey' ? ' As you instructed, I carried them out. Tell me if you want them to fail.' : ' As you instructed, I let them come to nothing. Tell me if you would rather I carry them out.')
     : '');
   for (const m of Object.values(game.agents).filter((x) => x.alive && x.turnedBy && x.turnedBy !== x.side)) {
     const own = all.find((o) => o.agentId === m.id && o.type !== 'lie');
     if (own) {
       const so = shown(own);
-      send(game, m.turnedBy, { kind: 'source', from: m.id, city: m.city, text: `My orders from ${SIDE_LABEL[own.side]} this week: ${describeOrder(so, game)}.${stanceNote(m, so.type)}`,
+      // Read the next morning, after the night's moves: so it says when and where the order was given.
+      send(game, m.turnedBy, { kind: 'source', from: m.id, city: m.city, text: `Last week's orders from ${SIDE_LABEL[own.side]}: ${describeOrder(so, game)}, in ${m.city}.${stanceNote(m, so.type)}`,
         facts: { order: so.type, targetId: so.targetId || null, city: so.city || null } });
     }
     const mates = all.filter((o) => o.side === m.side && o.agentId !== m.id && o.type !== 'lie' && game.agents[o.agentId].city === m.city);
     if (mates.length) {
-      const lines = mates.map((o) => { const a = game.agents[o.agentId]; claim(game, m.turnedBy, a.id, a.archetype, `${m.name} (our source)`); return `${a.name}, their ${role(a.archetype)}, is to ${describeOrder(shown(o), game)}.`; });
-      send(game, m.turnedBy, { kind: 'source', from: m.id, city: m.city, text: `In ${m.city}: ${lines.join(' ')}`,
+      const lines = mates.map((o) => { const a = game.agents[o.agentId]; claim(game, m.turnedBy, a.id, a.archetype, `${m.name} (our source)`); return `${a.name}, their ${role(a.archetype)}, was ordered to ${describeOrder(shown(o), game)}.`; });
+      send(game, m.turnedBy, { kind: 'source', from: m.id, city: m.city, text: `In ${m.city} last week: ${lines.join(' ')}`,
         facts: { mates: mates.map((o) => { const so = shown(o); return { id: o.agentId, order: so.type, targetId: so.targetId || null, city: so.city || null }; }) } });
     }
   }

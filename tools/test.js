@@ -62,7 +62,7 @@ const inbox = (g, side) => viewFor(g, side).inbox.map((m) => m.text).join(' | ')
   ok(ll.turnedBy === 'control', 'two approaches turn an agent');
   ok(viewFor(g, 'control').enemies.find((e) => e.id === ll.id).asset, 'the turning side sees its new asset');
   week(g, [{ agentId: ll.id, type: 'lie', lie: { kind: 'hide' } }], [{ agentId: ll.id, type: 'move', city: 'Moscow' }]);
-  ok(inbox(g, 'control').includes('My orders from Karla this week: go to Moscow'), 'every order to a turned agent leaks');
+  ok(inbox(g, 'control').includes("Last week's orders from Karla: go to Moscow"), 'every order to a turned agent leaks');
 }
 { const { g, get } = setup({ control: { scalphunter: 'A', ferret: 'A' }, karla: { lamplighter: 'A', scalphunter: 'A' } });
   const fe = get('control', 'ferret');
@@ -93,7 +93,7 @@ const inbox = (g, side) => viewFor(g, side).inbox.map((m) => m.text).join(' | ')
   setStance(g, 'karla', sh.id, 'obey');
   week(g, [{ agentId: sh.id, type: 'strike', targetId: ll.id }]);
   ok(!ll.alive, 'a mole told to obey carries out its orders, even against the side that turned it');
-  ok(inbox(g, 'karla').includes('As you instructed, I am carrying them out'), 'the mole tells its handlers what it is doing with its orders');
+  ok(inbox(g, 'karla').includes('As you instructed, I carried them out'), 'the mole tells its handlers what it is doing with its orders');
 }
 { const { g, get } = setup({ control: { ferret: 'A', lamplighter: 'A', lamplighter: 'A' } });
   const ll0 = get('control', 'lamplighter', 0), ll1 = get('control', 'lamplighter', 1);
@@ -124,7 +124,8 @@ const inbox = (g, side) => viewFor(g, side).inbox.map((m) => m.text).join(' | ')
   fe.turnedBy = 'karla';
   week(g, [{ agentId: sh.id, type: 'lielow' }, { agentId: ll.id, type: 'surveil' }]);
   const t = inbox(g, 'karla');
-  ok(t.includes(`${sh.name}, their Scalphunter, is to lie low`) && !t.includes(ll.name), "a mole reports its city-mates' orders, and only theirs");
+  ok(t.includes(`${sh.name}, their Scalphunter, was ordered to lie low`) && !t.includes(ll.name), "a mole reports its city-mates' orders, and only theirs");
+  ok(validateOrders(g, 'karla', [{ agentId: get('karla', 'scalphunter').id, type: 'strike', targetId: ll.id }]).length > 0, 'no one can be ordered to strike an agent in another city');
   ok(viewFor(g, 'karla').intel[sh.id]?.roles.at(-1).archetype === 'scalphunter', "the mole's handlers learn its city-mates' roles");
 }
 { const { g, get } = setup({ control: { lamplighter: 'A' }, karla: { talentspotter: 'A', 'talentspotter:1': 'A' } });

@@ -4,6 +4,11 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 
 ## [Unreleased]
 
+### Fixed
+- Mole reports read as last week's news, which is when they were written: "Last week's orders from
+  Karla: strike Fenwick, in Tangier. As you instructed, I let them come to nothing." Before, "this
+  week" made an order look like a strike on someone who had since moved to another city.
+
 ### Added (debrief lessons)
 - Below the key moments: "Where Control went wrong" and "Where Karla went wrong", each side's
   strategic lapse across the whole game and how it should have played, written by the analyst
