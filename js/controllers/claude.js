@@ -95,7 +95,8 @@ function toOrders(game, side, r) {
     const o = { agentId: a.id, type: c.type };
     if (c.type === 'move') o.city = city(c.city);
     if (['prepare', 'strike', 'approach', 'vet'].includes(c.type)) o.targetId = byName(c.target)?.id;
-    if (c.why) o.why = String(c.why).replace(/\s+/g, ' ').replace(/['",\s]+$/, '').trim().slice(0, 120);
+    // Keep only the sentence: a stray tail of JSON ("','lieTarget':null}") is cut off.
+    if (c.why) o.why = String(c.why).split(/['"]\s*[,}]/)[0].replace(/\s+/g, ' ').replace(/['",\s]+$/, '').trim().slice(0, 120);
     if (c.type === 'trap') o.when = c.when === 'tonight' && a.archetype === 'ferret' ? 'tonight' : 'next';
     if (c.type === 'feed') {
       const f = { type: c.fakeType };

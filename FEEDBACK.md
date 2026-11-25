@@ -223,3 +223,24 @@ groups people by allegiance; a visible "Offline Karla" warning; Save case file.
 - "Network holds" doesn't feel like winning. **Done:** CHECKMATE.
 - Fewer orders in 6-agent games? **Done:** 4 a week (in 600 bot games: fewer draws, 67 vs 96, wins
   still even; two-thirds of agents act each week, close to the larger games).
+
+## Playtest 4 (2026-11-25, Majed, 6 agents vs Karla on Claude): a draw, "the most fun so far"
+Played on 6 cities and 5 orders (started before those changes). Final 2-2.
+- **What made it riveting** (from the case file; keep these alive in future changes):
+  1. *A duel of moles.* Each side had a spy inside the other: Molnar for Control, Holloway then
+     Vance for Karla. Both sides acted on leaks, so every move could be a reaction to a secret.
+  2. *A last loyal agent to protect.* From week 7 Fenwick was Control's only loyal joe, and Molnar's
+     leaks showed Karla's orders against him a night later: dramatic irony.
+  3. *A face-to-face chase.* Two pitches, in different weeks, in the same city: Fenwick ran
+     Berlin to Tangier to Berlin, and Novak followed each time on a public map.
+  4. *A close score with two-point swings.* The second pitch on Fenwick would have won it for
+     Karla; striking Novak in the last week settled it.
+  5. *Deception that paid.* Molnar framed Tamas in week 9; Karla executed his own loyal Ferret in
+     week 12 and lost the lead.
+  6. *One crowded city.* From week 4 almost everyone was in Berlin.
+- Kemble died under an "instant trap" because Holloway had been turned in week 4: a mole's trap
+  is a dud. Control correctly executed Holloway in week 12.
+- From week 7 Control gave 2-3 orders a week (only 3 agents left); the order cap only bites early
+  in a 6-agent game. Watch whether 4 orders and 5 cities make the opening more decisive or cramped.
+- Karla's week 10 was a Claude refusal (now retried once). One of Karla's reasons carried a stray
+  tail of JSON (now cut).
