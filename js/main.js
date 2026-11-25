@@ -536,7 +536,7 @@ function onAct(el, ev) {
   switch (act) {
     case 'pref': { prefs[el.dataset.key] = el.dataset.val; try { localStorage.setItem(PREFS, JSON.stringify(prefs)); } catch {} return render(); }
     case 'new': return startNew(prefs.players === '2' ? 'hotseat' : prefs.opponent, Number(prefs.size));
-    case 'continue': app = load(); if (app.screen === 'busy') { app.game.pending = { control: null, karla: null }; app.screen = app.game.phase === 'setup' ? 'setup' : 'play'; app.active = 'control'; } return render();
+    case 'continue': app = load(); app.tab = 'traffic'; app.stationCity = null; if (app.sel) app.sel = { city: null, agent: null }; if (app.screen === 'busy') { app.game.pending = { control: null, karla: null }; app.screen = app.game.phase === 'setup' ? 'setup' : 'play'; app.active = 'control'; } return render();
     case 'manual': return openModal(manualHTML());
     case 'quit': openModal(`<h2>Abandon this operation?</h2><p>The current game will be lost.</p><button class="btn red" data-act="quit-ok">Abandon</button> <button class="btn" data-act="close-modal">Keep playing</button>`); return;
     case 'quit-ok': clearSave(); app = null; closeModal(); return render();
