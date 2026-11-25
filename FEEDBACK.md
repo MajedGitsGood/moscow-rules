@@ -244,3 +244,9 @@ Played on 6 cities and 5 orders (started before those changes). Final 2-2.
   in a 6-agent game. Watch whether 4 orders and 5 cities make the opening more decisive or cramped.
 - Karla's week 10 was a Claude refusal (now retried once). One of Karla's reasons carried a stray
   tail of JSON (now cut).
+
+### Follow-up 11: title figures and the field
+- The figures mixed head-on bodies with heads facing each other. **Done:** both are side profiles facing
+  each other; Karla smokes (animated) with the gold lighter in his breast pocket; Smiley wears a tie.
+- Similar games and how to stand apart: see `docs/positioning.md` (bite-sized like Brawl Stars; Sigma
+  Theory's memorable agent faces as a visual benchmark; proposals for more memorable agents).

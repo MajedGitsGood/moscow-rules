@@ -83,29 +83,40 @@ export function portraitBody(agent, mood = null) {
 }
 
 // The two spymasters, as silhouettes for the title and handoff screens.
+// The two spymasters on the title screen: side profiles facing each other across the page.
+// Control (Smiley) looks right: spectacles, collar and tie. Karla looks left: a cigarette in his mouth
+// with smoke rising, and a gold lighter in his breast pocket (the hidden switch into Smiley mode).
+const PROFILE = 'M96 30C74 30 58 44 58 64c0 16 6 30 16 40l-2 12c-16 4-28 10-36 20-10 14-16 36-18 60L12 260h180l-6-64c-2-28-10-48-22-60-10-10-24-16-38-20l-8-6c4-4 7-8 8-12l2-5 3-2-1-4 8-6-6-7c0-10-2-20-6-28-6-10-16-16-30-16z';
 export const SPYMASTER = {
   control: `<svg viewBox="0 0 200 260" class="spymaster" aria-hidden="true">
-    <defs><radialGradient id="cLamp" cx="50%" cy="38%" r="60%"><stop offset="0" stop-color="#4a8bd1" stop-opacity=".75"/><stop offset=".45" stop-color="#2f5f93" stop-opacity=".35"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient></defs>
+    <defs><radialGradient id="cLamp" cx="55%" cy="38%" r="60%"><stop offset="0" stop-color="#4a8bd1" stop-opacity=".75"/><stop offset=".45" stop-color="#2f5f93" stop-opacity=".35"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient></defs>
     <rect width="200" height="260" fill="url(#cLamp)"/>
-    <path d="M100 38c-19 0-31 13-31 31 0 13 6 22 13 27-27 7-45 27-50 57l-8 107h152l-8-107c-5-30-23-50-50-57 7-5 13-14 13-27 0-18-12-31-31-31z" fill="#07090c" stroke="#8fb6e6" stroke-opacity=".7" stroke-width="1.6"/>
-    <path d="M80 104l20 30 20-30" fill="none" stroke="#8fb6e6" stroke-opacity=".55" stroke-width="1.4"/>
-    <path d="M96 104h8l-1.5 7 5.5 46-8 11-8-11 5.5-46z" fill="#07090c" stroke="#8fb6e6" stroke-opacity=".75" stroke-width="1.5"/>
-    <path d="M66 118c10 14 22 30 34 44M134 118c-10 14-22 30-34 44" fill="none" stroke="#8fb6e6" stroke-opacity=".35" stroke-width="1.3"/>
-    <path d="M112 84c4 2 8 2 11 0" stroke="#e8c77a" stroke-opacity=".5" stroke-width="1.5"/>
-    <circle cx="121" cy="74" r="6" fill="none" stroke="#e8c77a" stroke-opacity=".7" stroke-width="1.6"/><path d="M115 73h-6" stroke="#e8c77a" stroke-opacity=".6" stroke-width="1.4"/>
-    <path d="M140 108c10-2 18 1 22 8" stroke="#cfcfcf" stroke-opacity=".25" stroke-width="2" fill="none"/>
+    <path d="${PROFILE}" fill="#07090c" stroke="#8fb6e6" stroke-opacity=".75" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M118 111l5 13 7-9" fill="none" stroke="#8fb6e6" stroke-opacity=".6" stroke-width="1.3" stroke-linejoin="round"/>
+    <path d="M120 116l7 1-1 6c2 12 6 24 11 34l-6 8c-6-12-9-26-10-42z" fill="#07090c" stroke="#8fb6e6" stroke-opacity=".75" stroke-width="1.4" stroke-linejoin="round"/>
+    <path d="M78 116c18 14 32 34 44 62" fill="none" stroke="#8fb6e6" stroke-opacity=".35" stroke-width="1.3"/>
+    <circle cx="122" cy="69" r="6.5" fill="none" stroke="#e8c77a" stroke-opacity=".85" stroke-width="1.7"/>
+    <path d="M115.5 68.5L90 66" stroke="#e8c77a" stroke-opacity=".7" stroke-width="1.5" stroke-linecap="round"/>
   </svg>`,
   karla: `<svg viewBox="0 0 200 260" class="spymaster" aria-hidden="true">
-    <defs><radialGradient id="kLamp" cx="50%" cy="38%" r="60%"><stop offset="0" stop-color="#cf4234" stop-opacity=".75"/><stop offset=".45" stop-color="#6e1f1a" stop-opacity=".4"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient></defs>
+    <defs><radialGradient id="kLamp" cx="45%" cy="38%" r="60%"><stop offset="0" stop-color="#cf4234" stop-opacity=".75"/><stop offset=".45" stop-color="#6e1f1a" stop-opacity=".4"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient></defs>
     <rect width="200" height="260" fill="url(#kLamp)"/>
-    <path d="M100 44c-17 0-28 12-28 28 0 12 6 20 12 25-28 6-47 27-52 58l-8 105h152l-8-105c-5-31-24-52-52-58 6-5 12-13 12-25 0-16-11-28-28-28z" fill="#0b0707" stroke="#ee8c82" stroke-opacity=".7" stroke-width="1.6"/>
-    <path d="M84 70c4-2 9-2 12 0" stroke="#e86a4f" stroke-opacity=".35" stroke-width="1.5"/>
-    <path d="M60 228c12-6 20-14 22-26" stroke="#e86a4f" stroke-opacity=".2" stroke-width="2" fill="none"/>
-    <circle cx="70" cy="214" r="3" fill="#e86a4f" opacity=".9"/><path d="M70 210c-4-10 6-14 0-24" stroke="#bbb" stroke-opacity=".3" stroke-width="1.5" fill="none"/>
-    <path d="M140 228c-10-6-16-13-18-24" stroke="#e86a4f" stroke-opacity=".2" stroke-width="2" fill="none"/>
-    <g class="lighter-g" data-act="smiley"><title>A gold lighter</title><rect x="111" y="182" width="26" height="40" fill="transparent"/>
-      <rect x="117" y="196" width="10" height="15" rx="1.5" fill="#e8c77a"/><rect x="117" y="192" width="10" height="4.5" rx="1" fill="#c9a24e"/>
-      <path d="M119.5 201.5h5M119.5 205h3.5" stroke="#8a6d33" stroke-width=".8"/>
-      <path class="lighter-flame" d="M122 183c2.6 2.6 2.8 5.2 0 8-2.8-2.8-2.6-5.4 0-8z" fill="#f4b04c"/></g>
+    <g transform="matrix(-1 0 0 1 200 0)">
+      <path d="${PROFILE}" fill="#0b0707" stroke="#ee8c82" stroke-opacity=".75" stroke-width="1.6" stroke-linejoin="round"/>
+      <path d="M118 111l5 12 7-8" fill="none" stroke="#ee8c82" stroke-opacity=".55" stroke-width="1.3" stroke-linejoin="round"/>
+      <path d="M78 116c18 14 32 34 44 62" fill="none" stroke="#ee8c82" stroke-opacity=".35" stroke-width="1.3"/>
+      <path d="M112 64c4-2 9-2 12 0" stroke="#e86a4f" stroke-opacity=".45" stroke-width="1.5" fill="none"/>
+      <path d="M128 147h22" stroke="#ee8c82" stroke-opacity=".45" stroke-width="1.3"/>
+    </g>
+    <path d="M70 91.5L50 95" stroke="#d9d2c4" stroke-opacity=".8" stroke-width="2.6" stroke-linecap="round"/>
+    <circle cx="49" cy="95.2" r="2.2" fill="#f07a4a"/>
+    <g class="smoke" fill="none" stroke="#c9c4bb" stroke-linecap="round">
+      <path d="M48 92c-4-8 6-12 0-22s4-14 0-24"/><path d="M48 92c5-9-5-13 1-23s-4-15 1-25"/>
+    </g>
+    <g class="lighter-g" data-act="smiley"><title>A gold lighter</title><rect x="50" y="122" width="30" height="34" fill="transparent"/>
+      <rect x="58" y="133" width="10" height="15" rx="1.5" fill="#e8c77a"/><rect x="58" y="129" width="10" height="4.5" rx="1" fill="#c9a24e"/>
+      <path d="M60.5 138.5h5M60.5 142h3.5" stroke="#8a6d33" stroke-width=".8"/>
+      <path class="lighter-flame" d="M63 120c2.6 2.6 2.8 5.2 0 8-2.8-2.8-2.6-5.4 0-8z" fill="#f4b04c"/></g>
+    <path d="M50 147h22" stroke="#ee8c82" stroke-opacity=".55" stroke-width="1.4"/>
   </svg>`,
 };

@@ -784,3 +784,11 @@ kbd { font-family: var(--ui); font-size: 9.5px; line-height: 1; padding: 2px 4px
 .lighter-g:hover rect:not([fill="transparent"]) { filter: brightness(1.25); }
 .lighter-g:hover .lighter-flame { opacity: .55; }
 .lighter-g.lit .lighter-flame { opacity: 1; }
+
+/* the cigarette's smoke, drifting up and fading */
+.spymaster .smoke path { stroke-width: 1.4; stroke-dasharray: 6 9; opacity: .35; }
+@media (prefers-reduced-motion: no-preference) {
+  .spymaster .smoke path { animation: smoke 4.2s linear infinite; }
+  .spymaster .smoke path:nth-child(2) { animation-duration: 5.6s; animation-delay: -2s; }
+  @keyframes smoke { 0% { stroke-dashoffset: 0; opacity: 0; } 15% { opacity: .45; } 70% { opacity: .25; } 100% { stroke-dashoffset: -60; opacity: 0; } }
+}
