@@ -4,6 +4,11 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 
 ## [Unreleased]
 
+### Fixed
+- Karla's weekly orders now come from Claude. The order format Karla answers in was rejected by
+  the API, so every week silently fell back to the offline bot (only his opening placement used
+  Claude). The server window now prints any failed Claude call.
+
 ### Changed (panels)
 - The city panel opens beside its city, over open sea where it can, and never covers the city
   itself or any other city. On smaller windows, where there's no clear sea nearby, it docks over

@@ -107,6 +107,8 @@ const server = http.createServer(async (req, res) => {
     try {
       r = await callClaude(kind, system, user, schema, maxTokens);
     } catch (e) {
+      // Failures are printed here: the game falls back to offline play silently.
+      console.error(`[claude] ${kind} FAILED: ${String(e.message || e).slice(0, 300)}`);
       if (e instanceof Anthropic.RateLimitError) return json(res, 429, { ok: false, error: 'rate limited' });
       if (e instanceof Anthropic.AuthenticationError) return json(res, 503, { ok: false, error: 'The server\'s Anthropic credentials were rejected.' });
       if (e instanceof Anthropic.APIConnectionError) return json(res, 502, { ok: false, error: 'Could not reach the Claude API' });

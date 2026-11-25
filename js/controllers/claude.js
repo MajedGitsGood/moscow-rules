@@ -66,10 +66,10 @@ const ORDER_SCHEMA = {
           type: { type: 'string', enum: ['move', 'surveil', 'lielow', 'prepare', 'strike', 'trap', 'approach', 'vet', 'brief', 'lie'] },
           city: { type: ['string', 'null'], description: 'move: destination' },
           target: { type: ['string', 'null'], description: 'prepare/strike/approach/vet: agent name' },
-          when: { type: ['string', 'null'], enum: ['tonight', 'next', null], description: 'trap only: tonight (Ferrets only) or next week' },
-          planKind: { type: ['string', 'null'], enum: ['strike', 'trap', null], description: 'brief only' },
+          when: { type: 'string', enum: ['tonight', 'next', 'none'], description: "trap only: tonight (Ferrets only) or next; 'none' for other orders" },
+          planKind: { type: 'string', enum: ['strike', 'trap', 'none'], description: "brief only; 'none' for other orders" },
           planCity: { type: ['string', 'null'], description: 'brief only' },
-          lieKind: { type: ['string', 'null'], enum: ['hide', 'frame', 'alarm', null], description: 'lie only (British agents working for you)' },
+          lieKind: { type: 'string', enum: ['hide', 'frame', 'alarm', 'none'], description: "lie only (British agents working for you); 'none' for other orders" },
           lieTarget: { type: ['string', 'null'], description: 'lie frame: which British agent to frame' },
         },
         required: ['agent', 'type', 'city', 'target', 'when', 'planKind', 'planCity', 'lieKind', 'lieTarget'],
@@ -95,8 +95,8 @@ function toOrders(game, side, r) {
     if (c.type === 'move') o.city = city(c.city);
     if (['prepare', 'strike', 'approach', 'vet'].includes(c.type)) o.targetId = byName(c.target)?.id;
     if (c.type === 'trap') o.when = c.when === 'tonight' && a.archetype === 'ferret' ? 'tonight' : 'next';
-    if (c.type === 'brief') o.plan = { kind: c.planKind || 'strike', city: city(c.planCity) };
-    if (c.type === 'lie') o.lie = { kind: c.lieKind || 'hide', targetId: byName(c.lieTarget)?.id };
+    if (c.type === 'brief') o.plan = { kind: c.planKind === 'trap' ? 'trap' : 'strike', city: city(c.planCity) };
+    if (c.type === 'lie') o.lie = { kind: ['frame', 'alarm'].includes(c.lieKind) ? c.lieKind : 'hide', targetId: byName(c.lieTarget)?.id };
     if (!validateOrders(game, side, [...valid, o]).length) valid.push(o);
     if (valid.length >= RULES.ordersPerWeek) break;
   }
