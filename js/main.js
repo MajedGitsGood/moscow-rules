@@ -81,6 +81,7 @@ async function morning() {
   for (const side of humanSides()) await voiceMorning(app.game, side);
   app.active = 'control';
   app.sel = { city: null, agent: null }; app.pick = null;
+  app.tab = 'traffic'; app.stationCity = null; app.traffic = true; // each morning opens on the new traffic
   app.screen = app.mode === 'hotseat' ? 'handoff' : 'play';
   app.fresh = true;
   save(); render();
@@ -96,7 +97,7 @@ async function endWeek() {
   app.queued[side] = [];
   const opp = other(side);
   if (!g.pending[opp]) {
-    if (isHuman(opp)) { app.active = opp; app.screen = 'handoff'; app.sel = { city: null, agent: null }; app.pick = null; save(); render(); return; }
+    if (isHuman(opp)) { app.active = opp; app.screen = 'handoff'; app.sel = { city: null, agent: null }; app.pick = null; app.tab = 'traffic'; app.stationCity = null; save(); render(); return; }
     busy('Moscow Centre is reading the traffic');
     const v = viewFor(g, opp);
     const r = app.mode === 'claude' ? await claudeOrders(g, opp, v) : { orders: heuristicOrders(g, v, g.seed), executions: [] };
