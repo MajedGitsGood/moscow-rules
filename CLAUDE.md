@@ -9,7 +9,8 @@ Run with `npm start` (port 8643; static files plus the `/api/claude` proxy). Sec
 - Controllers (human UI, `controllers/claude.js`, `controllers/heuristic.js`) only ever see `viewFor(side)`.
   Never pass the full game to Claude.
 - Both sides follow identical rules. Don't add Karla-only logic to the engine.
-- Model routing lives in `server.js` (`MODELS`): Karla on Opus, report voices on Haiku.
+- Model routing lives in `api/models.js` (`MODELS`), shared by `server.js` (local) and `worker/` (hosted):
+  Karla and the debrief on Opus, report voices on Haiku.
 - Claude never states facts: report rewrites go through `factsCheck` in `js/voices.js`.
 - Keep mechanics minimal; playtest feedback lives in FEEDBACK.md.
 - System prompts in `js/prompts.js` must stay byte-stable so they cache; put game data in the user message.

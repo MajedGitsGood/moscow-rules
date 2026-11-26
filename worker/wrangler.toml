@@ -1,0 +1,21 @@
+# The hosted Claude proxy for Spymaster. See worker/README.md.
+name = "spymaster-api"
+main = "index.js"
+compatibility_date = "2026-11-01"
+
+# Token budgets live here. Create it once with:  npx wrangler kv namespace create BUDGET
+# then paste the id it prints below.
+[[kv_namespaces]]
+binding = "BUDGET"
+id = "PASTE_KV_NAMESPACE_ID_HERE"
+
+[vars]
+# Who may call the proxy (the GitHub Pages site, and local testing).
+ALLOWED_ORIGINS = "https://majedgitsgood.github.io,http://localhost:8643"
+# Tokens one visitor (by IP) may spend per day: a full game is roughly 200-300k.
+VISITOR_DAILY_TOKENS = "400000"
+# Tokens the whole site may spend per day, across everyone. Raise it when you're ready to pay for more.
+SITE_DAILY_TOKENS = "4000000"
+
+# Secrets (never in this file):  npx wrangler secret put ANTHROPIC_API_KEY
+#                                npx wrangler secret put OWNER_TOKEN

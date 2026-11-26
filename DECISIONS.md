@@ -4,6 +4,18 @@ Why-this-not-that for this project, newest first. Companion to [CHANGELOG.md](CH
 
 ---
 
+## 2026-11-26: Host on GitHub Pages with a locked-down Cloudflare Worker
+**Decision:** Serve the game from GitHub Pages (like Hall of Mirrors) and proxy Claude through a
+Cloudflare Worker that accepts only the game's own system prompts, caps message size, and enforces a
+per-visitor daily budget and a site-wide daily cap in KV.
+**Why:** Free and scales for the static game; the key never reaches the browser. The local proxy
+forwards any prompt, which is fine on a laptop but would be a free Opus endpoint for the internet.
+The prompts are byte-stable, so they can be checked exactly.
+**Rejected:** *One Node host for everything* (Render/Railway: simplest, but a monthly bill and no
+static CDN). *The browser session id as the budget key* (clearing storage would reset it; IP plus
+a site-wide cap can't be reset from the browser). *Private repo* (the user wanted it public, like
+Hall of Mirrors).
+
 ## 2026-11-26: Karla's loyalty record, execution arithmetic, and resigning
 **Decision:** Give Claude, for each of its own agents, a whole-game list of the facts in its own
 records that bear on loyalty; replace "execute only on strong evidence" with the arithmetic (a mole

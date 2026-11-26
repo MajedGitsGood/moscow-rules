@@ -19,17 +19,11 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import Anthropic from '@anthropic-ai/sdk';
+import { MODELS, MAX_TOKENS, EFFORT } from './api/models.js';
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.argv[2] || process.env.PORT || 8643);
 
-const MODELS = {
-  karla: 'claude-opus-5-5',      // Karla's decision-making
-  debrief: 'claude-opus-5-5',    // the after-action analysis
-  voice: 'claude-haiku-5-5',     // agents' voices in the morning traffic
-};
-const MAX_TOKENS = { karla: 8000, debrief: 6000, voice: 2500 };
-const EFFORT = { karla: 'medium', debrief: 'medium', voice: 'low' };
 const GUEST_BUDGET = Number(process.env.MR_GUEST_BUDGET || 300000);
 const OWNER_TOKEN = process.env.MR_OWNER_TOKEN || '';
 
@@ -77,7 +71,7 @@ function serveStatic(req, res) {
   const url = decodeURIComponent(new URL(req.url, 'http://x').pathname);
   const rel = url === '/' ? 'index.html' : url.slice(1);
   const file = path.resolve(ROOT, rel);
-  const blocked = !file.startsWith(ROOT + path.sep) || rel.startsWith('node_modules') || rel.startsWith('.');
+  const blocked = !file.startsWith(ROOT + path.sep) || rel.startsWith('node_modules') || rel.startsWith('.') || rel.startsWith('worker');
   if (blocked || !fs.existsSync(file) || fs.statSync(file).isDirectory()) { res.writeHead(404); res.end('Not found'); return; }
   res.writeHead(200, { 'Content-Type': TYPES[path.extname(file)] || 'application/octet-stream', 'Cache-Control': 'no-store, must-revalidate' });
   fs.createReadStream(file).pipe(res);

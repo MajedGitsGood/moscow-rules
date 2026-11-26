@@ -1,9 +1,12 @@
-// Single gateway to Claude, through the local proxy at /api/claude (serve.py now, a Worker later).
+// Single gateway to Claude: through server.js on localhost, or the hosted Worker (worker/) whose
+// address is in index.html's <meta name="mr-api">. Without either, the game plays offline.
 // The browser never holds an API key. The server chooses the model per call kind
 // (karla → Opus, everything else → Haiku) and enforces the token budget; this file just
 // tracks what's left and lets callers fall back cleanly when Claude is unavailable.
 
 const SESSION_KEY = 'mr-session';
+const LOCAL = typeof location === 'undefined' || ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname);
+const API = LOCAL ? '' : (document.querySelector('meta[name="mr-api"]')?.content || '').replace(/\/$/, '');
 let status = { llm: false, checked: false, owner: false, remaining: null };
 
 function sessionId() {
@@ -24,7 +27,8 @@ function ownerToken() {
 
 export async function checkLLM() {
   try {
-    const r = await fetch('/api/status', { headers: { 'X-Session': sessionId(), 'X-Owner-Token': ownerToken() } });
+    if (!LOCAL && !API) throw new Error('no proxy configured');
+    const r = await fetch(`${API}/api/status`, { headers: { 'X-Session': sessionId(), 'X-Owner-Token': ownerToken() } });
     if (!r.ok) throw new Error(r.status);
     const j = await r.json();
     status = { llm: !!j.llm, checked: true, owner: !!j.owner, remaining: j.remaining ?? null, reason: j.reason };
@@ -42,7 +46,7 @@ export async function callClaude(kind, { system, user, schema, maxTokens }) {
   if (!status.llm) throw new LLMUnavailable(status.reason || 'LLM off');
   let r;
   try {
-    r = await fetch('/api/claude', {
+    r = await fetch(`${API}/api/claude`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-Session': sessionId(), 'X-Owner-Token': ownerToken() },
       body: JSON.stringify({ kind, system, user, schema, max_tokens: maxTokens }),
