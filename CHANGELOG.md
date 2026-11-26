@@ -41,9 +41,10 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
   own words (Moscow Rules, Control and Karla, Scalphunters and Lamplighters, the Circus, morning
   traffic). In plain mode, Claude's reports and debriefs are written without insider slang, and role
   names are always capitalised (Counterspy, Recruiter) so they read as roles.
-- The title-screen spymasters are side profiles facing each other: Smiley in spectacles, with a
-  collar and a tie hanging from the knot at his throat; Karla with a cigarette (smoke drifting up)
-  and the gold lighter poking out of his coat's hip pocket.
+- The title-screen spymasters face each other in profile, their bodies turned three-quarters to the
+  player: Smiley in gold spectacles and a double-breasted suit with a full-length tie; Karla in a
+  plain belted raincoat with the collar up, a cigarette (smoke drifting up) and the gold lighter
+  poking out of his hip pocket. MI6 and KGB now sit above their heads.
 - The shareable highlight page and X thread use the plain vocabulary and the Spymaster name.
 
 ### Fixed (Karla refusals)

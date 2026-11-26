@@ -4,6 +4,15 @@ Why-this-not-that for this project, newest first. Companion to [CHANGELOG.md](CH
 
 ---
 
+## 2026-11-26: Spymasters in three-quarter view
+**Decision:** Draw both spymasters with bodies turned three-quarters to the player and heads in
+profile facing each other; Smiley double-breasted with a full-length tie, Karla in a belted raincoat.
+**Why:** A pure side view can't show a tie or lapels convincingly (the tie looked stuck on), and the
+earlier head-on bodies looked flat. A three-quarter body shows the outfit and still lets them face off.
+Smiley's expensive, badly fitting suits and the tie he polishes his spectacles on come from the books;
+Karla stays deliberately anonymous.
+**Rejected:** *Pure profiles* (tie and lapels unreadable). *Square-on bodies* (flat, the first version).
+
 ## 2026-11-26: Muted relief with hot spots; moles-only means defeat
 **Decision:** Shade the land as relief in a muted grey, keep side tints faint, and light only the
 territories where something happened this week. End the game when a side has no loyal agent alive.

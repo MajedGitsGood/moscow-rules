@@ -75,40 +75,52 @@ export function portraitBody(agent, mood = null) {
   return out;
 }
 
-// The two spymasters, as silhouettes for the title and handoff screens.
-// The two spymasters on the title screen: side profiles facing each other across the page.
-// Control (Smiley) looks right: spectacles, collar and tie. Karla looks left: a cigarette in his mouth
-// with smoke rising, and a gold lighter poking out of his coat's side pocket (the hidden switch into Smiley mode).
-const PROFILE = 'M96 30C74 30 58 44 58 64c0 16 6 30 16 40l-2 12c-16 4-28 10-36 20-10 14-16 36-18 60L12 260h180l-6-64c-2-28-10-48-22-60-10-10-24-16-38-20l-8-6c4-4 7-8 8-12l2-5 3-2-1-4 8-6-6-7c0-10-2-20-6-28-6-10-16-16-30-16z';
+// The two spymasters on the title screen: bodies turned three-quarters to the player, heads in profile
+// facing each other across the page. Control (Smiley) looks right: gold spectacles, a double-breasted
+// suit with a full-length tie. Karla looks left: a plain belted raincoat with the collar up, a cigarette
+// with smoke rising, and a gold lighter poking out of his hip pocket (the hidden switch into Smiley mode).
+// Both are drawn facing right; Karla's figure is mirrored.
+const HEAD = 'M96 28C74 28 58 42 58 62c0 14 5 26 14 35l-1 15 37 4 1-10c5-1 11-4 15-8l2-5 3-2-1-4 7-6-6-7c0-11-2-22-7-30-6-10-14-16-28-16z';
+const BODY = 'M66 114c-20 4-38 14-46 34-9 22-10 66-12 112h184c-1-42-3-82-11-104-8-20-26-32-49-38z';
+const line = (col, op = 0.75, w = 1.4) => `fill="none" stroke="${col}" stroke-opacity="${op}" stroke-width="${w}" stroke-linejoin="round" stroke-linecap="round"`;
+const shape = (fill, col, op = 0.75, w = 1.4) => `fill="${fill}" stroke="${col}" stroke-opacity="${op}" stroke-width="${w}" stroke-linejoin="round"`;
+const lamp = (id, c1, c2, cx) => `<defs><radialGradient id="${id}" cx="${cx}" cy="38%" r="60%"><stop offset="0" stop-color="${c1}" stop-opacity=".75"/><stop offset=".45" stop-color="${c2}" stop-opacity=".38"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient></defs><rect width="200" height="260" fill="url(#${id})"/>`;
+
+const C = '#8fb6e6', K = '#ee8c82';
 export const SPYMASTER = {
-  control: `<svg viewBox="0 0 200 260" class="spymaster" aria-hidden="true">
-    <defs><radialGradient id="cLamp" cx="55%" cy="38%" r="60%"><stop offset="0" stop-color="#4a8bd1" stop-opacity=".75"/><stop offset=".45" stop-color="#2f5f93" stop-opacity=".35"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient></defs>
-    <rect width="200" height="260" fill="url(#cLamp)"/>
-    <path d="${PROFILE}" fill="#07090c" stroke="#8fb6e6" stroke-opacity=".75" stroke-width="1.6" stroke-linejoin="round"/>
-    <path d="M80 116c16 12 26 30 34 62" fill="none" stroke="#8fb6e6" stroke-opacity=".35" stroke-width="1.3"/>
-    <path d="M106 104c4 3 8.5 5.5 13 7.5l1.6 6.5-6.5-2.5c-3.5-2.6-6.2-6-8.1-11.5z" fill="#07090c" stroke="#8fb6e6" stroke-opacity=".7" stroke-width="1.2" stroke-linejoin="round"/>
-    <path d="M119 111.5l7 1.8.4 5.7-6.6.2z" fill="#07090c" stroke="#8fb6e6" stroke-opacity=".85" stroke-width="1.3" stroke-linejoin="round"/>
-    <path d="M120.2 119.4l6.2-.2c.8 8 1.6 16 4 26.5l-4.2 7.3-4.6-6.8c-.9-9-1.3-18-1.4-26.8z" fill="#07090c" stroke="#8fb6e6" stroke-opacity=".8" stroke-width="1.3" stroke-linejoin="round"/>
-    <circle cx="122" cy="69" r="6.5" fill="none" stroke="#e8c77a" stroke-opacity=".85" stroke-width="1.7"/>
-    <path d="M115.5 68.5L90 66" stroke="#e8c77a" stroke-opacity=".7" stroke-width="1.5" stroke-linecap="round"/>
+  control: `<svg viewBox="0 0 200 260" class="spymaster" aria-hidden="true">${lamp('cLamp', '#4a8bd1', '#2f5f93', '55%')}
+    <path d="${HEAD}" ${shape('#07090c', C)}/>
+    <path d="${BODY}" ${shape('#07090c', C)}/>
+    <path d="M90 116l26 74 22-74z" ${shape('#0d1219', C, 0.35, 1.1)}/>
+    <path d="M106 121h9l-1.5 8.5h-6z" ${shape('#07090c', C, 0.9, 1.3)}/>
+    <path d="M107.5 129.5h6l7 62-6.5 8-7.5-8z" ${shape('#07090c', C, 0.9, 1.3)}/>
+    <path d="M93 117l12 14 2-10zM127 117l-11 14-2-10z" ${shape('#07090c', C, 0.7, 1.2)}/>
+    <path d="M88 116L66 150l11 4-4 8 45 46" ${line(C, 0.6)}/>
+    <path d="M130 116l20 30-9 4 3 8-26 50" ${line(C, 0.6)}/>
+    <path d="M118 208c-2 18-3 34-3 52" ${line(C, 0.3)}/>
+    <g fill="${C}" fill-opacity=".55"><circle cx="104" cy="214" r="2.2"/><circle cx="134" cy="214" r="2.2"/><circle cx="105" cy="234" r="2.2"/><circle cx="135" cy="234" r="2.2"/></g>
+    <path d="M32 168c6 30 8 60 8 92" ${line(C, 0.25)}/>
+    <circle cx="122" cy="67" r="6.5" fill="none" stroke="#e8c77a" stroke-opacity=".9" stroke-width="1.7"/>
+    <path d="M115.5 66.5L90 64" stroke="#e8c77a" stroke-opacity=".7" stroke-width="1.5" stroke-linecap="round"/>
   </svg>`,
-  karla: `<svg viewBox="0 0 200 260" class="spymaster" aria-hidden="true">
-    <defs><radialGradient id="kLamp" cx="45%" cy="38%" r="60%"><stop offset="0" stop-color="#cf4234" stop-opacity=".75"/><stop offset=".45" stop-color="#6e1f1a" stop-opacity=".4"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient></defs>
-    <rect width="200" height="260" fill="url(#kLamp)"/>
+  karla: `<svg viewBox="0 0 200 260" class="spymaster" aria-hidden="true">${lamp('kLamp', '#cf4234', '#6e1f1a', '45%')}
     <g transform="matrix(-1 0 0 1 200 0)">
-      <path d="${PROFILE}" fill="#0b0707" stroke="#ee8c82" stroke-opacity=".75" stroke-width="1.6" stroke-linejoin="round"/>
-      <path d="M118 111l5 12 7-8" fill="none" stroke="#ee8c82" stroke-opacity=".55" stroke-width="1.3" stroke-linejoin="round"/>
-      <path d="M78 116c18 14 32 34 44 62" fill="none" stroke="#ee8c82" stroke-opacity=".35" stroke-width="1.3"/>
+      <path d="${HEAD}" ${shape('#0b0707', K)}/>
+      <path d="${BODY}" ${shape('#0b0707', K)}/>
+      <path d="M100 117l9 13 9-13" ${line(K, 0.5, 1.2)}/>
+      <path d="M72 104l-12 30 34-14zM122 102l16 30-24-10z" ${shape('#0b0707', K, 0.8, 1.3)}/>
+      <path d="M94 120l-20 36 40 44M114 122l16 26-12 52" ${line(K, 0.55)}/>
+      <path d="M118 200c1 20 1 40 0 60" ${line(K, 0.4)}/>
+      <path d="M14 192c40 4 132 4 172 0" ${line(K, 0.55, 2.2)}/>
+      <rect x="111" y="188" width="14" height="10" rx="1.5" ${shape('#0b0707', K, 0.7, 1.3)}/>
       <path d="M112 64c4-2 9-2 12 0" stroke="#e86a4f" stroke-opacity=".45" stroke-width="1.5" fill="none"/>
+      <path d="M131 92.5L152 96" stroke="#d9d2c4" stroke-opacity=".85" stroke-width="2.6" stroke-linecap="round"/>
+      <circle cx="153" cy="96.2" r="2.2" fill="#f07a4a"/>
+      <g class="smoke" fill="none" stroke="#c9c4bb" stroke-linecap="round"><path d="M154 93c-4-8 6-12 0-22s4-14 0-24"/><path d="M154 93c5-9-5-13 1-23s-4-15 1-25"/></g>
+      <g class="lighter-g" data-act="smiley"><title>A gold lighter</title><rect x="36" y="196" width="48" height="44" fill="transparent"/>
+        <g transform="rotate(8 58 218)"><rect x="53" y="207" width="11" height="16" rx="1.5" fill="#e8c77a"/><rect x="53" y="203" width="11" height="4.8" rx="1" fill="#c9a24e"/></g>
+        <path class="lighter-flame" d="M57 193c2.6 2.6 2.8 5.2 0 8-2.8-2.8-2.6-5.4 0-8z" fill="#f4b04c"/>
+        <path d="M40 220l38-3 1 7-38 3z" ${shape('#0b0707', K, 0.65, 1.3)}/></g>
     </g>
-    <path d="M70 91.5L50 95" stroke="#d9d2c4" stroke-opacity=".8" stroke-width="2.6" stroke-linecap="round"/>
-    <circle cx="49" cy="95.2" r="2.2" fill="#f07a4a"/>
-    <g class="smoke" fill="none" stroke="#c9c4bb" stroke-linecap="round">
-      <path d="M48 92c-4-8 6-12 0-22s4-14 0-24"/><path d="M48 92c5-9-5-13 1-23s-4-15 1-25"/>
-    </g>
-    <g class="lighter-g" data-act="smiley"><title>A gold lighter</title><rect x="38" y="188" width="44" height="42" fill="transparent"/>
-      <g transform="rotate(-10 60 212)"><rect x="55" y="202" width="11" height="16" rx="1.5" fill="#e8c77a"/><rect x="55" y="198" width="11" height="4.8" rx="1" fill="#c9a24e"/></g>
-      <path class="lighter-flame" d="M58.5 188c2.6 2.6 2.8 5.2 0 8-2.8-2.8-2.6-5.4 0-8z" fill="#f4b04c"/>
-      <path d="M42 213.5l34-2.5 1 7-33.8 2.6z" fill="#0b0707" stroke="#ee8c82" stroke-opacity=".6" stroke-width="1.3" stroke-linejoin="round"/></g>
   </svg>`,
 };

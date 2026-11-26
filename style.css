@@ -60,7 +60,7 @@ h1, h2, h3 { margin: 0; font-weight: 700; }
 .fig { width: min(36vw, 420px); position: relative; animation: rise 1.2s ease-out both; }
 .fig.karla { animation-delay: .25s; }
 .fig .spymaster { width: 100%; height: auto; display: block; }
-.fig span { position: absolute; bottom: 10%; left: 0; right: 0; text-align: center; font-family: var(--serif); letter-spacing: .4em; font-size: 14px; }
+.fig span { position: absolute; top: -6px; left: 0; right: 0; text-align: center; font-family: var(--serif); letter-spacing: .4em; font-size: 14px; }
 .fig.control span { color: #8fb6e6; } .fig.karla span { color: #ee8c82; }
 .title-text { position: relative; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 18px; padding: 24px; pointer-events: none; }
 .title-text > * { pointer-events: auto; } /* the column's padding mustn't cover Karla's lighter */
