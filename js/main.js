@@ -104,7 +104,7 @@ async function endWeek() {
   const opp = other(side);
   if (!g.pending[opp]) {
     if (isHuman(opp)) { app.active = opp; app.screen = 'handoff'; app.sel = { city: null, agent: null }; app.pick = null; app.tab = 'traffic'; app.stationCity = null; save(); render(); return; }
-    busy("Moscow Centre's people are on the move"); // the wait is the night's work, not Karla reading
+    busy("Moscow Centre's networks are at work"); // the wait is the night's work, not Karla reading
     const v = viewFor(g, opp);
     const r = app.mode === 'claude' ? await claudeOrders(g, opp, v) : { orders: heuristicOrders(g, v, g.seed), executions: [] };
     // Never fall back silently: if Claude couldn't play Karla this week, say so until it can again.

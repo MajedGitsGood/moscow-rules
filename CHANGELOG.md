@@ -82,7 +82,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 - The title toggles are glyphs, not words: one or two people for the players, and a hat followed
   by 6 · 8 · 10 for agents a side (each has a tooltip).
 
-- While the other side plays, the wait reads as the night's work ("The KGB's people are on the move"),
+- While the other side plays, the wait reads as the night's work ("The KGB's networks are at work"),
   not as the opponent reading reports.
 
 ### Removed
