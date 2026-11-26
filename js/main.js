@@ -457,7 +457,7 @@ function traffic(v) {
     const a = m.from ? app.game.agents[m.from] : null;
     const who = a ? `${a.first} ${a.name}` : label('Station', 'HQ');
     const tag = !a ? label('Station', 'Headquarters') : a.side === v.side ? roleLabel(a.archetype) : 'Source inside their network';
-    return `<article class="msg ${m.kind} ${m.tone || ''}" data-act="goto" data-city="${m.city || ''}">
+    return `<article class="msg ${m.kind} ${m.tone || ''}" data-mid="${m.id}" data-act="goto" data-city="${m.city || ''}">
       <div class="msg-who">${a ? portrait(a, { size: 34 }) : `<span class="station">${UI_ICON.traffic}</span>`}<div><b>${esc(who)}</b><small>${esc(tag)}${m.city ? ` · ${m.city}` : ''}</small></div><em>wk ${m.week}</em></div>
       <p>${esc(m.voiced || m.text)}</p></article>`;
   };

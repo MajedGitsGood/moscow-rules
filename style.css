@@ -799,28 +799,18 @@ kbd { font-family: var(--ui); font-size: 9.5px; line-height: 1; padding: 2px 4px
 .lamp { pointer-events: none; transform-box: fill-box; transform-origin: center; }
 .night { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 45% 45%, rgba(3,7,14,.55), rgba(2,4,9,.85)); opacity: 0; transition: opacity .7s ease-in; }
 .dusk .night { opacity: 1; }
-.fx { pointer-events: none; transform-box: fill-box; transform-origin: center; opacity: 0; }
-.fx-death { fill: #2a0404; stroke: #ff5a3c; stroke-width: 3; }
-.fx-trap { fill: #f6dc8c; }
-.fx-notice { fill: url(#lampg); stroke: #ffd27a; stroke-opacity: .7; stroke-width: 2; }
 @media (prefers-reduced-motion: no-preference) {
   .glint { animation: glint 22s ease-in-out infinite alternate; }
   .glint.g2 { animation-duration: 28s; animation-delay: -9s; }
   .lamp { animation: lamplight 5s ease-in-out infinite; }
   .fresh .night { animation: dawn 1.3s ease-out both; }
-  .fx-death { animation: fx-death 1.6s ease-out both; }
-  .fx-trap { animation: fx-trap .9s ease-out both; }
-  .fx-notice { animation: fx-notice 1.8s ease-in-out both; }
-  .travelling .tok-inner { animation: none; }
-  .replay .panel { animation: slide .4s ease-out 1.7s both; }
+        .travelling .tok-inner { animation: none; }
+  .replay .panel { animation: slide .4s ease-out 1.7s both; } /* replay.js sets the real delay */
   .replay .msg { animation: none; }
 }
 @keyframes glint { 0% { transform: translate(-60px, 10px); opacity: .5; } 50% { opacity: 1; } 100% { transform: translate(80px, -20px); opacity: .6; } }
 @keyframes lamplight { 0%, 100% { opacity: .75; } 40% { opacity: 1; } 55% { opacity: .85; } 70% { opacity: .95; } }
 @keyframes dawn { from { opacity: 1; } to { opacity: 0; } }
-@keyframes fx-death { 0% { opacity: 0; transform: scale(.4); } 25% { opacity: .85; } 100% { opacity: 0; transform: scale(3.4); stroke-width: .5; } }
-@keyframes fx-trap { 0% { opacity: 0; transform: scale(.6); } 15% { opacity: .9; } 100% { opacity: 0; transform: scale(2.2); } }
-@keyframes fx-notice { 0% { opacity: 0; transform: scale(.7); } 40% { opacity: 1; } 100% { opacity: 0; transform: scale(1.4); } }
 
 /* ---------- debrief moments as pictures: who, their role, and what passed between them ---------- */
 .mo-cast { display: flex; align-items: flex-start; gap: 6px; margin-bottom: 8px; }
@@ -858,3 +848,11 @@ kbd { font-family: var(--ui); font-size: 9.5px; line-height: 1; padding: 2px 4px
 }
 /* steady for nineteen seconds, then a brief stutter, as if the bulb caught a draught */
 @keyframes lamp-flicker { 0%, 95% { opacity: 1; } 95.6% { opacity: .35; } 96.1% { opacity: .9; } 96.6% { opacity: .5; } 97.4%, 100% { opacity: 1; } }
+
+/* ---------- the morning: telegram slips on the corner of the sheet (replay.js) ---------- */
+.wires { position: absolute; left: 24px; bottom: 96px; width: min(300px, 24vw); display: flex; flex-direction: column; justify-content: flex-end; gap: 8px; pointer-events: none; z-index: 4; }
+.slip { padding: 8px 12px 10px; background: #efe6cf; color: #2b2418; font: 12.5px/1.35 var(--stamp); letter-spacing: .02em; box-shadow: 0 4px 10px rgba(0,0,0,.45); border-top: 3px solid #c9b78f; opacity: 0; will-change: transform, opacity; }
+.slip small { display: block; font: 9px var(--stamp); letter-spacing: .14em; color: #7a6a4c; margin-bottom: 3px; }
+.slip .caret { display: inline-block; width: 7px; height: 12px; margin-left: 1px; background: #2b2418; vertical-align: -1px; }
+.msg.landed { animation: landed 4s ease-out both; }
+@keyframes landed { 0%, 55% { box-shadow: 0 0 0 2px rgba(242,211,107,.6); } 100% { box-shadow: 0 0 0 2px rgba(242,211,107,0); } }

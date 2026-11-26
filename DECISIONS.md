@@ -4,6 +4,14 @@ Why-this-not-that for this project, newest first. Companion to [CHANGELOG.md](CH
 
 ---
 
+## 2026-11-26: The morning as lamp, telegrams, then Reports
+**Decision:** Replace the morning's pulses and flashes with a sequence: the desk lamp swings to each
+city where something happened, the night's main events type out as telegram slips, and the slips
+slide into the Reports panel, which appears once they land. Nothing persists on the map.
+**Why:** It uses the lamp the user liked and keeps the continent clean; Reports stays the UI for play.
+**Rejected:** *Pins and string* (mocked; didn't land). *Telegrams that stay on the map* (clutter;
+Reports is the better place to read and act). *Grease-pencil marks* (earlier).
+
 ## 2026-11-26: The map as a printed chart under a desk lamp
 **Decision:** Add the chart-maker's craft (coastal water lines, italic sea names, ticked border, scale
 bar, margin stamp) and a single desk lamp with fold creases and a brief flicker every twenty seconds.
@@ -11,7 +19,7 @@ bar, margin stamp) and a single desk lamp with fold creases and a brief flicker 
 it is quiet single-colour linework or one warm light, so the map gains depth without new colour signals.
 **Rejected:** *Grease-pencil overlays* (mocked: hatching, hand-drawn arrows, crosses; even with marks
 fading after two weeks it was too much and made the continent look duller). *Relief texture and hot
-spots* (reverted earlier: borrowed from Sigma Theory). Mock page: `docs/mocks/map-directions.html`.
+spots* (reverted earlier: borrowed from Sigma Theory). Mocks live in a single page, `docs/mocks/map-alive.html`.
 
 ## 2026-11-26: No Offline bot choice; glyph toggles
 **Decision:** Drop the opponent toggle (Claude vs Offline bot); one player always faces Claude, with

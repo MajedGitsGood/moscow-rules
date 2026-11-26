@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Living map mock</title>
+<link rel="stylesheet" href="/style.css">
+<style>
+  /* The one design-mock page (not part of the game). The current idea: a morning plays out on the real
+     map (chart craft and desk lamp included). The lamp swings to each city where something happened;
+     then the night's telegrams type out on the corner of the sheet; then they fly into the Reports
+     panel and the map is clean again. Loops; window.mockAt(seconds) freezes it at a moment. */
+  body { overflow: auto; background: #0b1016; }
+  .page { max-width: 1280px; margin: 0 auto; padding: 32px 24px 64px; }
+  .page h1 { font-family: var(--serif); letter-spacing: .14em; color: var(--gold-hi); font-size: 24px; margin: 0 0 6px; }
+  .page > p { color: var(--text-dim); margin: 0 0 22px; max-width: 78ch; line-height: 1.5; }
+  .desk { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 300px; border-radius: 4px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,.45);
+    background: radial-gradient(ellipse at 40% 45%, #1f3a48 0%, #12232d 45%, #0a141b 85%); }
+  .desk svg.map { position: static; display: block; width: 100%; height: auto; }
+  .mapwrap { position: relative; container-type: inline-size; }
+  .clock { position: absolute; top: 12px; left: 14px; font: 11px var(--ui); color: var(--text-dim); background: rgba(10,15,20,.6); padding: 3px 8px; border-radius: 3px; }
+  .phase { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); font: 600 10px var(--ui); letter-spacing: .14em; text-transform: uppercase; color: var(--gold-hi); background: rgba(10,15,20,.7); padding: 4px 10px; border-radius: 3px; }
+
+  /* the telegrams on the corner of the sheet */
+  /* sized to the map, not the window, and stacked in a column so they never overlap */
+  .wires { position: absolute; left: 3%; bottom: 8%; width: 27cqw; display: flex; flex-direction: column; justify-content: flex-end; gap: .9cqw; pointer-events: none; z-index: 2; }
+  .slip { position: relative; padding: .8cqw 1.1cqw 1cqw; background: #efe6cf; color: #2b2418; font: clamp(8.5px, 1.2cqw, 12.5px)/1.35 var(--stamp); letter-spacing: .02em; text-transform: uppercase; min-height: 4.6cqw;
+    box-shadow: 0 4px 10px rgba(0,0,0,.45); border-top: 3px solid #c9b78f; opacity: 0; will-change: transform, opacity; }
+  .slip small { display: block; font: clamp(7px, .85cqw, 9px) var(--stamp); letter-spacing: .14em; color: #7a6a4c; margin-bottom: 3px; }
+  .slip .caret { display: inline-block; width: 7px; height: 12px; margin-left: 1px; background: #2b2418; vertical-align: -1px; }
+
+  /* a stand-in for the game's Reports panel */
+  .reports { background: linear-gradient(180deg, #17222d, #111921); border-left: 1px solid rgba(201,162,78,.35); padding: 0 12px 12px; display: flex; flex-direction: column; gap: 9px; }
+  .reports .tabs { display: flex; gap: 14px; padding: 12px 2px 9px; border-bottom: 1px solid rgba(201,162,78,.3); font: 700 10.5px var(--serif); letter-spacing: .14em; color: var(--text-dim); }
+  .reports .tabs b { color: var(--gold-hi); border-bottom: 2px solid var(--gold-hi); padding-bottom: 7px; margin-bottom: -10px; }
+  .reports h4 { margin: 4px 0 0; font: 700 10px var(--serif); letter-spacing: .16em; color: var(--gold); }
+  .card { background: #ebe2cb; color: #2b2418; border-left: 4px solid #8fb6e6; border-radius: 2px; padding: 8px 10px; font: 12.5px/1.4 var(--stamp); opacity: 0; box-shadow: 0 2px 6px rgba(0,0,0,.3); will-change: transform, opacity; }
+  .card.loss { border-left-color: #cf4234; } .card.win { border-left-color: #62c48f; }
+  .card small { display: block; font: 600 10px var(--ui); color: #6b5e45; margin-bottom: 3px; letter-spacing: .02em; }
+  .card.new { box-shadow: 0 0 0 2px rgba(242,211,107,.55), 0 2px 6px rgba(0,0,0,.3); }
+  .card.old { opacity: 1; }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>A MORNING ON THE MAP</h1>
+  <p>The lamp swings to each city where something happened overnight, then the night's telegrams type out on the corner of the sheet, then they fly into the Reports panel and the map is clean again. The Reports panel stays the place to read and act. Loops every 16 seconds.</p>
+  <div class="desk">
+    <div class="mapwrap" id="mapwrap"><span class="clock" id="clock"></span><span class="phase" id="phase"></span><div class="wires" id="wires"></div></div>
+    <aside class="reports" id="reports"><div class="tabs"><b>REPORTS</b><span>CITY</span><span>OURS</span><span>THEIRS</span></div><h4>WHAT HAPPENED</h4></aside>
+  </div>
+</div>
+<script type="module">
+import { mapBase, mapOverlay, tintCells, cityXY } from '/js/ui/map.js';
+import { newGame, viewFor } from '/js/engine.js';
+
+// One game state: agents spread so each city has a clear holder.
+const CITIES = ['London', 'Berlin', 'Vienna', 'Rome', 'Istanbul', 'Moscow', 'Helsinki'];
+const g = newGame(11, { size: 8 });
+g.cities = CITIES;
+const spots = { control: ['London', 'London', 'Berlin', 'Vienna', 'Vienna', 'Rome', 'Helsinki', 'London'], karla: ['Moscow', 'Moscow', 'Rome', 'Rome', 'Istanbul', 'Istanbul', 'Berlin', 'Vienna'] };
+for (const side of ['control', 'karla']) Object.values(g.agents).filter((a) => a.side === side).forEach((a, i) => { a.city = spots[side][i]; });
+g.placed = { control: true, karla: true }; g.phase = 'orders';
+const view = viewFor(g, 'control');
+const roleOf = (a) => (a.side === 'control' ? { role: a.archetype, sure: true } : null);
+const nameIn = (side, c, i = 0) => Object.values(g.agents).filter((a) => a.side === side && a.city === c)[i].name;
+
+// The night's events: where the lamp goes, what the telegram says, how it reads in Reports.
+const EVENTS = [
+  { city: 'Rome', tone: 'loss', wire: `${nameIn('control', 'Rome').toUpperCase()} FOUND DEAD. NO WITNESS.`, report: `${nameIn('control', 'Rome')} was found dead in Rome.`, from: 'HQ · Rome' },
+  { city: 'Vienna', tone: 'win', wire: `TRAP SPRUNG. ${nameIn('karla', 'Vienna').toUpperCase()} TAKEN IN THE NIGHT.`, report: `The trap in Vienna worked. ${nameIn('karla', 'Vienna')} came for one of ours and is in our hands.`, from: 'Counterspy · Vienna' },
+  { city: 'Berlin', tone: '', wire: `${nameIn('karla', 'Berlin').toUpperCase()} SEEN AT THE STATION. WATCHING.`, report: `${nameIn('karla', 'Berlin')} has been surveilling us.`, from: 'Watcher · Berlin' },
+];
+
+// ---- the map, with a lamp whose pool we can move ----
+const wrap = document.getElementById('mapwrap');
+wrap.insertAdjacentHTML('afterbegin', `<svg class="map" viewBox="0 0 1000 640">${mapBase(CITIES)}
+  <g id="overlay">${mapOverlay({ view, selected: null, orders: [], roleOf })}</g>
+  <defs><radialGradient id="swinglamp" gradientUnits="userSpaceOnUse" cx="220" cy="115" r="850"><stop offset="0" stop-color="#ffd9a0" stop-opacity=".55"/><stop offset=".45" stop-color="#ffcf8a" stop-opacity=".16"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>
+    <radialGradient id="swingdark" gradientUnits="userSpaceOnUse" cx="220" cy="115" r="950"><stop offset=".4" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".5"/></radialGradient></defs>
+  <g pointer-events="none"><rect width="1000" height="640" fill="url(#swinglamp)" style="mix-blend-mode:soft-light"/><rect width="1000" height="640" fill="url(#swinglamp)" opacity=".5"/><rect width="1000" height="640" fill="url(#swingdark)"/>
+    <rect x="488" y="0" width="24" height="640" fill="url(#foldV)"/><rect x="0" y="308" width="1000" height="24" fill="url(#foldH)"/></g></svg>`);
+tintCells(wrap.querySelector('svg'), view);
+const lamp = document.getElementById('swinglamp'), dark = document.getElementById('swingdark');
+
+// ---- the slips and the report cards ----
+const wires = document.getElementById('wires'), reports = document.getElementById('reports');
+const TILT = [-2, 1.5, -1];
+const slips = EVENTS.map(() => { const el = document.createElement('div'); el.className = 'slip'; wires.appendChild(el); return el; });
+const cards = EVENTS.map((e) => { const el = document.createElement('div'); el.className = `card ${e.tone}`; el.innerHTML = `<small>${e.from}</small>${e.report}`; reports.appendChild(el); return el; });
+reports.insertAdjacentHTML('beforeend', `<h4 style="margin-top:8px">REPORTS FROM OUR PEOPLE</h4><div class="card old"><small>Recruiter · London</small>Another evening with ${nameIn('karla', 'Moscow')}. 1 of 3: they're listening.</div>`);
+
+// ---- the timeline (seconds) ----
+const LOOP = 16;
+const REST = [220, 115, 850];
+const stop = (c) => [...cityXY(c), 230];
+const LAMP = [[0, REST], [0.8, REST], [1.8, stop('Rome')], [2.6, stop('Rome')], [3.3, stop('Vienna')], [4.0, stop('Vienna')], [4.7, stop('Berlin')], [5.4, stop('Berlin')], [6.4, REST], [LOOP, REST]];
+const SLIP_IN = (i) => 6.6 + i * 1.25;           // each slip slides in, then types for about a second
+const FLY = 10.4, FLY_LEN = 0.7, CARD_IN = 10.9; // slips fly to the panel; the cards land there
+const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+const clamp = (x) => Math.max(0, Math.min(1, x));
+const lerpKeys = (keys, t) => { for (let i = 1; i < keys.length; i++) if (t <= keys[i][0]) { const [t0, a] = keys[i - 1], [t1, b] = keys[i], k = ease(clamp((t - t0) / (t1 - t0 || 1))); return a.map((v, j) => v + (b[j] - v) * k); } return keys.at(-1)[1]; };
+
+function render(t) {
+  // The lamp.
+  const [x, y, r] = lerpKeys(LAMP, t);
+  for (const gr of [lamp, dark]) { gr.setAttribute('cx', x.toFixed(1)); gr.setAttribute('cy', y.toFixed(1)); }
+  lamp.setAttribute('r', r.toFixed(1)); dark.setAttribute('r', (r * 1.25 + 60).toFixed(1));
+  // The slips: slide in from the left and type; then, last first, they slide straight right along the
+  // bottom margin into the Reports panel, shrinking and fading as they go.
+  const wr = wires.getBoundingClientRect(), pr = reports.getBoundingClientRect();
+  slips.forEach((el, i) => {
+    const e = EVENTS[i], tin = SLIP_IN(i), slide = ease(clamp((t - tin) / 0.35)), fly = ease(clamp((t - FLY - (EVENTS.length - 1 - i) * 0.12) / FLY_LEN));
+    const typed = Math.floor(clamp((t - tin - 0.3) / 1.0) * e.wire.length);
+    el.innerHTML = `<small>WEEK 4 · ${e.city.toUpperCase()}</small>${e.wire.slice(0, typed)}${typed < e.wire.length && t > tin ? '<span class="caret"></span>' : ''}`;
+    const dx = (pr.left - wr.left) * fly;
+    el.style.opacity = t < tin ? 0 : (1 - clamp((fly - 0.35) / 0.65)).toFixed(3);
+    el.style.transform = `translateX(${(-115 * (1 - slide)).toFixed(1)}%) translateX(${dx.toFixed(1)}px) rotate(${(TILT[i] * (1 - fly)).toFixed(2)}deg) scale(${(1 - 0.3 * fly).toFixed(3)})`;
+  });
+  // The report cards land, briefly marked as new.
+  cards.forEach((el, i) => {
+    const k = ease(clamp((t - CARD_IN - i * 0.15) / 0.45));
+    el.style.display = t < CARD_IN + i * 0.15 ? 'none' : ''; // no empty gap before they land
+    el.style.opacity = k.toFixed(3);
+    el.style.transform = `translateY(${((1 - k) * 10).toFixed(1)}px)`;
+    el.classList.toggle('new', t > CARD_IN && t < CARD_IN + 3.5);
+  });
+  document.getElementById('clock').textContent = `${t.toFixed(1)} s`;
+  document.getElementById('phase').textContent = t < 0.8 ? 'Dawn' : t < 6.4 ? 'The lamp finds the night' : t < FLY ? 'Telegrams' : t < CARD_IN + 0.6 ? 'Into Reports' : 'Your move';
+}
+
+let frozen = null; const t0 = performance.now();
+window.mockAt = (t) => { frozen = t; render(t); };
+window.mockPlay = () => { frozen = null; };
+const tick = (now) => { if (frozen === null) render(((now - t0) / 1000) % LOOP); requestAnimationFrame(tick); };
+if (matchMedia('(prefers-reduced-motion: reduce)').matches) render(LOOP - 1); else requestAnimationFrame(tick);
+</script>
+</body>
+</html>

@@ -55,8 +55,8 @@ export function mapBase(cities) {
     <mask id="waterlines" maskUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${H}">
       ${[18, 11, 5].map((d) => `<path d="${MAP.land}" fill="none" stroke="#fff" stroke-width="${2 * d + 1.1}" stroke-linejoin="round"/><path d="${MAP.land}" fill="none" stroke="#000" stroke-width="${2 * d - 1.1}" stroke-linejoin="round"/>`).join('')}
     </mask>
-    <radialGradient id="desklamp" cx="22%" cy="18%" r="85%"><stop offset="0" stop-color="#ffd9a0" stop-opacity=".42"/><stop offset=".45" stop-color="#ffcf8a" stop-opacity=".12"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>
-    <radialGradient id="deskdark" cx="22%" cy="18%" r="95%"><stop offset=".45" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".38"/></radialGradient>
+    <radialGradient id="desklamp" gradientUnits="userSpaceOnUse" cx="${W * 0.22}" cy="${H * 0.18}" r="850"><stop offset="0" stop-color="#ffd9a0" stop-opacity=".42"/><stop offset=".45" stop-color="#ffcf8a" stop-opacity=".12"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>
+    <radialGradient id="deskdark" gradientUnits="userSpaceOnUse" cx="${W * 0.22}" cy="${H * 0.18}" r="950"><stop offset=".4" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".45"/></radialGradient>
     <linearGradient id="foldV" x1="0" x2="1"><stop offset="0" stop-color="#000" stop-opacity="0"/><stop offset=".48" stop-color="#000" stop-opacity=".16"/><stop offset=".5" stop-color="#fff" stop-opacity=".18"/><stop offset=".53" stop-color="#000" stop-opacity="0"/></linearGradient>
     <linearGradient id="foldH" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#000" stop-opacity="0"/><stop offset=".48" stop-color="#000" stop-opacity=".14"/><stop offset=".5" stop-color="#fff" stop-opacity=".16"/><stop offset=".53" stop-color="#000" stop-opacity="0"/></linearGradient>
     <clipPath id="land"><path d="${MAP.land}"/></clipPath>

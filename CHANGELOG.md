@@ -4,6 +4,12 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 
 ## [Unreleased]
 
+### Changed (the morning)
+- **Each morning plays out on the map before the reports:** agents who moved slide in, the desk
+  lamp narrows and swings to each city where something happened overnight, then up to three
+  telegrams type out on the corner of the sheet and slide into the Reports panel, which arrives with
+  those reports briefly marked as new. Nothing stays on the map. The old pulses and flashes are gone.
+
 ### Added (the map as a printed chart)
 - **Chart-maker's craft:** faint ripple lines trace out from every coast, the seas are named in spaced
   italics, and the sheet has a ticked double border, a scale bar and a "SECRET" stamp in the margin.
