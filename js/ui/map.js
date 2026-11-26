@@ -4,7 +4,6 @@ import { MAP } from '../mapdata.js';
 import { LANDMARK, HOME } from '../world.js';
 import { LANDMARK_ICON, ORDER_ICON, ROLE_ICON, sized } from './icons.js';
 import { portraitBody } from './portraits.js';
-import { nightEvents } from './replay.js';
 
 const { width: W, height: H } = MAP;
 export const cityXY = (c) => MAP.cityXY[c];
@@ -47,12 +46,6 @@ export function mapBase(cities) {
       <feComposite in="grain" in2="SourceGraphic" operator="in" result="g2"/>
       <feMerge><feMergeNode in="SourceGraphic"/><feMergeNode in="g2"/></feMerge>
     </filter>
-    <filter id="relief" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
-      <feTurbulence type="fractalNoise" baseFrequency=".011" numOctaves="5" seed="11" result="t"/>
-      <feDiffuseLighting in="t" surfaceScale="9" diffuseConstant="1.05" lighting-color="#fff4dc" result="lit"><feDistantLight azimuth="235" elevation="38"/></feDiffuseLighting>
-      <feComposite in="lit" in2="SourceGraphic" operator="in" result="litLand"/>
-      <feBlend in="SourceGraphic" in2="litLand" mode="multiply"/>
-    </filter>
     <filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
     <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#000" flood-opacity=".55"/></filter>
     <radialGradient id="sea" cx="50%" cy="40%" r="75%"><stop offset="0" stop-color="#1d3542"/><stop offset="1" stop-color="#0a141b"/></radialGradient>
@@ -65,7 +58,7 @@ export function mapBase(cities) {
   </defs>
   <g class="shimmer"><ellipse class="glint g1" cx="${W * 0.3}" cy="${H * 0.72}" rx="230" ry="90" fill="url(#shim)"/><ellipse class="glint g2" cx="${W * 0.72}" cy="${H * 0.3}" rx="200" ry="80" fill="url(#shim)"/></g>
   <g class="graticule">${graticule.join('')}</g>
-  <path class="land" d="${MAP.land}" filter="url(#relief)"/>
+  <path class="land" d="${MAP.land}" filter="url(#paper)"/>
   <g clip-path="url(#land)">${cities.map((c, i) => `<path class="cell" data-city="${c}" d="${cell(pts, i)}"/>`).join('')}</g>
   <path class="borders" d="${MAP.borders}"/>
   <path class="coast" d="${MAP.land}"/>
@@ -125,18 +118,12 @@ export function mapOverlay({ view, selected, orders = [], moveTargets = null, ro
 }
 
 // Who holds each city's territory: more agents present wins the tint.
-// Cities where something happened this week (a death outranks anything else) are lit as hot spots.
 export function tintCells(root, view) {
-  const hot = new Map();
-  const telling = (view.inbox || []).filter((m) => m.week === view.week && m.city && (m.kind === 'event' || m.facts?.activities?.length || m.facts?.turned));
-  for (const e of nightEvents(telling, view.week)) if (e.kind !== 'notice' || !hot.has(e.city)) hot.set(e.city, e.kind === 'notice' ? 'notice' : 'death');
   for (const el of root.querySelectorAll('.cell')) {
     const c = el.dataset.city;
     const us = view.own.filter((a) => a.alive && a.city === c).length;
     const them = view.enemies.filter((a) => a.alive && a.city === c).length;
     el.dataset.hold = us > them ? 'us' : them > us ? 'them' : (us ? 'split' : 'none');
-    const alert = hot.get(c);
-    if (alert) el.dataset.alert = alert; else delete el.dataset.alert;
   }
 }
 

@@ -37,9 +37,12 @@ Each is one unbroken outline (head, neck and body together) with as few inner li
 *Separate head and body shapes* (the neck never met the collar cleanly). *Buttons, belts and coat
 seams* (too busy). *A coloured glow behind each figure* (looked tacky).
 
-## 2026-11-26: Muted relief with hot spots; moles-only means defeat
+## 2026-11-26: Muted relief with hot spots (reverted); moles-only means defeat
 **Decision:** Shade the land as relief in a muted grey, keep side tints faint, and light only the
 territories where something happened this week. End the game when a side has no loyal agent alive.
+**Reverted (same day):** the relief and hot spots went back to the paper map. The colour contrast was
+too much and the noise-made contours looked cheap; it borrowed Sigma Theory's answer instead of
+finding our own. Moles-only defeat stays.
 **Why:** The first living-map pass was too subtle. Sigma Theory's map works by contrast: texture,
 and a few vivid highlights against a muted base. Lighting every held territory was tried and was
 loud and flat; lighting where the week's action was tells the player where to look. A side run
