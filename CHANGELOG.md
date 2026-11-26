@@ -18,6 +18,10 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
   heavier so it reads on a map token, and the same face appears everywhere.
 - The loading line in plain mode reads "The morning reports are coming in".
 
+### Fixed (title)
+- Karla's gold lighter could be hidden under the title column's padding at some window widths, so it
+  sometimes couldn't switch Smiley mode back off. The column no longer catches clicks outside its buttons.
+
 ### Changed (plain language)
 - The game is now **Spymaster**, in plain language: MI6 vs the KGB, Assassins, Watchers,
   Counterspies and Recruiters, Reports and City tabs, and orders such as Recruit, Plan attack,
