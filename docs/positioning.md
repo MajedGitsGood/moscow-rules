@@ -50,25 +50,21 @@ strategy, which today means Phantom Doctrine's tactics and Espiocracy's grand st
 
 ## Raising the visual bar (concepts, not copies)
 
-Sigma Theory's agents are painted, near-photographic faces in a saturated purple world of glowing rings
-and orbs. What makes them memorable is that **each agent's face is distinctive and shows up in the same
-place every time.** Playtest 3 found our agents hard to remember. These ideas keep our noir, minimal
-look and stay fast (no full-screen characters):
+What stands out in Sigma Theory is that **its map looks alive and its characters are memorable.** Playtest 3
+found our agents hard to tell apart. Two changes, both inside our existing noir, minimal style, with no new
+colour signals (the side, role and verdict colours are already plenty) and nothing that slows the game:
 
-1. **Faces you can tell apart at token size.** Give each agent one strong, consistent visual trait
-   (spectacles, a hat, a beard, a scarf, grey hair), with an outline that reads at 24px, and keep exactly that
-   face on the map, in the City list, in reports and in the debrief.
-2. **A personal colour.** A thin ring tint per agent within each side's palette, so "the one in mustard"
-   becomes a memory hook alongside the name.
-3. **An agent card on hover.** A larger portrait, the role badge, and what you know or suspect: a dossier
-   corner, not a screen.
-4. **A living map.** The morning plays out on the map before the reports: a pulse where someone died, a
-   flash where a trap sprang, a soft glow on cities where something happened overnight. Lamplight and
-   night between weeks.
-5. **One signature element.** Sigma Theory has its glowing orb. Ours could be the dossier stamp or the gold
-   lighter's flame: one recurring, polished motif used sparingly.
+1. **Faces you can tell apart, but only just.** Spies shouldn't be memorable, so each agent gets exactly one
+   ordinary distinguishing trait (spectacles, a moustache, a beard, a hat brim, grey hair, a headscarf,
+   a bald crown), drawn in the same monochrome line style and readable at token size. The same face appears
+   on the map, in the City list, in reports and in the debrief.
+2. **A living map.** The morning plays out on the map for a couple of seconds before you read the reports: a
+   dark pulse where someone died, a flash where a trap sprang, a token sliding along its route, a faint glow
+   where something was noticed. Between turns, a little ambient life: lamplight on cities where agents
+   are, a slow shimmer on the sea, the light dimming to night as you send your orders.
 
-Suggested order: 1 and 3 together (they answer the playtest note directly), then 4, then 2 and 5.
+Considered and dropped (2026-11-26): a personal colour per agent (too many colour signals already), a hover
+dossier card (bloat, with little to put on it), and a recurring signature motif (only makes sense in Smiley mode).
 
 ## Sources
 - Steam: Sigma Theory: Global Cold War, https://store.steampowered.com/app/716640
