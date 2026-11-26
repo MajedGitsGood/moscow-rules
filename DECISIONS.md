@@ -4,6 +4,17 @@ Why-this-not-that for this project, newest first. Companion to [CHANGELOG.md](CH
 
 ---
 
+## 2026-11-26: Muted relief with hot spots; moles-only means defeat
+**Decision:** Shade the land as relief in a muted grey, keep side tints faint, and light only the
+territories where something happened this week. End the game when a side has no loyal agent alive.
+**Why:** The first living-map pass was too subtle. Sigma Theory's map works by contrast: texture,
+and a few vivid highlights against a muted base. Lighting every held territory was tried and was
+loud and flat; lighting where the week's action was tells the player where to look. A side run
+entirely by the enemy can't act for itself, so playing on was busywork.
+**Rejected:** *Saturated tints on every territory* (tried: loud, and it flattened the relief).
+*Footprints as hot spots* (they arrive in nearly every city every week). *Copying Sigma's low-poly
+facets* (too close to their look).
+
 ## 2026-11-26: One trait per face; the night replayed on the map
 **Decision:** Draw every agent from one plain template plus exactly one trait, assigned across each
 side from the look seeds (no game RNG, so seeded games are unchanged). Replay each night on the map

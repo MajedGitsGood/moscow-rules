@@ -11,7 +11,7 @@
   --paper-ink: #2a241a;
   --text: #ece4cf;
   --text-dim: #9fa7ad;
-  --land: #d3c49c;
+  --land: #b9b3a4;
   --control: #4a8bd1;
   --karla: #cf4234;
   --ok: #67b27a;
@@ -99,11 +99,15 @@ h1, h2, h3 { margin: 0; font-weight: 700; }
 .borders { fill: none; stroke: #6d5c3f; stroke-width: .8; stroke-opacity: .35; stroke-dasharray: 2 3; }
 .cell-edges path { fill: none; stroke: #5f4c2f; stroke-width: 1.2; stroke-opacity: .55; stroke-dasharray: 5 4; }
 .cell { fill: transparent; transition: fill .35s, fill-opacity .35s; cursor: pointer; }
-.cell[data-hold="us"] { fill: var(--control); fill-opacity: .2; }
-.cell[data-hold="them"] { fill: var(--karla); fill-opacity: .2; }
-.cell[data-hold="split"] { fill: #8a6aa8; fill-opacity: .16; }
-.karla .cell[data-hold="us"] { fill: var(--karla); }
-.karla .cell[data-hold="them"] { fill: var(--control); }
+.cell[data-hold] { mix-blend-mode: color; }
+.cell[data-hold="us"] { fill: #3d8cff; fill-opacity: .32; }
+.cell[data-hold="them"] { fill: #ff3b2a; fill-opacity: .3; }
+.cell[data-hold="split"] { fill: #a46cff; fill-opacity: .25; }
+/* The hot spots: territories where something happened this week, lit against the muted map. */
+.cell[data-alert] { fill: #ffb13b !important; fill-opacity: .62 !important; mix-blend-mode: overlay; stroke: #ffd27a; stroke-width: 2.5; stroke-opacity: .9; filter: drop-shadow(0 0 6px rgba(255,190,90,.8)); }
+.cell[data-alert="death"] { fill: #ff5a3c !important; stroke: #ff8a6a; filter: drop-shadow(0 0 6px rgba(255,90,60,.8)); }
+.karla .cell[data-hold="us"] { fill: #ff3b2a; }
+.karla .cell[data-hold="them"] { fill: #3d8cff; }
 .cell.hot { fill-opacity: .42; }
 .cell[data-hold="none"].hot { fill: #fff; fill-opacity: .14; }
 
@@ -799,9 +803,9 @@ kbd { font-family: var(--ui); font-size: 9.5px; line-height: 1; padding: 2px 4px
 .night { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 45% 45%, rgba(3,7,14,.55), rgba(2,4,9,.85)); opacity: 0; transition: opacity .7s ease-in; }
 .dusk .night { opacity: 1; }
 .fx { pointer-events: none; transform-box: fill-box; transform-origin: center; opacity: 0; }
-.fx-death { fill: #1a0303; stroke: #b3322a; stroke-width: 2; }
+.fx-death { fill: #2a0404; stroke: #ff5a3c; stroke-width: 3; }
 .fx-trap { fill: #f6dc8c; }
-.fx-notice { fill: url(#lampg); stroke: #f2d36b; stroke-opacity: .35; stroke-width: 1; }
+.fx-notice { fill: url(#lampg); stroke: #ffd27a; stroke-opacity: .7; stroke-width: 2; }
 @media (prefers-reduced-motion: no-preference) {
   .glint { animation: glint 22s ease-in-out infinite alternate; }
   .glint.g2 { animation-duration: 28s; animation-delay: -9s; }
@@ -817,6 +821,21 @@ kbd { font-family: var(--ui); font-size: 9.5px; line-height: 1; padding: 2px 4px
 @keyframes glint { 0% { transform: translate(-60px, 10px); opacity: .5; } 50% { opacity: 1; } 100% { transform: translate(80px, -20px); opacity: .6; } }
 @keyframes lamplight { 0%, 100% { opacity: .75; } 40% { opacity: 1; } 55% { opacity: .85; } 70% { opacity: .95; } }
 @keyframes dawn { from { opacity: 1; } to { opacity: 0; } }
-@keyframes fx-death { 0% { opacity: 0; transform: scale(.4); } 25% { opacity: .85; } 100% { opacity: 0; transform: scale(2.6); stroke-width: .5; } }
+@keyframes fx-death { 0% { opacity: 0; transform: scale(.4); } 25% { opacity: .85; } 100% { opacity: 0; transform: scale(3.4); stroke-width: .5; } }
 @keyframes fx-trap { 0% { opacity: 0; transform: scale(.6); } 15% { opacity: .9; } 100% { opacity: 0; transform: scale(2.2); } }
 @keyframes fx-notice { 0% { opacity: 0; transform: scale(.7); } 40% { opacity: 1; } 100% { opacity: 0; transform: scale(1.4); } }
+
+/* ---------- debrief moments as pictures: who, their role, and what passed between them ---------- */
+.mo-cast { display: flex; align-items: flex-start; gap: 6px; margin-bottom: 8px; }
+.mo-a { position: relative; display: flex; flex-direction: column; align-items: center; width: 52px; }
+.mo-a .portrait { border-radius: 50%; box-shadow: 0 0 0 2.5px var(--control); }
+.mo-a.karla .portrait { box-shadow: 0 0 0 2.5px var(--karla); }
+.mo-a small { margin-top: 5px; font-size: 11px; color: var(--text-dim); max-width: 60px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mo-a.died small { text-decoration: line-through; text-decoration-color: #b3322a; }
+.mo-r { position: absolute; top: 26px; right: 2px; width: 19px; height: 19px; border-radius: 50%; display: grid; place-items: center; background: var(--rc); color: #0a0f14; box-shadow: 0 0 0 2px #121a22; }
+.mo-r .ico { width: 12px; height: 12px; stroke-width: 2.6; }
+.mo-m { position: absolute; top: -4px; right: 2px; width: 16px; height: 16px; border-radius: 50%; display: grid; place-items: center; font: 700 10px/1 var(--ui); font-style: normal; background: #e9e4da; color: #0a0f14; box-shadow: 0 0 0 2px #121a22; }
+.mo-x { align-self: center; margin-top: -14px; color: var(--gold-hi); display: grid; place-items: center; width: 22px; }
+.mo-x .ico { width: 18px; height: 18px; }
+.moment.mistake .mo-x { color: #ef8a80; } .moment.recruitment .mo-x { color: var(--ok); }
+.moment p { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }

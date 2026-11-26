@@ -256,3 +256,17 @@ Played on 6 cities and 5 orders (started before those changes). Final 2-2.
   face, readable on tokens; the night replays on the map each morning (moves, deaths, traps, sightings),
   with lamplight, sea glints and dusk when orders go out. Colours per agent, a hover card and a motif
   were declined.
+
+## Playtest 5: 6 agents vs Claude (case 1386047269): boring, too easy, too fast
+Control won 5-0, Karla wiped out by week 8. Why:
+- **Strikes are free and certain.** Control struck 7 times and killed 6; the only miss was a target
+  already dead. Nothing punishes a strike except a trap.
+- **One Ferret is the whole defence, and it was turned in week 3.** Six-agent rosters have a single
+  Ferret; once Thorne turned Novak, every Karla trap was a dud and Novak leaked Lisbon's orders weekly.
+- **Turning takes two approaches at every size.** Losing one of six agents, plus a leak, is decisive.
+- **Watchers protect themselves for free:** Holloway saw Novak's preparation without an order and left.
+- **Claude-Karla traded blind strikes early** (Orlov for Rudd) and never vetted Novak (no Ferret left to).
+- Bots at 6 agents average ~4 deaths in 12 weeks; this game had 7 in 7. A human picking targets with
+  Watcher intel is far deadlier than the bot, so the simulation underrates how fast games collapse.
+**Done:** moles-only ends the game; map contrast; debrief moments as pictures.
+**Open:** balance options for small games (see the reply in session, 2026-11-26).

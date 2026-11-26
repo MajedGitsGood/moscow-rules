@@ -514,9 +514,12 @@ function finish(game, reason) {
 }
 function checkEnd(game) {
   if (game.phase === 'over') return;
-  const out = SIDES.find((s) => alive(game, s).length === 0);
-  if (out) finish(game, `${SIDE_LABEL[out]}'s networks were wiped out`);
-  else if (game.week > RULES.weeks) { game.week = RULES.weeks; finish(game, 'Twelve weeks have passed'); }
+  // A side is finished when no one alive still works for it: all dead, or the survivors all turned.
+  const out = SIDES.find((s) => !alive(game, s).some(loyal));
+  const timeUp = game.week > RULES.weeks;
+  if (timeUp) game.week = RULES.weeks;
+  if (out) finish(game, alive(game, out).length ? `${SIDE_LABEL[out]}'s networks are gone: everyone left is working for ${SIDE_LABEL[other(out)]}` : `${SIDE_LABEL[out]}'s networks were wiped out`);
+  else if (timeUp) finish(game, 'Twelve weeks have passed');
 }
 
 // ---------- views ----------

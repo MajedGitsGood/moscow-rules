@@ -4,6 +4,16 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 
 ## [Unreleased]
 
+### Changed (contrast and endings)
+- **The map has relief:** the land is shaded like terrain in a muted stone grey, and each side's
+  territories are quiet tints. **Hot spots** stand out against it: any territory where something
+  happened this week (a death or a trap in red-orange; a turning or a certain sighting in amber)
+  stays lit for the week. The morning flashes are bolder too.
+- **Debrief moments are pictures:** each shows the people involved (face, side ring, role badge, an
+  M if they had been turned) with what passed between them, above a shorter caption.
+- **A side whose only survivors are moles has lost.** The game ends there; you no longer have to
+  hunt down the last turned agent.
+
 ### Added (a living map)
 - **Each morning the night plays out on the map** before the reports slide in: agents who moved
   slide from their old city, a dark pulse marks a death, a gold flash a sprung trap, and a faint glow

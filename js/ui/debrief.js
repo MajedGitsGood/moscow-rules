@@ -53,13 +53,35 @@ function storyChart(game, story, last) {
   </svg>`;
 }
 
-function moments(story) {
+// Who a moment is about, in the order the analysts mention them (at most three).
+function castOf(game, m) {
+  const text = `${m.title} ${m.detail}`;
+  return Object.values(game.agents)
+    .map((a) => ({ a, at: text.search(new RegExp(`\\b${a.name}\\b`)) }))
+    .filter((x) => x.at >= 0).sort((x, y) => x.at - y.at).slice(0, 3).map((x) => x.a);
+}
+// The moment as a picture: the people involved, each with their side's ring and role, joined by
+// what happened between them. A death that week is marked on the face.
+function cast(game, m) {
+  const who = castOf(game, m);
+  if (!who.length) return '';
+  const face = (a) => {
+    const died = a.eliminated?.week === m.week;
+    const mole = a.turnedBy && a.turnedWeek && a.turnedWeek <= m.week;
+    return `<span class="mo-a ${a.side} ${died ? 'died' : ''}" title="${esc(`${a.first} ${a.name}, ${role(a.archetype)}${mole ? `, working for ${SIDE_LABEL[a.turnedBy]}` : ''}${died ? ', died this week' : ''}`)}">
+      ${portrait(a, { size: 40, mood: died ? 'dead' : null })}<i class="mo-r r-${a.archetype}">${ROLE_ICON[a.archetype]}</i>${mole ? '<i class="mo-m">M</i>' : ''}<small>${esc(a.name)}</small></span>`;
+  };
+  const act = `<span class="mo-x">${KIND[m.kind]?.icon || ''}</span>`;
+  return `<div class="mo-cast">${face(who[0])}${who.length > 1 ? act + who.slice(1).map(face).join('') : ''}</div>`;
+}
+
+function moments(story, game) {
   if (!story) return `<p class="db-wait">The analysts are going through the files<span class="dots"></span></p>`;
   // Fill column by column, so the numbers run left to right like the weeks on the chart above.
   const rows = story.moments.length <= 4 ? 2 : 3;
   return `<ol class="moments" style="--rows:${rows}">${story.moments.map((m, i) => `<li class="moment ${m.side} ${m.kind}" data-pin="${i + 1}" title="${esc(KIND[m.kind]?.label || m.kind)}">
     <span class="mo-n"><small>wk</small>${m.week}</span>
-    <div><b>${esc(m.title)}</b><span class="mo-when">${KIND[m.kind]?.icon || ''}${m.city ? esc(m.city) : ''}</span><p>${esc(m.detail)}</p></div></li>`).join('')}</ol>`;
+    <div>${cast(game, m)}<b>${esc(m.title)}</b><span class="mo-when">${KIND[m.kind]?.icon || ''}${m.city ? esc(m.city) : ''}</span><p title="${esc(m.detail)}">${esc(m.detail)}</p></div></li>`).join('')}</ol>`;
 }
 
 // Below the moments: each side's lapse across the whole game, and how it should have played.
@@ -144,7 +166,7 @@ export function debriefHTML(game, story, { mood = 'even', reveal = false } = {})
       <div class="db-score">${SIDES.map((s) => { const x = o.score[s]; return `<div class="${s}"><span>${x.standing}</span><b>${SIDE_LABEL[s]}</b>
         <small class="sum-line">${x.loyal ?? x.standing} own${x.recruited ? ` + ${x.recruited} turned` : ''}</small></div>`; }).join('<i>vs</i>')}</div>
     </header>
-    <section class="db2-card"><h2>How it unfolded</h2>${storyChart(game, story, last)}${moments(story)}${lessons(story)}</section>
+    <section class="db2-card"><h2>How it unfolded</h2>${storyChart(game, story, last)}${moments(story, game)}${lessons(story)}</section>
     ${battleground(game, story)}
     ${rosters(game)}
     ${story?.via === 'rules' ? '<p class="db-note">Rules-engine analysis. <button class="link" data-act="reanalyze">Ask the analyst</button></p>' : ''}

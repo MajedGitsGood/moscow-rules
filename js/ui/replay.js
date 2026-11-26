@@ -45,7 +45,7 @@ export function playMorning(root, { prev, inbox, week }) {
   for (const e of nightEvents(inbox, week)) {
     const [x, y] = cityXY(e.city);
     const c = document.createElementNS(NS, 'circle');
-    c.setAttribute('cx', x); c.setAttribute('cy', y); c.setAttribute('r', e.kind === 'notice' ? 30 : 26);
+    c.setAttribute('cx', x); c.setAttribute('cy', y); c.setAttribute('r', e.kind === 'notice' ? 34 : 32);
     c.setAttribute('class', `fx fx-${e.kind}`);
     c.style.animationDelay = `${e.delay}ms`;
     fx.appendChild(c);

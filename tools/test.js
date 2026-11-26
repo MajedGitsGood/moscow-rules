@@ -25,6 +25,13 @@ const inbox = (g, side) => viewFor(g, side).inbox.map((m) => m.text).join(' | ')
   ok(!ll.alive && sh.alive, 'Scalphunter strikes without preparing');
   ok(!viewFor(g, 'control').intel[ll.id], 'a kill reveals nothing about the dead agent\'s role');
 }
+{ const { g } = setup();
+  const ks = Object.values(g.agents).filter((a) => a.side === 'karla');
+  ks.slice(1).forEach((a) => { a.alive = false; a.eliminated = { week: 1, how: 'killed', by: 'control', city: a.city }; });
+  ks[0].turnedBy = 'control';
+  week(g);
+  ok(g.phase === 'over' && g.outcome.winner === 'control' && /working for/.test(g.outcome.reason), 'a side whose only survivors are moles has lost: the game ends');
+}
 { const { g, get } = setup({ control: { lamplighter: 'A' }, karla: { talentspotter: 'A' } });
   const ll = get('control', 'lamplighter'), ts = get('karla', 'talentspotter');
   ok(!legalOrders(g, 'control', ll.id).some((l) => l.type === 'strike'), 'non-Scalphunter cannot strike unprepared');
