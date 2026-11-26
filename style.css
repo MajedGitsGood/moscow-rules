@@ -843,3 +843,18 @@ kbd { font-family: var(--ui); font-size: 9.5px; line-height: 1; padding: 2px 4px
 .seg .seg-lead { display: grid; place-items: center; padding: 0 12px; color: var(--gold); border-right: 1px solid rgba(201,162,78,.25); }
 .seg .seg-lead .ico { width: 17px; height: 17px; }
 .seg button { font-size: 13px; }
+
+/* ---------- the chart-maker's craft and the desk lamp ---------- */
+.waterlines { fill: #a9d2e4; fill-opacity: .13; }
+.sea-name { font-family: Georgia, 'Times New Roman', serif; font-style: italic; text-anchor: middle; fill: #a9cfe0; fill-opacity: .55; }
+.chart-frame rect, .chart-frame path { fill: none; stroke: #d8c9a3; stroke-opacity: .45; }
+.chart-frame .chart-scale rect { stroke-opacity: .75; stroke-width: .8; }
+.chart-frame .chart-scale rect.on { fill: #d8c9a3; fill-opacity: .75; }
+.chart-frame .chart-scale text { font-family: Georgia, serif; font-size: 9px; fill: #d8c9a3; fill-opacity: .7; }
+.chart-frame .chart-stamp rect { stroke: #b5463c; stroke-opacity: .6; stroke-width: 1.6; }
+.chart-frame .chart-stamp text { font-family: var(--serif); font-weight: 700; font-size: 15px; letter-spacing: 4px; fill: #b5463c; fill-opacity: .62; }
+@media (prefers-reduced-motion: no-preference) {
+  .lamp-glow { animation: lamp-flicker 20s linear infinite; }
+}
+/* steady for nineteen seconds, then a brief stutter, as if the bulb caught a draught */
+@keyframes lamp-flicker { 0%, 95% { opacity: 1; } 95.6% { opacity: .35; } 96.1% { opacity: .9; } 96.6% { opacity: .5; } 97.4%, 100% { opacity: 1; } }

@@ -4,6 +4,13 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 
 ## [Unreleased]
 
+### Added (the map as a printed chart)
+- **Chart-maker's craft:** faint ripple lines trace out from every coast, the seas are named in spaced
+  italics, and the sheet has a ticked double border, a scale bar and a "SECRET" stamp in the margin.
+- **A desk lamp:** warm light falls across the map from the top left, the far corner sits in shadow,
+  and the faint creases of a folded map cross the middle. The lamp flickers briefly about every
+  twenty seconds (not when the system asks for reduced motion).
+
 ### Changed (balance)
 - **6-agent games are more defensive:** each side now has 1 Assassin, 2 Watchers, 2 Counterspies and
   1 Recruiter (was 2 Assassins and 1 Counterspy). With one blade, most attacks need a week of

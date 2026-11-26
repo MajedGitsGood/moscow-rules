@@ -52,17 +52,57 @@ export function mapBase(cities) {
     <radialGradient id="vignette" cx="50%" cy="50%" r="70%"><stop offset=".6" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".55"/></radialGradient>
     <radialGradient id="shim"><stop offset="0" stop-color="#a9d2e4" stop-opacity=".09"/><stop offset=".6" stop-color="#a9d2e4" stop-opacity=".03"/><stop offset="1" stop-color="#a9d2e4" stop-opacity="0"/></radialGradient>
     <radialGradient id="lampg"><stop offset="0" stop-color="#ffd98a" stop-opacity=".55"/><stop offset=".5" stop-color="#f4c36a" stop-opacity=".2"/><stop offset="1" stop-color="#f4c36a" stop-opacity="0"/></radialGradient>
+    <mask id="waterlines" maskUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${H}">
+      ${[18, 11, 5].map((d) => `<path d="${MAP.land}" fill="none" stroke="#fff" stroke-width="${2 * d + 1.1}" stroke-linejoin="round"/><path d="${MAP.land}" fill="none" stroke="#000" stroke-width="${2 * d - 1.1}" stroke-linejoin="round"/>`).join('')}
+    </mask>
+    <radialGradient id="desklamp" cx="22%" cy="18%" r="85%"><stop offset="0" stop-color="#ffd9a0" stop-opacity=".42"/><stop offset=".45" stop-color="#ffcf8a" stop-opacity=".12"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>
+    <radialGradient id="deskdark" cx="22%" cy="18%" r="95%"><stop offset=".45" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".38"/></radialGradient>
+    <linearGradient id="foldV" x1="0" x2="1"><stop offset="0" stop-color="#000" stop-opacity="0"/><stop offset=".48" stop-color="#000" stop-opacity=".16"/><stop offset=".5" stop-color="#fff" stop-opacity=".18"/><stop offset=".53" stop-color="#000" stop-opacity="0"/></linearGradient>
+    <linearGradient id="foldH" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#000" stop-opacity="0"/><stop offset=".48" stop-color="#000" stop-opacity=".14"/><stop offset=".5" stop-color="#fff" stop-opacity=".16"/><stop offset=".53" stop-color="#000" stop-opacity="0"/></linearGradient>
     <clipPath id="land"><path d="${MAP.land}"/></clipPath>
     <clipPath id="tok" clipPathUnits="objectBoundingBox"><circle cx=".5" cy=".5" r=".5"/></clipPath>
     <marker id="arrow" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#e8c77a"/></marker>
   </defs>
   <g class="shimmer"><ellipse class="glint g1" cx="${W * 0.3}" cy="${H * 0.72}" rx="230" ry="90" fill="url(#shim)"/><ellipse class="glint g2" cx="${W * 0.72}" cy="${H * 0.3}" rx="200" ry="80" fill="url(#shim)"/></g>
   <g class="graticule">${graticule.join('')}</g>
+  ${chartSea()}
   <path class="land" d="${MAP.land}" filter="url(#paper)"/>
   <g clip-path="url(#land)">${cities.map((c, i) => `<path class="cell" data-city="${c}" d="${cell(pts, i)}"/>`).join('')}</g>
   <path class="borders" d="${MAP.borders}"/>
   <path class="coast" d="${MAP.land}"/>
-  <g class="cell-edges" clip-path="url(#land)">${cities.map((c, i) => `<path d="${cell(pts, i)}"/>`).join('')}</g>`;
+  <g class="cell-edges" clip-path="url(#land)">${cities.map((c, i) => `<path d="${cell(pts, i)}"/>`).join('')}</g>
+  ${chartFrame()}`;
+}
+
+// The chart-maker's craft, in one quiet colour: ripple lines tracing out from the coasts and the sea
+// names (both under the land, so they only show at sea); a ticked border, a scale bar and a stamp.
+function chartSea() {
+  const sea = (t, x, y, r = 0, s = 11) => `<text class="sea-name" x="${x}" y="${y}" transform="rotate(${r} ${x} ${y})" font-size="${s}" letter-spacing="${(s * 0.42).toFixed(1)}">${t}</text>`;
+  return `<rect class="waterlines" width="${W}" height="${H}" mask="url(#waterlines)"/>
+  <g>${sea('ATLANTIC OCEAN', 120, 330, -72, 13)}${sea('NORTH SEA', 352, 198, -12)}${sea('BALTIC', 532, 192, -62, 10)}${sea('MEDITERRANEAN SEA', 400, 612, 0, 12)}${sea('BLACK SEA', 835, 442, -4)}</g>`;
+}
+function chartFrame() {
+  const t = [];
+  for (let x = 50; x < W; x += 50) t.push(`M${x},10v${x % 100 ? 4 : 7}M${x},${H - 10}v-${x % 100 ? 4 : 7}`);
+  for (let y = 50; y < H; y += 50) t.push(`M10,${y}h${y % 100 ? 4 : 7}M${W - 10},${y}h-${y % 100 ? 4 : 7}`);
+  return `<g class="chart-frame" pointer-events="none">
+    <rect x="10" y="10" width="${W - 20}" height="${H - 20}" stroke-width="1"/><rect x="5" y="5" width="${W - 10}" height="${H - 10}" stroke-width=".6"/>
+    <path d="${t.join('')}" stroke-width=".8"/>
+    <g class="chart-scale" transform="translate(36,${H - 40})"><rect width="40" height="4" class="on"/><rect x="40" width="40" height="4"/><rect x="80" width="40" height="4" class="on"/>
+      <text y="-5">0</text><text x="40" y="-5" text-anchor="middle">250</text><text x="120" y="-5" text-anchor="middle">750 km</text></g>
+    <g class="chart-stamp" transform="translate(${W - 70},52) rotate(-8)"><rect x="-50" y="-16" width="100" height="28"/><text y="4" text-anchor="middle">SECRET</text></g>
+  </g>`;
+}
+
+// One light source: a desk lamp falling across the sheet from the top left, and the creases of a map
+// that has been folded and carried. Drawn over everything; it ignores the pointer. The lamp flickers
+// briefly about every twenty seconds (style.css).
+export function mapLight() {
+  return `<g class="desk-light" pointer-events="none">
+    <g class="lamp-glow"><rect width="${W}" height="${H}" fill="url(#desklamp)" style="mix-blend-mode:soft-light"/><rect width="${W}" height="${H}" fill="url(#desklamp)" opacity=".5"/></g>
+    <rect width="${W}" height="${H}" fill="url(#deskdark)"/>
+    <rect x="${W / 2 - 12}" y="0" width="24" height="${H}" fill="url(#foldV)"/><rect x="0" y="${H / 2 - 12}" width="${W}" height="24" fill="url(#foldH)"/>
+  </g>`;
 }
 
 // Dynamic layer: cities, tokens, queued moves. `state` comes from the UI.

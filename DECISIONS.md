@@ -4,6 +4,15 @@ Why-this-not-that for this project, newest first. Companion to [CHANGELOG.md](CH
 
 ---
 
+## 2026-11-26: The map as a printed chart under a desk lamp
+**Decision:** Add the chart-maker's craft (coastal water lines, italic sea names, ticked border, scale
+bar, margin stamp) and a single desk lamp with fold creases and a brief flicker every twenty seconds.
+**Why:** Premium for this game means a crafted physical object in a 1970s office, not effects. All of
+it is quiet single-colour linework or one warm light, so the map gains depth without new colour signals.
+**Rejected:** *Grease-pencil overlays* (mocked: hatching, hand-drawn arrows, crosses; even with marks
+fading after two weeks it was too much and made the continent look duller). *Relief texture and hot
+spots* (reverted earlier: borrowed from Sigma Theory). Mock page: `docs/mocks/map-directions.html`.
+
 ## 2026-11-26: No Offline bot choice; glyph toggles
 **Decision:** Drop the opponent toggle (Claude vs Offline bot); one player always faces Claude, with
 the bot as the automatic fallback. The remaining toggles use glyphs (people for players, a hat plus

@@ -10,7 +10,7 @@ import { voiceMorning } from './voices.js';
 import { claudeOrders, claudePlacement } from './controllers/claude.js';
 import { heuristicOrders, heuristicPlacement } from './controllers/heuristic.js';
 import { checkLLM, llmStatus } from './llm.js';
-import { mapBase, mapOverlay, cityXY, tintCells, MAP_SIZE } from './ui/map.js';
+import { mapBase, mapOverlay, mapLight, cityXY, tintCells, MAP_SIZE } from './ui/map.js';
 import { playMorning } from './ui/replay.js';
 import { portrait, SPYMASTER } from './ui/portraits.js';
 import { ROLE_ICON, ORDER_ICON, UI_ICON, LANDMARK_ICON } from './ui/icons.js';
@@ -235,6 +235,7 @@ function playScreen() {
   return `<div class="stage ${fresh ? 'fresh' : ''} ${replay ? 'replay' : ''} ${side} ${setup ? 'is-setup' : ''} ${app.pick ? 'picking' : ''} ${!setup && app.traffic ? 'traffic-open' : ''}">
     <svg class="map" viewBox="0 0 ${MAP_SIZE.W} ${MAP_SIZE.H}" preserveAspectRatio="xMidYMid meet">${base(g)}
       <g id="overlay">${mapOverlay({ view: v, selected: app.sel.city, orders: setup ? [] : app.queued[side], moveTargets, roleOf: roleInfo(side), trustOf: trustOf(side), numbers: null })}</g>
+      ${mapLight()}
     </svg>
     <div class="night"></div>
     ${hudTop(v, setup)}
