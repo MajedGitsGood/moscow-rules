@@ -168,6 +168,13 @@ const SCHEMA = {
       required: ['control', 'karla'],
       additionalProperties: false,
     },
+    mvp: {
+      type: 'object',
+      description: 'the single agent, from either side, who did the most to decide the game',
+      properties: { surname: { type: 'string' }, why: { type: 'string' } },
+      required: ['surname', 'why'],
+      additionalProperties: false,
+    },
     pivotal: {
       type: 'object',
       properties: {
@@ -181,7 +188,7 @@ const SCHEMA = {
       additionalProperties: false,
     },
   },
-  required: ['headline', 'summary', 'moments', 'pivotal', 'play'],
+  required: ['headline', 'summary', 'moments', 'pivotal', 'play', 'mvp'],
   additionalProperties: false,
 };
 
@@ -198,6 +205,23 @@ function lessonFor(game, side) {
   if (trapped >= 2) return `${trapped} attackers walked into traps. Strike only where no trap is being set, and watch for rooms and unfamiliar faces first.`;
   if (killed >= 3) return `${killed} agents were killed. Read the footprints around your people and lie low or trap when someone starts asking about them.`;
   return 'No single lapse stands out; the margin came from small exchanges.';
+}
+
+// The agent who did most to decide the game, by the record: each kill, trap sprung and agent turned
+// is credited to the agent the winning side's report names as having done it.
+export function mvpByRecord(game) {
+  const credit = {};
+  for (const side of SIDES) for (const m of game.inbox[side]) {
+    if (m.kind !== 'event' || m.tone !== 'win' || !m.from || !game.agents[m.from]) continue;
+    const why = m.facts?.turned ? 'turned' : /trap/i.test(m.text) ? 'trapped' : 'killed';
+    (credit[m.from] ||= { turned: 0, trapped: 0, killed: 0 })[why]++;
+  }
+  const value = (c) => c.turned * 2 + c.trapped * 1.5 + c.killed;
+  const best = Object.entries(credit).sort((a, b) => value(b[1]) - value(a[1]))[0];
+  if (!best) return null;
+  const [id, c] = best, bits = [];
+  if (c.turned) bits.push(`turned ${c.turned}`); if (c.trapped) bits.push(`trapped ${c.trapped}`); if (c.killed) bits.push(`killed ${c.killed}`);
+  return { id, why: `${bits.join(', ').replace(/^./, (x) => x.toUpperCase())} of the other side's agents.` };
 }
 
 // Offline: what a side did best, by simple counts.
@@ -226,6 +250,7 @@ function fallbackStory(game, found) {
     moments: found.moments.slice(0, 10),
     pivotal: found.pivotal,
     play: Object.fromEntries(SIDES.map((side) => [side, { good: strengthFor(game, side), bad: lessonFor(game, side) }])),
+    mvp: mvpByRecord(game),
     via: 'rules',
   };
 }
@@ -238,7 +263,10 @@ export async function analyze(game) {
     const okCity = (c) => game.cities.find((x) => x.toLowerCase() === String(c).toLowerCase());
     const moments = r.moments.filter((m) => m.week >= 1 && m.week <= last).map((m) => ({ ...m, city: okCity(m.city) || null })).slice(0, 10);
     const pivotal = { ...r.pivotal, week: Math.min(Math.max(1, r.pivotal.week), last), city: okCity(r.pivotal.city) || found.pivotal.city };
-    return { headline: r.headline, summary: r.summary, moments, pivotal, play: r.play, via: 'claude' };
+    // Claude names the MVP; it must be a real agent, or the record's pick stands in.
+    const named = Object.values(game.agents).find((a) => a.name.toLowerCase() === String(r.mvp?.surname || '').trim().toLowerCase());
+    const mvp = named ? { id: named.id, why: r.mvp.why } : mvpByRecord(game);
+    return { headline: r.headline, summary: r.summary, moments, pivotal, play: r.play, mvp, via: 'claude' };
   } catch (e) {
     if (!(e instanceof LLMUnavailable)) console.warn('debrief analysis fell back:', e.message);
     return fallbackStory(game, found);

@@ -5,7 +5,7 @@ import { SIDES, SIDE_LABEL, ARCHETYPES } from '../world.js';
 import { mapBase, cityXY, MAP_SIZE } from './map.js';
 import { portrait, portraitBody } from './portraits.js';
 import { ROLE_ICON, ORDER_ICON, UI_ICON, sized } from './icons.js';
-import { standingAt, lastWeek, tradecraft } from '../analysis.js';
+import { standingAt, lastWeek, tradecraft, mvpByRecord } from '../analysis.js';
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const role = (k) => ARCHETYPES[k].label;
@@ -75,13 +75,23 @@ function cast(game, m) {
   return `<div class="mo-cast">${face(who[0])}${who.length > 1 ? act + who.slice(1).map(face).join('') : ''}</div>`;
 }
 
+// The game's most valuable agent, from either side: a card that sits with the moments.
+function mvpCard(game, mvp) {
+  const a = mvp && game.agents[mvp.id];
+  if (!a) return '';
+  return `<li class="moment mvp ${a.side}"><div class="mo-head"><span class="mo-n">MVP</span><span class="mo-city">${SIDE_LABEL[a.side]}</span></div>
+    <div class="mvp-who"><span class="mo-a ${a.side}">${portrait(a, { size: 46, mood: a.alive ? null : 'dead' })}<i class="mo-r r-${a.archetype}">${ROLE_ICON[a.archetype]}</i></span>
+      <div><b>${esc(a.first)} ${esc(a.name)}</b><small>${role(a.archetype)}${a.turnedBy ? ` · turned by ${SIDE_LABEL[a.turnedBy]}` : ''}</small></div></div>
+    <p>${esc(mvp.why)}</p></li>`;
+}
+
 function moments(story, game) {
   if (!story) return `<p class="db-wait">The analysts are going through the files<span class="dots"></span></p>`;
   // Fill column by column, so the numbers run left to right like the weeks on the chart above.
-  const rows = story.moments.length <= 4 ? 2 : 3;
+  const rows = story.moments.length + 1 <= 4 ? 2 : 3;
   return `<ol class="moments" style="--rows:${rows}">${story.moments.map((m, i) => `<li class="moment ${m.side} ${m.kind}" data-pin="${i + 1}" title="${esc(KIND[m.kind]?.label || m.kind)}">
     <div class="mo-head"><span class="mo-n">Wk ${m.week}</span>${m.city ? `<span class="mo-city">${esc(m.city)}</span>` : ''}</div>
-    ${cast(game, m)}<b>${esc(m.title)}</b><p title="${esc(m.detail)}">${esc(m.detail)}</p></li>`).join('')}</ol>`;
+    ${cast(game, m)}<b>${esc(m.title)}</b><p title="${esc(m.detail)}">${esc(m.detail)}</p></li>`).join('')}${mvpCard(game, story.mvp || mvpByRecord(game))}</ol>`;
 }
 
 // Below the moments: each side's lapse across the whole game, and how it should have played.

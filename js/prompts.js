@@ -82,10 +82,11 @@ Check the receiver's orders that week (or the next) to show they really acted on
 a title under 8 words, the receiver, the source, told (what the receiver was told, under 15 words, paraphrased), did (what the \
 receiver ordered because of it, under 12 words), result (under 12 words), and which side it favoured.
 
-- play: for each side (control, karla), how it played across the whole game, not a single moment: good, the one thing it \
-did best and why it worked; bad, the one strategic lapse that ran through its game and how it should have played instead. \
-Concrete (name agents, cities, weeks), one or two sentences and at most 35 words each. Write to the player as a senior \
-officer would: frank, unsentimental, fair to both sides.
+- play: for each side (control, karla), a verdict on its whole game, the way a coach sums up a player's style: good, \
+the habit or approach that served it best; bad, the habit or blind spot that cost it most, and what to do differently next \
+game. Describe patterns across many weeks, not single events: no week numbers, and no retelling of moments already listed. \
+Name agents only as brief examples. One or two sentences, at most 30 words each. Frank, unsentimental, fair to both sides.
+- mvp: the single agent, from either side, who did the most to decide the game: their surname, and why in under 18 words.
 
 Use only facts in the record. Plain, dry prose; name agents by surname.`;
 

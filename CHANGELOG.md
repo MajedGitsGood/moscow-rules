@@ -8,8 +8,12 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 - **A Tradecraft rating out of 100 for each side**, worked out from the game record: Kept (your
   agents still loyal and alive), Damage (theirs removed or turned), Intel (their roles you identified)
   and Security (moles missed, loyal agents executed and attackers trapped count against you), 25 each.
-- **Both sides get a fair verdict:** what each did best and where it went wrong, replacing "where you
-  went wrong". The offline analyst writes both too.
+- **Both sides get a fair verdict on their whole game:** the habit that served each best and the one
+  that cost it most, as patterns across the game rather than single weeks, replacing "where you went
+  wrong". The offline analyst writes both too.
+- **An MVP:** the one agent, from either side, who did most to decide the game, in a gold card among
+  the moments. Claude picks and explains; without Claude, the agent with the most kills, traps and
+  turnings to their name.
 - **The debrief's moments are compact cards** with a side-coloured edge, the week and city on one
   line, smaller faces and one action icon (no duplicate icon by the city).
 - Title screen: the agents row reads "Agents" with small 6 · 8 · 10 boxes instead of a hat icon.

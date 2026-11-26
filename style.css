@@ -899,3 +899,13 @@ kbd { font-family: var(--ui); font-size: 9.5px; line-height: 1; padding: 2px 4px
 .seg.seg-size { width: auto; }
 .seg.seg-size .seg-lead { font-family: var(--serif); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--text-dim); padding: 0 12px; }
 .seg.seg-size button { flex: 0 0 auto; min-width: 40px; padding: 6px 8px; }
+
+/* the MVP card among the moments */
+.moment.mvp { border: 1px solid rgba(232,199,122,.55); border-left: 3px solid var(--gold-hi); background: linear-gradient(160deg, rgba(232,199,122,.10), rgba(255,255,255,.02) 60%); }
+.moment.mvp .mo-n { color: var(--gold-hi); letter-spacing: .24em; }
+.mvp-who { display: flex; align-items: center; gap: 12px; }
+.mvp-who .mo-a { width: auto; }
+.mvp-who .mo-r { top: 30px; right: -3px; }
+.mvp-who b { font-size: 15px; }
+.mvp-who small { display: block; font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+.moment.mvp p { -webkit-line-clamp: 3; }
