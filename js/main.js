@@ -114,11 +114,12 @@ async function endWeek() {
       if (app.karlaDown && !was) setTimeout(() => toast(/refus/i.test(app.karlaDown) ? 'Claude declined to play Karla this week, so the offline bot did. Claude is asked again next week.' : `Karla lost his line to Claude (${app.karlaDown}). The offline bot played this week; Claude will be tried again each week.`, 8000), 600);
       if (!app.karlaDown && was) setTimeout(() => toast('Karla is back on Claude.'), 600);
     }
+    if (r.journal) addJournal(g, opp, r.journal);
+    if (r.resign) { surrender(g, opp); setTimeout(() => toast(`${SIDE_LABEL[opp]} has resigned.`, 6000), 300); app.screen = 'debrief'; save(); render(); return; }
     for (const id of r.executions || []) { try { executeAgent(g, opp, id); } catch {} }
     for (const x of r.stances || []) { try { setStance(g, opp, x.id, x.stance); } catch {} }
     if (g.phase === 'over') { app.screen = 'debrief'; save(); render(); return; }
     submitOrders(g, opp, r.orders.filter((o) => g.agents[o.agentId].alive));
-    if (r.journal) addJournal(g, opp, r.journal);
   }
   busy('The night passes');
   await new Promise((res) => setTimeout(res, 900));

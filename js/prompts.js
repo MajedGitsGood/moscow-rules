@@ -45,14 +45,23 @@ surveillance. A Lamplighter's word is certain. Your Scalphunters may prepare fir
 agent's role, act on it: strike their Lamplighters and Talent-spotters, avoid their Ferrets' cities unless you have no choice.
 - Strike when the odds are good, not when they are certain. Lie low only an agent who is being prepared on or hunted.
 - Keep your Talent-spotters pitching every week.
-- Watch for your own agents being turned: reports that contradict each other, strikes and traps that quietly fail, accusations. \
-Vet suspects with a Ferret; execute only on strong evidence. Use British agents you have turned: choose their lies, set their \
+- Hunt your own moles. Each of your agents may carry a loyaltyRecord: how their orders turned out, vetting verdicts and \
+accusations, across the whole game. A loyal agent's strike never "slips away" from a target who was there, its trap catches the \
+attacker on its night, and its pitch always brings a report; only a turned agent's orders quietly fail like that. A Ferret \
+that is itself turned vouches for everyone, so weigh who did the vetting. Do the arithmetic: a mole already counts for \
+Control, so executing one costs you nothing and takes a point from him, while executing a loyal agent costs you one. Execute \
+when you judge an agent more likely turned than loyal; do not wait for certainty while a mole leaks your orders. Vet first \
+only if a loyal Ferret is free to do it this week. Use British agents you have turned: choose their lies, set their \
 standing instructions (let them obey when failing would expose them), and act on what their orders reveal. Feed fake orders where you suspect a British mole is listening.
 - Orders leaked to you by British agents working for you are usually real, but Control may be feeding a mole he suspects: \
 if one of yours is named as a target, protect them unless you suspect bait; reacting to a fake order tells Control which agent is your mole.
 
+- Resign (resign: true) when the game is lost beyond any realistic recovery: count what Control holds against what you could \
+still win in the weeks left (each turning takes three pitches; each kill risks a trap). A master resigns a lost position \
+rather than play it out; until then, fight.
+
 Each week you receive your fog-of-war view. Return up to the allowed orders (agent names exactly as given), any executions of \
-your own agents (usually none), and a private journal entry of 2 to 4 sentences with your real reasoning: Control reads it only after the game.`;
+your own agents, whether you resign, and a private journal entry of 2 to 4 sentences with your real reasoning: Control reads it only after the game.`;
 
 export const KARLA_PLACEMENT = `${WORLD}
 

@@ -2,6 +2,7 @@
 import { newGame, submitOrders, resolveWeek, viewFor, executeAgent, surrender, legalOrders, setStance, validateOrders } from '../js/engine.js';
 import { factsCheck } from '../js/voices.js';
 import { tradecraft } from '../js/analysis.js';
+import { loyaltyRecord } from '../js/controllers/claude.js';
 
 let fails = 0;
 const ok = (cond, msg) => { if (!cond) { fails++; console.error('FAIL', msg); } else console.log('ok  ', msg); };
@@ -25,6 +26,15 @@ const inbox = (g, side) => viewFor(g, side).inbox.map((m) => m.text).join(' | ')
   week(g, [{ agentId: sh.id, type: 'strike', targetId: ll.id }]);
   ok(!ll.alive && sh.alive, 'Scalphunter strikes without preparing');
   ok(!viewFor(g, 'control').intel[ll.id], 'a kill reveals nothing about the dead agent\'s role');
+}
+{ const { g, get } = setup({ control: { lamplighter: 'A' }, karla: { scalphunter: 'A', ferret: 'A' } });
+  const sh = get('karla', 'scalphunter'), ll = get('control', 'lamplighter'), fe = get('karla', 'ferret');
+  for (const a of Object.values(g.agents)) a.history = [{ week: 0, city: a.city }];
+  sh.turnedBy = 'control';
+  week(g, [], [{ agentId: sh.id, type: 'strike', targetId: ll.id }, { agentId: fe.id, type: 'vet', targetId: sh.id }]);
+  const rec = loyaltyRecord(g, 'karla', sh) || [];
+  ok(ll.alive && rec.some((x) => /slipped away/.test(x)) && rec.some((x) => /vetted by .*TURNED/.test(x)), "Karla's loyalty record shows a mole's failed strike and the vet verdict");
+  ok(!loyaltyRecord(g, 'karla', fe), 'a loyal agent with nothing against them has no record');
 }
 { const { g } = setup();
   const fresh = tradecraft(g, 'control');

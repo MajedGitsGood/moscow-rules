@@ -4,6 +4,13 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 
 ## [Unreleased]
 
+### Changed (Karla)
+- **Karla hunts his moles properly:** each of his agents now carries a record of everything that bears
+  on their loyalty across the whole game (a strike that "slipped away", a trap that failed on its
+  night, a pitch that went silently nowhere, vetting verdicts, accusations), and he is told the
+  arithmetic: executing a real mole costs him nothing and takes a point from Control.
+- **Karla can resign** a game that is lost beyond recovery, which ends it and opens the debrief.
+
 ### Changed (the debrief: how each side played)
 - **A Tradecraft rating out of 100 for each side**, worked out from the game record: Kept (your
   agents still loyal and alive), Damage (theirs removed or turned), Intel (their roles you identified)

@@ -4,6 +4,17 @@ Why-this-not-that for this project, newest first. Companion to [CHANGELOG.md](CH
 
 ---
 
+## 2026-11-26: Karla's loyalty record, execution arithmetic, and resigning
+**Decision:** Give Claude, for each of its own agents, a whole-game list of the facts in its own
+records that bear on loyalty; replace "execute only on strong evidence" with the arithmetic (a mole
+already counts for the enemy, so executing one is free) and "execute when more likely turned than
+loyal"; add a resign option for lost positions.
+**Why:** Playtest: Karla, clearly losing, neither resigned nor executed an obvious mole. He only ever
+saw two or three weeks of traffic and was told executions are "usually none". The record lists facts,
+not verdicts, from his own inbox and orders, the same evidence a human player can read.
+**Rejected:** *Telling Karla who is turned* (breaks the fog of war). *A rules-based auto-resign*
+(resigning is a judgement, and Claude explains it in the journal).
+
 ## 2026-11-26: Tradecraft rating from the record; a fair verdict for both sides
 **Decision:** Rate each side's play out of 100 as four parts of 25 (Kept, Damage, Intel, Security),
 computed from the game record, and ask Claude for one thing each side did well and one it got wrong.

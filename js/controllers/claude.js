@@ -9,6 +9,33 @@ import { heuristicOrders, heuristicPlacement } from './heuristic.js';
 
 const label = (k) => ARCHETYPES[k].label;
 
+// Everything in your own records that bears on whether one of your agents still works for you, across
+// the whole game: how their orders turned out, vetting verdicts and accusations. Facts only, no
+// verdict; the rules (WORLD) say what a turned agent's failed orders look like. Positions are public,
+// so where both agents stood that week is fair to use.
+export function loyaltyRecord(game, side, a) {
+  const name = (id) => game.agents[id]?.name;
+  const inbox = game.inbox[side];
+  const at = (x, w) => x.history?.find((h) => h.week === w)?.city;
+  const aliveAt = (x, w) => !x.eliminated || x.eliminated.week > w;
+  const out = [];
+  for (const o of game.orderLog.filter((x) => x.side === side && x.agentId === a.id)) {
+    const w = o.week, t = game.agents[o.targetId], said = inbox.filter((m) => m.week === w + 1 && m.from === a.id);
+    if (o.type === 'strike' && said.some((m) => /slipped away/.test(m.text))) out.push(`wk ${w}: ordered to strike ${name(o.targetId)}; reported the target "slipped away", though they were in ${at(t, w)} and not lying low`);
+    if (o.type === 'approach' && t && at(t, w) === at(a, w) && aliveAt(t, w) && !said.some((m) => m.facts?.approach === t.id || m.facts?.turned === t.id)) out.push(`wk ${w}: pitched ${name(o.targetId)} in ${at(a, w)}; no report came back and the pitch made no progress`);
+    if (o.type === 'trap') {
+      const night = o.when === 'tonight' ? w : w + 1, city = at(a, w);
+      const lost = inbox.filter((m) => m.week === night + 1 && m.kind === 'event' && m.tone === 'loss' && m.city === city && /found dead/.test(m.text));
+      if (lost.length && at(a, night) === city) out.push(`wk ${night}: their trap was due that night in ${city}, yet ${lost.map((m) => m.text.replace(/ was found dead.*/, '')).join(', ')} was killed there and no one was caught`);
+    }
+  }
+  for (const m of inbox) {
+    if (m.facts?.vet === a.id) out.push(`wk ${m.week}: vetted by ${name(m.from)}: ${m.facts.verdict === 'turned' ? 'TURNED' : 'clean'}`);
+    if (m.facts?.accused === a.id) out.push(`wk ${m.week}: ${name(m.from)} accused them of being turned`);
+  }
+  return out.length ? out : undefined;
+}
+
 function summarize(game, view) {
   const name = (id) => game.agents[id]?.name;
   // What each British agent has been seen doing in the last few weeks: certain sightings (a
@@ -39,6 +66,7 @@ function summarize(game, view) {
       preparedStrikeOn: a.prep ? name(a.prep.targetId) : undefined,
       canDo: legalOrders(game, view.side, a.id).map((l) => l.targets ? `${l.type} [${l.targets.map(name).join(', ')}]` : l.when ? `${l.type} [${l.when.join(', ')}]` : l.type),
       ...intelOn(a.id),
+      loyaltyRecord: loyaltyRecord(game, view.side, game.agents[a.id]),
     })),
     yourLosses: view.own.filter((a) => !a.alive).map((a) => `${a.name} (${label(a.archetype)}), ${a.eliminated.how}, wk ${a.eliminated.week}`),
     yourTraps: view.traps.map((t) => `${t.city} (catches ${t.active ? 'tonight' : 'next week'} only)`),
@@ -77,11 +105,12 @@ const ORDER_SCHEMA = {
         additionalProperties: false,
       },
     },
-    execute: { type: 'array', items: { type: 'string' } },
+    execute: { type: 'array', items: { type: 'string' }, description: 'names of your own agents to execute now' },
+    resign: { type: 'boolean', description: 'true only if the game is lost beyond any realistic recovery' },
     instructions: { type: 'array', description: 'Standing instructions for British agents working for you', items: { type: 'object', properties: { agent: { type: 'string' }, stance: { type: 'string', enum: ['obey', 'sabotage'] } }, required: ['agent', 'stance'], additionalProperties: false } },
     journal: { type: 'string' },
   },
-  required: ['orders', 'execute', 'instructions', 'journal'],
+  required: ['orders', 'execute', 'instructions', 'resign', 'journal'],
   additionalProperties: false,
 };
 
@@ -111,7 +140,7 @@ function toOrders(game, side, r) {
   }
   const executions = (r.execute || []).map(byName).filter((a) => a && a.side === side && a.alive).map((a) => a.id);
   const stances = (r.instructions || []).map((x) => ({ id: byName(x.agent)?.id, stance: x.stance })).filter((x) => x.id && game.agents[x.id].turnedBy === side);
-  return { orders: valid, executions, stances };
+  return { orders: valid, executions, stances, resign: r.resign === true };
 }
 
 export async function claudeOrders(game, side, view) {
@@ -124,7 +153,7 @@ export async function claudeOrders(game, side, view) {
   } catch (e) {
     console.warn('Karla fell back to the offline bot:', e.message);
     // Leave a trace in the debrief, so a passive week can be explained.
-    return { orders: heuristicOrders(game, view, game.seed), executions: [], stances: [], journal: `(This week's orders came from the offline bot: ${e.message})`, via: 'bot', error: e.message };
+    return { orders: heuristicOrders(game, view, game.seed), executions: [], stances: [], resign: false, journal: `(This week's orders came from the offline bot: ${e.message})`, via: 'bot', error: e.message };
   }
 }
 
