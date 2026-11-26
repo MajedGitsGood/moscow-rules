@@ -4,6 +4,14 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 
 ## [Unreleased]
 
+### Changed (balance)
+- **6-agent games are more defensive:** each side now has 1 Assassin, 2 Watchers, 2 Counterspies and
+  1 Recruiter (was 2 Assassins and 1 Counterspy). With one blade, most attacks need a week of
+  planning, and turning one Counterspy no longer strips a side of every trap.
+- **Turning takes three approaches** (was two), at every size.
+- **Recruiters can double up:** two Recruiters pitching the same target in one week both count, so a
+  pair can turn someone in two weeks. Blind strikes still always land unless they hit a trap.
+
 ### Changed (contrast and endings)
 - **The map has relief:** the land is shaded like terrain in a muted stone grey, and each side's
   territories are quiet tints. **Hot spots** stand out against it: any territory where something

@@ -269,4 +269,5 @@ Control won 5-0, Karla wiped out by week 8. Why:
 - Bots at 6 agents average ~4 deaths in 12 weeks; this game had 7 in 7. A human picking targets with
   Watcher intel is far deadlier than the bot, so the simulation underrates how fast games collapse.
 **Done:** moles-only ends the game; map contrast; debrief moments as pictures.
-**Open:** balance options for small games (see the reply in session, 2026-11-26).
+**Done (balance):** 6-agent roster flipped to 1 Assassin and 2 Counterspies; turning takes three
+approaches, and two Recruiters on one target in a week both count. Blind strikes stay certain.

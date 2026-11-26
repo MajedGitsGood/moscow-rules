@@ -4,6 +4,18 @@ Why-this-not-that for this project, newest first. Companion to [CHANGELOG.md](CH
 
 ---
 
+## 2026-11-26: Defensive 6-agent rosters; three approaches, and Recruiters can double up
+**Decision:** The 6-agent roster becomes 1 Assassin, 2 Watchers, 2 Counterspies, 1 Recruiter. Turning
+takes three approaches; every approach counts, so two Recruiters on one target in the same week
+both count. Blind strikes keep landing.
+**Why:** Playtest 5 was over by week 8: two Assassins against one Counterspy meant free kills, and once
+that Counterspy was turned no trap worked. Two approaches made recruiting too easy. Three slows small
+games (one Recruiter needs three weeks), while doubling up gives larger games a real tactic.
+In 300 simulated 6-agent games, deaths fall from 4.0 to 2.9 a game; wins stay even.
+**Rejected:** *Blind strikes that can miss* (the user: striking blind is already a gamble against an
+unseen trap). *Three approaches only in small games* (one rule for every size is easier to learn).
+*Keeping the one-pitch-per-week limit* (it made a second Recruiter pointless on a shared target).
+
 ## 2026-11-26: Spymasters in three-quarter view
 **Decision:** Draw both spymasters with bodies turned three-quarters to the player and heads in
 profile facing each other; Smiley double-breasted with a full-length tie, Karla in a belted raincoat.

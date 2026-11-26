@@ -61,7 +61,7 @@ export const ARCHETYPES = {
   scalphunter: { label: 'Scalphunter', short: 'SH', power: 'Can strike without preparing first: no footprints beforehand.' },
   lamplighter: { label: 'Lamplighter', short: 'LL', power: 'The only one who can surveil: learns every role in the city. Sees preparations, traps and surveillance for what they are.' },
   ferret: { label: 'Ferret', short: 'FE', power: 'Can trap the same night. Notices surveillance. Vets your own agents.' },
-  talentspotter: { label: 'Talent-spotter', short: 'TS', power: 'Turns an enemy agent after two approaches, unseen. Cannot kill or set traps.' },
+  talentspotter: { label: 'Talent-spotter', short: 'TS', power: 'Turns an enemy agent after three approaches, unseen; two Talent-spotters can pitch the same target in one week. Cannot kill or set traps.' },
 };
 export const ARCHETYPE_KEYS = Object.keys(ARCHETYPES);
 
@@ -70,7 +70,7 @@ export const RULES = {
   roster: { scalphunter: 2, lamplighter: 3, ferret: 3, talentspotter: 2 }, // the default (10 agents per side)
   maxPerCityAtSetup: 3,
   ordersPerWeek: 5,
-  approachesToTurn: 2,
+  approachesToTurn: 3,     // two Talent-spotters on the same target in one week both count
   noticeChance: 0.5,      // chance a non-Lamplighter witnesses an attack in its city (footprints: TELLS)
   notesPerReport: 3,      // an agent's weekly report carries at most this many observations
   contestedCities: 4,
@@ -97,7 +97,7 @@ export const CONTESTED_FOR_SIZE = { 6: 3, 8: 4, 10: 4 };
 // ...and fewer orders a week, so choosing who acts still matters.
 export const ORDERS_FOR_SIZE = { 6: 4, 8: 5, 10: 5 };
 export const ROSTERS = {
-  6: { scalphunter: 2, lamplighter: 2, ferret: 1, talentspotter: 1 },
+  6: { scalphunter: 1, lamplighter: 2, ferret: 2, talentspotter: 1 }, // defensive: one blade, two Ferrets
   8: { scalphunter: 2, lamplighter: 2, ferret: 2, talentspotter: 2 },
   10: { scalphunter: 2, lamplighter: 3, ferret: 3, talentspotter: 2 },
 };

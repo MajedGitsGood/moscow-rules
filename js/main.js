@@ -35,7 +35,7 @@ const ORDER_HINT = {
   strike: 'Kill the target. Fails, fatally, if they have a trap here.',
   trap: 'Catches anyone who strikes here next week, one night only. Loud while it is set up.',
   trapTonight: 'Ferrets: catches anyone who strikes here tonight, one night only.',
-  approach: 'One of two pitches needed to turn them. Unseen: looks like doing nothing.',
+  approach: 'One of three pitches needed to turn them; two Talent-spotters can pitch together. Unseen: looks like doing nothing.',
   vet: 'Find out if one of ours here is working for them.',
   feed: 'Give a fake order. They do nothing this week, but a mole (them, or one beside them) passes it on as real.',
   lie: 'Decide what this source tells their masters this week.',

@@ -98,11 +98,10 @@ export function heuristicOrders(game, view, seed = 1) {
   for (const a of me.filter((x) => x.archetype === 'talentspotter')) {
     const l = legal(a, 'approach');
     if (!l) continue;
-    const taken = new Set(orders.filter((o) => o.type === 'approach').map((o) => o.targetId)); // one pitch per target a week
-    const open = l.targets.filter((id) => !taken.has(id));
-    if (!open.length) continue;
-    const ongoing = open.find((id) => view.approachProgress[id]);
-    add({ agentId: a.id, type: 'approach', targetId: ongoing || rng.pick(open) });
+    // Double up: a target another Talent-spotter is already pitching this week is the best choice.
+    const doubled = orders.find((o) => o.type === 'approach' && l.targets.includes(o.targetId))?.targetId;
+    const ongoing = l.targets.find((id) => view.approachProgress[id]);
+    add({ agentId: a.id, type: 'approach', targetId: doubled || ongoing || rng.pick(l.targets) });
   }
   // 4b. Feed a suspect a fake preparation on someone beside them: if the target then runs, the suspect is a mole.
   const suspect = me.find((a) => suspects.has(a.id) && !used.has(a.id));

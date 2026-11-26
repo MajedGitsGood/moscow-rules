@@ -19,8 +19,8 @@ Ten agents a side (2 Scalphunters, 3 Lamplighters, 3 Ferrets, 2 Talent-spotters)
   traps and surveillance in its city for what they are, and always witnesses attacks.
 - Ferret: can trap the same night;
   notices surveillance; vets your own agents.
-- Talent-spotter: turns an enemy after two approaches in different weeks (a side's second pitch on the
-  same target in one week doesn't count), never reported; cannot kill or trap.
+- Talent-spotter: turns an enemy after three approaches; two Talent-spotters pitching the same target
+  in one week both count. Never reported; cannot kill or trap.
 
 ## Orders (five a week, one per agent)
 Move, Surveil, Lie low, Prepare (a strike on someone in the same city), Strike, Set trap, Approach,

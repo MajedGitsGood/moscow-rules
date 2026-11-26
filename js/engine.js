@@ -336,17 +336,13 @@ export function resolveWeek(game) {
     if (t.alive && t.city === a.city) a.prep = { targetId: t.id, week: w };
   }
 
-  // 5. Approaches. Two approaches turn the target. Approaches are never reported: the only way to
-  //    catch a mole is to notice it in the traffic. A turned Talent-spotter's pitches quietly go nowhere.
-  const pitched = new Set(); // one approach per target per side per week: two pitches take two weeks
+  // 5. Approaches. RULES.approachesToTurn approaches turn the target, and every approach counts, so two
+  //    Talent-spotters working the same target in one week double the pace. Approaches are never
+  //    reported: the only way to catch a mole is to notice it in the traffic. A turned Talent-spotter's
+  //    pitches quietly go nowhere.
   for (const o of withRng(game, (r) => r.shuffle(of('approach')))) {
     const ts = game.agents[o.agentId], t = game.agents[o.targetId];
     if (!t.alive || t.city !== ts.city || !obeys(game, ts)) continue;
-    if (pitched.has(`${o.side}:${t.id}`)) {
-      send(game, o.side, { kind: 'report', from: ts.id, city: ts.city, text: `One of ours was already with ${t.name} this week. Two of us at once would have scared them off.` });
-      continue;
-    }
-    pitched.add(`${o.side}:${t.id}`);
     if (t.turnedBy === o.side) continue;
     const prev = game.approaches[t.id];
     const rec = prev && prev.side === o.side ? prev : (game.approaches[t.id] = { side: o.side, count: 0 });

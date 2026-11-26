@@ -66,7 +66,9 @@ const inbox = (g, side) => viewFor(g, side).inbox.map((m) => m.text).join(' | ')
   week(g, [{ agentId: ts.id, type: 'approach', targetId: ll.id }]);
   ok(!ll.turnedBy && !/approach|pitch/i.test(inbox(g, 'karla')), 'an approach is never reported to the other side');
   week(g, [{ agentId: ts.id, type: 'approach', targetId: ll.id }]);
-  ok(ll.turnedBy === 'control', 'two approaches turn an agent');
+  ok(!ll.turnedBy, 'two approaches are not yet enough');
+  week(g, [{ agentId: ts.id, type: 'approach', targetId: ll.id }]);
+  ok(ll.turnedBy === 'control', 'three approaches turn an agent');
   ok(viewFor(g, 'control').enemies.find((e) => e.id === ll.id).asset, 'the turning side sees its new asset');
   week(g, [{ agentId: ll.id, type: 'lie', lie: { kind: 'hide' } }], [{ agentId: ll.id, type: 'move', city: 'Moscow' }]);
   ok(inbox(g, 'control').includes("Last week's orders from Karla: go to Moscow"), 'every order to a turned agent leaks');
@@ -138,9 +140,9 @@ const inbox = (g, side) => viewFor(g, side).inbox.map((m) => m.text).join(' | ')
 { const { g, get } = setup({ control: { lamplighter: 'A' }, karla: { talentspotter: 'A', 'talentspotter:1': 'A' } });
   const ll = get('control', 'lamplighter'), t0 = get('karla', 'talentspotter', 0), t1 = get('karla', 'talentspotter', 1);
   week(g, [{ agentId: ll.id, type: 'surveil' }], [{ agentId: t0.id, type: 'approach', targetId: ll.id }, { agentId: t1.id, type: 'approach', targetId: ll.id }]);
-  ok(!ll.turnedBy, 'two Talent-spotters pitching the same agent in one week count once');
+  ok(!ll.turnedBy && g.approaches[ll.id]?.count === 2, 'two Talent-spotters pitching the same agent in one week both count');
   week(g, [], [{ agentId: t0.id, type: 'approach', targetId: ll.id }]);
-  ok(ll.turnedBy === 'karla', 'a second week of approaches turns them');
+  ok(ll.turnedBy === 'karla', 'doubled up, a third approach the next week turns them');
 }
 { const { g, get } = setup();
   const loyalOne = get('control', 'ferret');
