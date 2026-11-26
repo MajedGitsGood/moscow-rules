@@ -55,6 +55,9 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 - The title toggles are glyphs, not words: one or two people for the players, and a hat followed
   by 6 · 8 · 10 for agents a side (each has a tooltip).
 
+- While the other side plays, the wait reads as the night's work ("The KGB's people are on the move"),
+  not as the opponent reading reports.
+
 ### Removed
 - The **Offline bot** choice on the title screen. One player always faces Claude; the bot still
   steps in on its own whenever Claude can't be reached.

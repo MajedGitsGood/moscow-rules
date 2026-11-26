@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Map directions</title>
+<link rel="stylesheet" href="/style.css">
+<style>
+  /* A design mock, not part of the game: the real map with each proposed treatment layered on top. */
+  body { overflow: auto; background: #0b1016; }
+  .page { max-width: 1480px; margin: 0 auto; padding: 32px 24px 64px; }
+  .page h1 { font-family: var(--serif); letter-spacing: .14em; color: var(--gold-hi); font-size: 26px; margin: 0 0 6px; }
+  .page > p { color: var(--text-dim); margin: 0 0 28px; max-width: 70ch; }
+  .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 34px 28px; }
+  @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+  figure { margin: 0; }
+  figure .frame { position: relative; border-radius: 4px; overflow: hidden; background: radial-gradient(ellipse at 40% 45%, #1f3a48 0%, #12232d 45%, #0a141b 85%); box-shadow: 0 10px 30px rgba(0,0,0,.45); }
+  figure svg.map { position: static; display: block; width: 100%; height: auto; }
+  figcaption { margin-top: 10px; }
+  figcaption b { font-family: var(--serif); letter-spacing: .1em; text-transform: uppercase; font-size: 13px; color: var(--text); }
+  figcaption span { display: block; color: var(--text-dim); font-size: 13px; margin-top: 4px; line-height: 1.45; }
+  .tag { display: inline-block; margin-left: 8px; padding: 1px 7px; border-radius: 9px; font: 600 10px/16px var(--ui); letter-spacing: .08em; text-transform: uppercase; background: rgba(201,162,78,.18); color: var(--gold-hi); }
+  .fade-key { display: flex; gap: 14px; margin-top: 8px; font-size: 12px; color: var(--text-dim); }
+  .fade-key i { display: inline-block; width: 22px; height: 3px; border-radius: 2px; background: #c23a2a; vertical-align: middle; margin-right: 6px; }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>MAP DIRECTIONS</h1>
+  <p>The same moment in one game, drawn six ways. Same cities, same agents. The first is today's map; the rest add one treatment at a time, then all together.</p>
+  <div class="grid" id="grid"></div>
+</div>
+<script type="module">
+import { mapBase, mapOverlay, tintCells, cityXY } from '/js/ui/map.js';
+import { MAP } from '/js/mapdata.js';
+import { newGame, viewFor } from '/js/engine.js';
+
+const CITIES = ['London', 'Berlin', 'Vienna', 'Rome', 'Istanbul', 'Moscow', 'Helsinki'];
+// One game state for every panel: agents spread so each city has a clear holder.
+const g = newGame(11, { size: 8 });
+g.cities = CITIES;
+const spots = { control: ['London', 'London', 'Berlin', 'Vienna', 'Vienna', 'Rome', 'Helsinki', 'London'], karla: ['Moscow', 'Moscow', 'Rome', 'Rome', 'Istanbul', 'Istanbul', 'Berlin', 'Vienna'] };
+for (const side of ['control', 'karla']) Object.values(g.agents).filter((a) => a.side === side).forEach((a, i) => { a.city = spots[side][i]; });
+g.placed = { control: true, karla: true }; g.phase = 'orders';
+const view = viewFor(g, 'control');
+const roleOf = (a) => (a.side === 'control' ? { role: a.archetype, sure: true } : null);
+
+const BLUE = '#2f63b8', RED = '#c23a2a';
+const xy = (c) => cityXY(c);
+
+// ---- shared defs for the treatments ----
+const DEFS = `<defs>
+  <filter id="wax" x="-10%" y="-10%" width="120%" height="120%">
+    <feTurbulence type="fractalNoise" baseFrequency=".03" numOctaves="2" seed="3" result="w"/>
+    <feDisplacementMap in="SourceGraphic" in2="w" scale="4" xChannelSelector="R" yChannelSelector="G" result="d"/>
+    <feTurbulence type="fractalNoise" baseFrequency="1.1" numOctaves="1" seed="8" result="g"/>
+    <feColorMatrix in="g" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -1.3 1.75" result="gm"/>
+    <feComposite in="d" in2="gm" operator="in"/>
+  </filter>
+  <pattern id="hatch-us" width="13" height="13" patternUnits="userSpaceOnUse" patternTransform="rotate(38)"><line x1="0" y1="0" x2="0" y2="13" stroke="${BLUE}" stroke-width="2.2" stroke-opacity=".45"/></pattern>
+  <pattern id="hatch-them" width="13" height="13" patternUnits="userSpaceOnUse" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="13" stroke="${RED}" stroke-width="2.2" stroke-opacity=".4"/></pattern>
+  <mask id="waterlines" maskUnits="userSpaceOnUse" x="0" y="0" width="1000" height="640">
+    ${[18, 11, 5].map((d) => `<path d="${MAP.land}" fill="none" stroke="#fff" stroke-width="${2 * d + 1.1}" stroke-linejoin="round"/><path d="${MAP.land}" fill="none" stroke="#000" stroke-width="${2 * d - 1.1}" stroke-linejoin="round"/>`).join('')}
+  </mask>
+  <radialGradient id="lamp" cx="22%" cy="18%" r="85%"><stop offset="0" stop-color="#ffd9a0" stop-opacity=".42"/><stop offset=".45" stop-color="#ffcf8a" stop-opacity=".12"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>
+  <radialGradient id="dark" cx="22%" cy="18%" r="95%"><stop offset=".45" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".5"/></radialGradient>
+  <linearGradient id="foldV" x1="0" x2="1"><stop offset="0" stop-color="#000" stop-opacity="0"/><stop offset=".48" stop-color="#000" stop-opacity=".16"/><stop offset=".5" stop-color="#fff" stop-opacity=".18"/><stop offset=".53" stop-color="#000" stop-opacity="0"/></linearGradient>
+  <linearGradient id="foldH" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#000" stop-opacity="0"/><stop offset=".48" stop-color="#000" stop-opacity=".14"/><stop offset=".5" stop-color="#fff" stop-opacity=".16"/><stop offset=".53" stop-color="#000" stop-opacity="0"/></linearGradient>
+</defs>`;
+
+// ---- direction 1: grease pencil on an acetate overlay ----
+const cellPath = (root, c) => root.querySelector(`.cell[data-city="${c}"]`)?.getAttribute('d');
+function hatching(root, alpha = 1) {
+  const held = { us: ['London', 'Vienna', 'Helsinki'], them: ['Rome', 'Istanbul', 'Moscow'], split: ['Berlin'] };
+  const out = [];
+  for (const c of held.us) out.push(`<path d="${cellPath(root, c)}" fill="url(#hatch-us)"/>`);
+  for (const c of held.them) out.push(`<path d="${cellPath(root, c)}" fill="url(#hatch-them)"/>`);
+  for (const c of held.split) out.push(`<path d="${cellPath(root, c)}" fill="url(#hatch-us)"/><path d="${cellPath(root, c)}" fill="url(#hatch-them)"/>`);
+  return `<g clip-path="url(#land)" filter="url(#wax)" opacity="${alpha}">${out.join('')}</g>`;
+}
+const arrow = (from, to, col, op = 1) => {
+  const [x1, y1] = xy(from), [x2, y2] = xy(to);
+  const mx = (x1 + x2) / 2 + (y2 - y1) * 0.12, my = (y1 + y2) / 2 - Math.abs(x2 - x1) * 0.22 - 14;
+  const ang = Math.atan2(y2 - my, x2 - mx), hx = x2 - Math.cos(ang) * 30, hy = y2 - Math.sin(ang) * 30;
+  const a1 = ang + 2.6, a2 = ang - 2.6;
+  return `<g filter="url(#wax)" opacity="${op}" fill="none" stroke="${col}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M${x1 + 18},${y1 - 12} Q${mx},${my} ${hx},${hy}"/><path d="M${hx + Math.cos(a1) * 15},${hy + Math.sin(a1) * 15} L${hx},${hy} L${hx + Math.cos(a2) * 15},${hy + Math.sin(a2) * 15}"/></g>`;
+};
+const cross = (c, op = 1) => { const [x, y] = xy(c); return `<g filter="url(#wax)" opacity="${op}" stroke="${RED}" stroke-width="6" stroke-linecap="round"><path d="M${x - 24},${y - 26} L${x + 26},${y + 22}"/><path d="M${x + 24},${y - 25} L${x - 22},${y + 25}"/></g>`; };
+const ring = (c, col, op = 1) => { const [x, y] = xy(c); return `<path filter="url(#wax)" opacity="${op}" d="M${x + 30},${y - 8} C${x + 34},${y - 34} ${x - 26},${y - 40} ${x - 34},${y - 6} C${x - 40},${y + 22} ${x + 6},${y + 38} ${x + 30},${y + 22} C${x + 40},${y + 14} ${x + 38},${y - 4} ${x + 26},${y - 14}" fill="none" stroke="${col}" stroke-width="4.6" stroke-linecap="round"/>`; };
+// A death is kept only as a small tick beside the city's name: the record without the clutter.
+const ticks = (c, n) => { const [x, y] = xy(c); const w = c.length * 4.6 + 14; return `<g filter="url(#wax)" stroke="${RED}" stroke-width="3" stroke-linecap="round">${Array.from({ length: n }, (_, i) => `<path d="M${x + w + 2 + i * 6},${y - 46} l2,10"/>`).join('')}</g>`; };
+
+// ---- direction 2: the chart-maker's craft ----
+function chartcraft() {
+  const ticksAlong = [];
+  for (let x = 50; x < 1000; x += 50) ticksAlong.push(`<path d="M${x},10v${x % 100 ? 4 : 7}M${x},630v-${x % 100 ? 4 : 7}"/>`);
+  for (let y = 50; y < 640; y += 50) ticksAlong.push(`<path d="M10,${y}h${y % 100 ? 4 : 7}M990,${y}h-${y % 100 ? 4 : 7}"/>`);
+  const sea = (t, x, y, r = 0, s = 11) => `<text x="${x}" y="${y}" transform="rotate(${r} ${x} ${y})" text-anchor="middle" font-family="Cormorant Garamond, Georgia, serif" font-style="italic" font-size="${s}" letter-spacing="${s * 0.42}" fill="#a9cfe0" fill-opacity=".55">${t}</text>`;
+  return `
+    <rect x="0" y="0" width="1000" height="640" fill="#a9d2e4" fill-opacity=".13" mask="url(#waterlines)"/>
+    <g>${sea('ATLANTIC OCEAN', 120, 330, -72, 13)}${sea('NORTH SEA', 352, 198, -12)}${sea('BALTIC', 532, 192, -62, 10)}${sea('MEDITERRANEAN SEA', 400, 612, 0, 12)}${sea('BLACK SEA', 835, 442, -4)}</g>
+    <g fill="none" stroke="#d8c9a3" stroke-opacity=".5"><rect x="10" y="10" width="980" height="620" stroke-width="1"/><rect x="5" y="5" width="990" height="630" stroke-width=".6"/></g>
+    <g stroke="#d8c9a3" stroke-opacity=".45" stroke-width=".8">${ticksAlong.join('')}</g>
+    <g transform="translate(36,600)" font-family="Cormorant Garamond, Georgia, serif" font-size="9" fill="#d8c9a3" fill-opacity=".7">
+      <rect width="40" height="4" fill="#d8c9a3" fill-opacity=".75"/><rect x="40" width="40" height="4" fill="none" stroke="#d8c9a3" stroke-opacity=".75" stroke-width=".8"/><rect x="80" width="40" height="4" fill="#d8c9a3" fill-opacity=".75"/>
+      <text y="-5">0</text><text x="40" y="-5" text-anchor="middle">250</text><text x="120" y="-5" text-anchor="middle">750 km</text></g>
+    <g transform="translate(930,52) rotate(-8)" font-family="Cormorant Garamond, Georgia, serif" font-weight="700" fill="none">
+      <rect x="-50" y="-16" width="100" height="28" stroke="#b5463c" stroke-opacity=".6" stroke-width="1.6"/><text y="4" text-anchor="middle" font-size="15" letter-spacing="4" fill="#b5463c" fill-opacity=".62">SECRET</text></g>`;
+}
+
+// ---- direction 3: one light source, a folded sheet ----
+const desk = () => `<g pointer-events="none"><rect width="1000" height="640" fill="url(#lamp)" style="mix-blend-mode:soft-light"/><rect width="1000" height="640" fill="url(#lamp)" opacity=".5"/>
+  <rect width="1000" height="640" fill="url(#dark)"/>
+  <rect x="488" y="0" width="24" height="640" fill="url(#foldV)"/><rect x="0" y="308" width="1000" height="24" fill="url(#foldH)"/></g>`;
+
+// ---- the panels ----
+const week3 = (root) => hatching(root) + arrow('London', 'Berlin', BLUE) + ring('Vienna', BLUE) + cross('Rome');
+const week10 = (root) => hatching(root) + arrow('Berlin', 'Vienna', BLUE, 0.28) + ring('Rome', BLUE, 0.28) + cross('Istanbul') + arrow('Moscow', 'Helsinki', RED) + ticks('Rome', 2) + ticks('London', 1) + ticks('Berlin', 1);
+const PANELS = [
+  { title: 'Today', note: 'The current paper map: flat territory tints, medallions and tokens.', today: true },
+  { title: 'Grease pencil, week 3', tag: 'direction 1', note: 'Wax pencil on clear film over the map. Territory as loose hatching instead of flat colour; a move drawn by hand; a trap ringed; a death crossed out.', over: week3 },
+  { title: 'Grease pencil, week 10: staying calm', tag: 'direction 1', note: 'Marks live two weeks: bold the week they happen, faint the next, then wiped off. A death leaves only a small red tick beside the city name, so the record builds up without the clutter.', over: week10, key: true },
+  { title: "Chart-maker's craft", tag: 'direction 2', note: 'Single-colour engraving details: ripple lines tracing out from the coasts, sea names in spaced italics, a ticked border, a scale bar and a margin stamp.', under: chartcraft },
+  { title: 'One light source', tag: 'direction 3', note: 'A desk lamp falling across the sheet from the top left in place of the even vignette, and the faint creases of a map that has been folded and carried.', top: desk },
+  { title: 'All together, week 10', tag: 'combined', note: "Chart craft underneath, grease pencil over it, the lamp on top.", under: chartcraft, over: week10, top: desk },
+];
+
+const grid = document.getElementById('grid');
+const only = new URLSearchParams(location.search).get('p');
+if (only) grid.style.gridTemplateColumns = '1fr';
+for (const [i, p] of PANELS.entries()) {
+  if (only && String(i + 1) !== only) continue;
+  const fig = document.createElement('figure');
+  fig.innerHTML = `<div class="frame ${p.today ? '' : 'mock'}"><svg class="map" viewBox="0 0 1000 640">${DEFS}${mapBase(CITIES)}<g class="under"></g><g id="overlay">${mapOverlay({ view, selected: null, orders: [], roleOf })}</g><g class="over"></g><g class="top"></g></svg></div>
+    <figcaption><b>${p.title}</b>${p.tag ? `<em class="tag">${p.tag}</em>` : ''}<span>${p.note}</span>${p.key ? '<div class="fade-key"><span><i></i>this week</span><span><i style="opacity:.3"></i>last week</span><span><i style="opacity:0;border:1px dashed #555"></i>older: wiped</span></div>' : ''}</figcaption>`;
+  grid.appendChild(fig);
+  const svg = fig.querySelector('svg');
+  tintCells(svg, view);
+  if (!p.today && p.over) svg.querySelectorAll('.cell').forEach((c) => { c.style.fill = 'transparent'; }); // the hatching replaces the flat tints
+  // Water lines and sea names sit under the land, so they only show at sea.
+  if (p.under) svg.querySelector('.graticule').insertAdjacentHTML('afterend', p.under());
+  if (p.over) svg.querySelector('.over').innerHTML = p.over(svg);
+  if (p.top) svg.querySelector('.top').innerHTML = p.top();
+}
+</script>
+</body>
+</html>
