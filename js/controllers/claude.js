@@ -22,7 +22,7 @@ export function loyaltyRecord(game, side, a) {
   for (const o of game.orderLog.filter((x) => x.side === side && x.agentId === a.id)) {
     const w = o.week, t = game.agents[o.targetId], said = inbox.filter((m) => m.week === w + 1 && m.from === a.id);
     if (o.type === 'strike' && said.some((m) => /slipped away/.test(m.text))) out.push(`wk ${w}: ordered to strike ${name(o.targetId)}; reported the target "slipped away", though they were in ${at(t, w)} and not lying low`);
-    if (o.type === 'approach' && t && at(t, w) === at(a, w) && aliveAt(t, w) && !said.some((m) => m.facts?.approach === t.id || m.facts?.turned === t.id)) out.push(`wk ${w}: pitched ${name(o.targetId)} in ${at(a, w)}; no report came back and the pitch made no progress`);
+    if (o.type === 'approach' && t && at(t, w) === at(a, w) && aliveAt(t, w) && aliveAt(a, w) && !said.some((m) => m.facts?.approach === t.id || m.facts?.turned === t.id)) out.push(`wk ${w}: pitched ${name(o.targetId)} in ${at(a, w)}; no report came back and the pitch made no progress`);
     if (o.type === 'trap') {
       const night = o.when === 'tonight' ? w : w + 1, city = at(a, w);
       const lost = inbox.filter((m) => m.week === night + 1 && m.kind === 'event' && m.tone === 'loss' && m.city === city && /found dead/.test(m.text));
