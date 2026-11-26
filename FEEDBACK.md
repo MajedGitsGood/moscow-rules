@@ -271,3 +271,9 @@ Control won 5-0, Karla wiped out by week 8. Why:
 **Done:** moles-only ends the game; map contrast; debrief moments as pictures.
 **Done (balance):** 6-agent roster flipped to 1 Assassin and 2 Counterspies; turning takes three
 approaches, and two Recruiters on one target in a week both count. Blind strikes stay certain.
+
+## Parked ideas
+- **Your record across games** (2026-11-26): a page that reads several saved case files and shows
+  the player's habits, what they notice and miss, their Tradecraft trend (Kept, Damage, Intel,
+  Security) and how Claude exploits them. Wanted, but parked until we're ready to think about storage
+  and scale; for now the analysis can be done by hand from case files.
