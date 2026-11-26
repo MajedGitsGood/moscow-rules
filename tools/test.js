@@ -1,6 +1,7 @@
 // v2 rule checks.   node tools/test.js
 import { newGame, submitOrders, resolveWeek, viewFor, executeAgent, surrender, legalOrders, setStance, validateOrders } from '../js/engine.js';
 import { factsCheck } from '../js/voices.js';
+import { tradecraft } from '../js/analysis.js';
 
 let fails = 0;
 const ok = (cond, msg) => { if (!cond) { fails++; console.error('FAIL', msg); } else console.log('ok  ', msg); };
@@ -24,6 +25,14 @@ const inbox = (g, side) => viewFor(g, side).inbox.map((m) => m.text).join(' | ')
   week(g, [{ agentId: sh.id, type: 'strike', targetId: ll.id }]);
   ok(!ll.alive && sh.alive, 'Scalphunter strikes without preparing');
   ok(!viewFor(g, 'control').intel[ll.id], 'a kill reveals nothing about the dead agent\'s role');
+}
+{ const { g } = setup();
+  const fresh = tradecraft(g, 'control');
+  ok(fresh.parts.kept === 25 && fresh.parts.damage === 0 && fresh.parts.security === 25 && fresh.score === 50, 'tradecraft: a fresh network keeps 25, does 0 damage, loses no security');
+  const k = Object.values(g.agents).find((a) => a.side === 'karla'); k.alive = false;
+  const c = Object.values(g.agents).find((a) => a.side === 'control'); c.turnedBy = 'karla';
+  const t = tradecraft(g, 'control');
+  ok(t.parts.damage > 0 && t.parts.kept < 25 && t.parts.security < 25 && t.score === Object.values(t.parts).reduce((x, y) => x + y, 0), 'tradecraft: kills add damage; an undetected mole costs kept and security');
 }
 { const { g } = setup();
   const ks = Object.values(g.agents).filter((a) => a.side === 'karla');

@@ -27,6 +27,28 @@ export function standingAt(game, w) {
 const cityAt = (a, w) => { let c = a.history[0]?.city; for (const h of a.history) if (h.week <= w) c = h.city; return c; };
 
 // Facts the rules can see on their own: recruitments, ignored warnings, undefended targets, executions.
+// Tradecraft: a 0-100 rating of how a side played, from the record alone (never from Claude), so it
+// is the same every time and can be checked. Four parts of 25:
+//   kept      your agents still loyal and alive at the end
+//   damage    their agents you removed, or turned and kept
+//   intel     their roles you had correctly identified by the end
+//   security  moles you missed, loyal agents you executed, and attackers you lost to traps count against you
+export function tradecraft(game, side) {
+  const all = Object.values(game.agents), mine = all.filter((a) => a.side === side), theirs = all.filter((a) => a.side !== side);
+  const n = mine.length || 1, m = theirs.length || 1;
+  const clamp = (x) => Math.max(0, Math.min(1, x));
+  const kept = mine.filter((a) => a.alive && !a.turnedBy).length / n;
+  const damage = clamp(theirs.filter((a) => !a.alive || a.turnedBy === side).length / m);
+  const intel = theirs.filter((a) => (game.intel[side]?.[a.id]?.roles || []).some((r) => r.archetype === a.archetype)).length / m;
+  const missed = mine.filter((a) => a.turnedBy && a.alive).length;
+  const framed = mine.filter((a) => a.eliminated?.how === 'executed' && !a.turnedBy).length;
+  const trapped = mine.filter((a) => a.eliminated?.how === 'trapped').length;
+  const security = clamp(1 - (missed + framed + 0.5 * trapped) / n);
+  const parts = { kept, damage, intel, security };
+  for (const k in parts) parts[k] = Math.round(parts[k] * 25);
+  return { score: parts.kept + parts.damage + parts.intel + parts.security, parts };
+}
+
 export function findMoments(game) {
   const moments = [];
   const last = lastWeek(game);
@@ -139,10 +161,10 @@ const SCHEMA = {
         additionalProperties: false,
       },
     },
-    lessons: {
+    play: {
       type: 'object',
-      description: "for each side, the strategic lapse that ran through its game and how it should have played instead",
-      properties: { control: { type: 'string' }, karla: { type: 'string' } },
+      description: 'for each side, what it did well and where it went wrong across its whole game',
+      properties: Object.fromEntries(['control', 'karla'].map((k) => [k, { type: 'object', properties: { good: { type: 'string' }, bad: { type: 'string' } }, required: ['good', 'bad'], additionalProperties: false }])),
       required: ['control', 'karla'],
       additionalProperties: false,
     },
@@ -159,7 +181,7 @@ const SCHEMA = {
       additionalProperties: false,
     },
   },
-  required: ['headline', 'summary', 'moments', 'pivotal', 'lessons'],
+  required: ['headline', 'summary', 'moments', 'pivotal', 'play'],
   additionalProperties: false,
 };
 
@@ -178,6 +200,21 @@ function lessonFor(game, side) {
   return 'No single lapse stands out; the margin came from small exchanges.';
 }
 
+// Offline: what a side did best, by simple counts.
+function strengthFor(game, side) {
+  const theirs = Object.values(game.agents).filter((a) => a.side !== side);
+  const turned = theirs.filter((a) => a.turnedBy === side).length;
+  const caught = theirs.filter((a) => a.eliminated?.how === 'trapped').length;
+  const killed = theirs.filter((a) => a.eliminated?.by === side && a.eliminated?.how === 'killed').length;
+  const t = tradecraft(game, side).parts;
+  if (turned >= 2) return `${turned} of their agents were turned and run as moles.`;
+  if (caught) return `${caught} of their attackers walked into your traps.`;
+  if (killed >= 2) return `${killed} of their agents were removed by your strikes.`;
+  if (t.intel >= 15) return 'You identified most of their network by the end.';
+  if (t.kept >= 15) return 'You kept most of your network alive and loyal.';
+  return 'Nothing stood out; you held on without a clear advantage.';
+}
+
 function fallbackStory(game, found) {
   const o = game.outcome, s = o.score;
   const lead = o.winner ? `${SIDE_LABEL[o.winner]} finished with ${s[o.winner].standing} agents working for them to ${s[other(o.winner)].standing}.` : `Both sides finished with ${s.control.standing} agents working for them.`;
@@ -188,7 +225,7 @@ function fallbackStory(game, found) {
     summary: `${lead} ${recruits} turned, ${mistakes} avoidable loss${mistakes === 1 ? '' : 'es'}.`,
     moments: found.moments.slice(0, 10),
     pivotal: found.pivotal,
-    lessons: { control: lessonFor(game, 'control'), karla: lessonFor(game, 'karla') },
+    play: Object.fromEntries(SIDES.map((side) => [side, { good: strengthFor(game, side), bad: lessonFor(game, side) }])),
     via: 'rules',
   };
 }
@@ -201,7 +238,7 @@ export async function analyze(game) {
     const okCity = (c) => game.cities.find((x) => x.toLowerCase() === String(c).toLowerCase());
     const moments = r.moments.filter((m) => m.week >= 1 && m.week <= last).map((m) => ({ ...m, city: okCity(m.city) || null })).slice(0, 10);
     const pivotal = { ...r.pivotal, week: Math.min(Math.max(1, r.pivotal.week), last), city: okCity(r.pivotal.city) || found.pivotal.city };
-    return { headline: r.headline, summary: r.summary, moments, pivotal, lessons: r.lessons, via: 'claude' };
+    return { headline: r.headline, summary: r.summary, moments, pivotal, play: r.play, via: 'claude' };
   } catch (e) {
     if (!(e instanceof LLMUnavailable)) console.warn('debrief analysis fell back:', e.message);
     return fallbackStory(game, found);

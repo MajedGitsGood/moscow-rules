@@ -4,6 +4,16 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 
 ## [Unreleased]
 
+### Changed (the debrief: how each side played)
+- **A Tradecraft rating out of 100 for each side**, worked out from the game record: Kept (your
+  agents still loyal and alive), Damage (theirs removed or turned), Intel (their roles you identified)
+  and Security (moles missed, loyal agents executed and attackers trapped count against you), 25 each.
+- **Both sides get a fair verdict:** what each did best and where it went wrong, replacing "where you
+  went wrong". The offline analyst writes both too.
+- **The debrief's moments are compact cards** with a side-coloured edge, the week and city on one
+  line, smaller faces and one action icon (no duplicate icon by the city).
+- Title screen: the agents row reads "Agents" with small 6 · 8 · 10 boxes instead of a hat icon.
+
 ### Changed (the morning)
 - **Each morning plays out on the map before the reports:** agents who moved slide in, the desk
   lamp narrows and swings to each city where something happened overnight, then up to three

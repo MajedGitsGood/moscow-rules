@@ -82,9 +82,10 @@ Check the receiver's orders that week (or the next) to show they really acted on
 a title under 8 words, the receiver, the source, told (what the receiver was told, under 15 words, paraphrased), did (what the \
 receiver ordered because of it, under 12 words), result (under 12 words), and which side it favoured.
 
-- lessons: for each side (control, karla), the one strategic lapse that ran through its whole game, not a single \
-moment, and how it should have played instead. Concrete (name agents, cities, weeks), at most two sentences and 40 words each. \
-Write to the player as a senior officer would: frank, unsentimental.
+- play: for each side (control, karla), how it played across the whole game, not a single moment: good, the one thing it \
+did best and why it worked; bad, the one strategic lapse that ran through its game and how it should have played instead. \
+Concrete (name agents, cities, weeks), one or two sentences and at most 35 words each. Write to the player as a senior \
+officer would: frank, unsentimental, fair to both sides.
 
 Use only facts in the record. Plain, dry prose; name agents by surname.`;
 

@@ -856,3 +856,46 @@ kbd { font-family: var(--ui); font-size: 9.5px; line-height: 1; padding: 2px 4px
 .slip .caret { display: inline-block; width: 7px; height: 12px; margin-left: 1px; background: #2b2418; vertical-align: -1px; }
 .msg.landed { animation: landed 4s ease-out both; }
 @keyframes landed { 0%, 55% { box-shadow: 0 0 0 2px rgba(242,211,107,.6); } 100% { box-shadow: 0 0 0 2px rgba(242,211,107,0); } }
+
+/* ---------- debrief moments as compact cards ---------- */
+.moments { gap: 12px; }
+.moment { flex-direction: column; gap: 7px; padding: 11px 13px 12px; border: 1px solid rgba(201,162,78,.14); border-left: 3px solid var(--gold); border-radius: 4px; background: rgba(255,255,255,.022); }
+.moment.control { border-left-color: #8fb6e6; } .moment.karla { border-left-color: #ee8c82; }
+.mo-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.moment .mo-n { all: unset; font-family: var(--serif); font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--gold-hi); }
+.moment.control .mo-n, .moment.karla .mo-n, .moment.both .mo-n { background: none; }
+.moment.control .mo-n { color: #8fb6e6; } .moment.karla .mo-n { color: #ee8c82; }
+.mo-city { font-size: 11px; letter-spacing: .06em; color: var(--text-dim); }
+.mo-cast { margin: 0; gap: 4px; }
+.mo-a { width: 44px; }
+.mo-a small { margin-top: 3px; font-size: 10.5px; }
+.mo-a.died small { text-decoration: none; }
+.mo-r { top: 21px; right: 1px; width: 17px; height: 17px; }
+.mo-r .ico { width: 11px; height: 11px; }
+.mo-x { margin-top: -12px; width: 18px; }
+.mo-x .ico { width: 16px; height: 16px; }
+.moment b { font-size: 14px; }
+.moment p { margin: 0; font-size: 12.5px; }
+
+/* ---------- how each side played: rating, its parts, did well / went wrong ---------- */
+.assess { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(201,162,78,.14); }
+.as-side { padding: 14px 16px; border: 1px solid rgba(201,162,78,.14); border-top: 3px solid var(--control); border-radius: 4px; background: rgba(255,255,255,.022); display: flex; flex-direction: column; gap: 10px; }
+.as-side.karla { border-top-color: var(--karla); }
+.as-top { display: flex; align-items: center; justify-content: space-between; }
+.as-top h3 { margin: 0; font-family: var(--serif); font-size: 13px; letter-spacing: .16em; text-transform: uppercase; color: #8fb6e6; }
+.as-side.karla h3 { color: #ee8c82; }
+.as-score { display: flex; align-items: baseline; gap: 2px; }
+.as-score b { font-family: var(--serif); font-size: 34px; line-height: 1; color: var(--gold-hi); }
+.as-score small { font-size: 12px; color: var(--text-dim); }
+.as-parts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.as-part { display: grid; grid-template-columns: 1fr auto; row-gap: 4px; font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--text-dim); }
+.as-part i { grid-column: 1 / -1; height: 4px; border-radius: 2px; background: linear-gradient(90deg, var(--gold) calc(var(--v) * 100%), rgba(255,255,255,.08) 0); }
+.as-part em { font-style: normal; color: var(--text); }
+.as-good, .as-bad { margin: 0; display: grid; grid-template-columns: 18px 1fr; gap: 6px; font-family: var(--type); font-size: 14px; line-height: 1.5; color: var(--text); }
+.as-good .ico, .as-bad .ico { width: 16px; height: 16px; margin-top: 3px; }
+.as-good .ico { color: var(--ok); } .as-bad .ico { color: #ef8a80; }
+
+/* agents row: a word naming the row, then small number boxes */
+.seg.seg-size { width: auto; }
+.seg.seg-size .seg-lead { font-family: var(--serif); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--text-dim); padding: 0 12px; }
+.seg.seg-size button { flex: 0 0 auto; min-width: 40px; padding: 6px 8px; }

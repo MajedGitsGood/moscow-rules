@@ -184,10 +184,9 @@ const roleTag = (ri, cls = '') => ri.role ? `<span class="rtag r-${ri.role} ${ri
 const PREFS = 'mr-prefs';
 let prefs = (() => { try { return { players: '1', size: '10', ...JSON.parse(localStorage.getItem(PREFS) || '{}') }; } catch { return { players: '1', size: '10' }; } })();
 // A row of choices; `lead` is an icon naming the row, so the buttons themselves stay one word or one glyph.
-const seg = (key, opts, { lead = '', name = '' } = {}) => `<div class="seg ${lead ? 'has-lead' : ''}" role="radiogroup" aria-label="${name}">${lead ? `<span class="seg-lead" title="${name}">${lead}</span>` : ''}${opts.map(([v, label, tip]) => `<button role="radio" aria-checked="${prefs[key] === v}" class="${prefs[key] === v ? 'on' : ''}" data-act="pref" data-key="${key}" data-val="${v}" ${tip ? `title="${tip}" aria-label="${tip}"` : ''}>${label}</button>`).join('')}</div>`;
+const seg = (key, opts, { lead = '', name = '', cls = '' } = {}) => `<div class="seg ${lead ? 'has-lead' : ''} ${cls}" role="radiogroup" aria-label="${name}">${lead ? `<span class="seg-lead" title="${name}">${lead}</span>` : ''}${opts.map(([v, label, tip]) => `<button role="radio" aria-checked="${prefs[key] === v}" class="${prefs[key] === v ? 'on' : ''}" data-act="pref" data-key="${key}" data-val="${v}" ${tip ? `title="${tip}" aria-label="${tip}"` : ''}>${label}</button>`).join('')}</div>`;
 const PERSON = '<svg class="ico" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M5 20c.6-4.4 3.3-6.8 7-6.8s6.4 2.4 7 6.8z"/></svg>';
 const PERSONS = '<svg class="ico wide" viewBox="0 0 36 24" fill="currentColor" aria-hidden="true"><circle cx="11" cy="8" r="3.6"/><path d="M4 20c.6-4.4 3.3-6.8 7-6.8s6.4 2.4 7 6.8z"/><circle cx="25" cy="8" r="3.6"/><path d="M18 20c.6-4.4 3.3-6.8 7-6.8s6.4 2.4 7 6.8z"/></svg>';
-const AGENTS = '<svg class="ico" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 15.5c3 1.6 15 1.6 18 0-1 1.9-17 1.9-18 0z"/><path d="M6.5 15c0-5 2-8 5.5-8s5.5 3 5.5 8c-3.5.9-7.5.9-11 0z"/></svg>';
 
 function titleScreen() {
   const saved = load();
@@ -199,7 +198,7 @@ function titleScreen() {
       <p class="tagline">Your best agent may already be theirs.</p>
       <div class="setup-opts">
         ${seg('players', [['1', PERSON, `One player, against ${label('Karla', 'Claude')}`], ['2', PERSONS, 'Two players on one device']], { name: 'Players' })}
-        ${seg('size', [['6', '6', '6 agents a side'], ['8', '8', '8 agents a side'], ['10', '10', '10 agents a side']], { lead: AGENTS, name: 'Agents a side' })}
+        ${seg('size', [['6', '6', '6 agents a side'], ['8', '8', '8 agents a side'], ['10', '10', '10 agents a side']], { lead: 'Agents', name: 'Agents a side', cls: 'seg-size' })}
       </div>
       ${prefs.players === '2' ? '<small class="opt-note">Hot-seat: pass the device between turns</small>' : !st.llm ? '<small class="opt-note">Claude is offline: the bot will play</small>' : ''}
       <button class="btn gold begin" data-act="new">Begin</button>
@@ -514,7 +513,7 @@ let analyzing = false;
 function debriefScreen() {
   // The analyst runs once per game; the page shows the facts at once and the story when it's ready.
   // A story saved in the older shape (pivotal without an exchange) is redone.
-  if (app.story && (!('receiver' in (app.story.pivotal || {})) || !app.story.lessons)) app.story = null;
+  if (app.story && (!('receiver' in (app.story.pivotal || {})) || !(app.story.play || app.story.lessons))) app.story = null;
   // A game finished under the old scoring is re-scored, and its story rewritten to match.
   if (app.game.outcome && !('recruited' in app.game.outcome.score.control)) { rescore(app.game); app.story = null; save(); }
   if (!app.story && !analyzing) {

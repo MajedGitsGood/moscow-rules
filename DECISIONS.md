@@ -4,6 +4,16 @@ Why-this-not-that for this project, newest first. Companion to [CHANGELOG.md](CH
 
 ---
 
+## 2026-11-26: Tradecraft rating from the record; a fair verdict for both sides
+**Decision:** Rate each side's play out of 100 as four parts of 25 (Kept, Damage, Intel, Security),
+computed from the game record, and ask Claude for one thing each side did well and one it got wrong.
+**Why:** The debrief is the Chess.com-style payoff: players want feedback on how to play better, and a
+number to beat. Computing the rating keeps it consistent and checkable (Claude never states facts),
+while Claude does what it's good at: the judgement in words. Only lapses felt like a scolding.
+**Rejected:** *Claude scoring each side* (unrepeatable, and a number presented as fact). *Per-move
+accuracy like chess engines* (no engine evaluation of positions to compare against). *Win/loss margin
+as the score* (says nothing about how a losing side played).
+
 ## 2026-11-26: The morning as lamp, telegrams, then Reports
 **Decision:** Replace the morning's pulses and flashes with a sequence: the desk lamp swings to each
 city where something happened, the night's main events type out as telegram slips, and the slips

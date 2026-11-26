@@ -5,7 +5,7 @@ import { SIDES, SIDE_LABEL, ARCHETYPES } from '../world.js';
 import { mapBase, cityXY, MAP_SIZE } from './map.js';
 import { portrait, portraitBody } from './portraits.js';
 import { ROLE_ICON, ORDER_ICON, UI_ICON, sized } from './icons.js';
-import { standingAt, lastWeek } from '../analysis.js';
+import { standingAt, lastWeek, tradecraft } from '../analysis.js';
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const role = (k) => ARCHETYPES[k].label;
@@ -69,7 +69,7 @@ function cast(game, m) {
     const died = a.eliminated?.week === m.week;
     const mole = a.turnedBy && a.turnedWeek && a.turnedWeek <= m.week;
     return `<span class="mo-a ${a.side} ${died ? 'died' : ''}" title="${esc(`${a.first} ${a.name}, ${role(a.archetype)}${mole ? `, working for ${SIDE_LABEL[a.turnedBy]}` : ''}${died ? ', died this week' : ''}`)}">
-      ${portrait(a, { size: 40, mood: died ? 'dead' : null })}<i class="mo-r r-${a.archetype}">${ROLE_ICON[a.archetype]}</i>${mole ? '<i class="mo-m">M</i>' : ''}<small>${esc(a.name)}</small></span>`;
+      ${portrait(a, { size: 34, mood: died ? 'dead' : null })}<i class="mo-r r-${a.archetype}">${ROLE_ICON[a.archetype]}</i>${mole ? '<i class="mo-m">M</i>' : ''}<small>${esc(a.name)}</small></span>`;
   };
   const act = `<span class="mo-x">${KIND[m.kind]?.icon || ''}</span>`;
   return `<div class="mo-cast">${face(who[0])}${who.length > 1 ? act + who.slice(1).map(face).join('') : ''}</div>`;
@@ -80,14 +80,27 @@ function moments(story, game) {
   // Fill column by column, so the numbers run left to right like the weeks on the chart above.
   const rows = story.moments.length <= 4 ? 2 : 3;
   return `<ol class="moments" style="--rows:${rows}">${story.moments.map((m, i) => `<li class="moment ${m.side} ${m.kind}" data-pin="${i + 1}" title="${esc(KIND[m.kind]?.label || m.kind)}">
-    <span class="mo-n"><small>wk</small>${m.week}</span>
-    <div>${cast(game, m)}<b>${esc(m.title)}</b><span class="mo-when">${KIND[m.kind]?.icon || ''}${m.city ? esc(m.city) : ''}</span><p title="${esc(m.detail)}">${esc(m.detail)}</p></div></li>`).join('')}</ol>`;
+    <div class="mo-head"><span class="mo-n">Wk ${m.week}</span>${m.city ? `<span class="mo-city">${esc(m.city)}</span>` : ''}</div>
+    ${cast(game, m)}<b>${esc(m.title)}</b><p title="${esc(m.detail)}">${esc(m.detail)}</p></li>`).join('')}</ol>`;
 }
 
 // Below the moments: each side's lapse across the whole game, and how it should have played.
-function lessons(story) {
-  if (!story?.lessons) return '';
-  return `<div class="lessons">${SIDES.map((s) => `<div class="lesson ${s}"><h3>Where ${SIDE_LABEL[s]} went wrong</h3><p>${esc(story.lessons[s])}</p></div>`).join('')}</div>`;
+// How each side played: a Tradecraft rating out of 100 from the record (analysis.js), its four parts,
+// and Claude's verdict on what the side did best and where it went wrong.
+const CHECK = '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+const PARTS = [['kept', 'Kept'], ['damage', 'Damage'], ['intel', 'Intel'], ['security', 'Security']];
+const PART_TIP = { kept: 'Your agents still loyal and alive', damage: 'Their agents removed, or turned and kept', intel: 'Their roles you identified correctly', security: 'Moles missed, loyal agents executed and attackers trapped count against this' };
+function assessment(game, story) {
+  if (!story) return '';
+  const play = story.play || (story.lessons && Object.fromEntries(SIDES.map((s) => [s, { bad: story.lessons[s] }]))); // older saves had lessons only
+  return `<div class="assess">${SIDES.map((s) => {
+    const t = tradecraft(game, s), p = play?.[s] || {};
+    return `<div class="as-side ${s}">
+      <div class="as-top"><h3>${SIDE_LABEL[s]}</h3><div class="as-score" title="Tradecraft, out of 100"><b>${t.score}</b><small>/100</small></div></div>
+      <div class="as-parts">${PARTS.map(([k, l]) => `<div class="as-part" title="${PART_TIP[k]}"><span>${l}</span><i style="--v:${t.parts[k] / 25}"></i><em>${t.parts[k]}</em></div>`).join('')}</div>
+      ${p.good ? `<p class="as-good">${CHECK}${esc(p.good)}</p>` : ''}
+      ${p.bad ? `<p class="as-bad">${UI_ICON.close}${esc(p.bad)}</p>` : ''}</div>`;
+  }).join('')}</div>`;
 }
 
 // The pivotal battleground: that week's map around the city, with the true picture in the spotlight.
@@ -166,7 +179,7 @@ export function debriefHTML(game, story, { mood = 'even', reveal = false } = {})
       <div class="db-score">${SIDES.map((s) => { const x = o.score[s]; return `<div class="${s}"><span>${x.standing}</span><b>${SIDE_LABEL[s]}</b>
         <small class="sum-line">${x.loyal ?? x.standing} own${x.recruited ? ` + ${x.recruited} turned` : ''}</small></div>`; }).join('<i>vs</i>')}</div>
     </header>
-    <section class="db2-card"><h2>How it unfolded</h2>${storyChart(game, story, last)}${moments(story, game)}${lessons(story)}</section>
+    <section class="db2-card"><h2>How it unfolded</h2>${storyChart(game, story, last)}${moments(story, game)}${assessment(game, story)}</section>
     ${battleground(game, story)}
     ${rosters(game)}
     ${story?.via === 'rules' ? '<p class="db-note">Rules-engine analysis. <button class="link" data-act="reanalyze">Ask the analyst</button></p>' : ''}
