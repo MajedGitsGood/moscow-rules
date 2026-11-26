@@ -75,44 +75,27 @@ export function portraitBody(agent, mood = null) {
   return out;
 }
 
-// The two spymasters on the title screen: bodies turned three-quarters to the player, heads in profile
-// facing each other across the page. Control (Smiley) looks right: gold spectacles, a double-breasted
-// suit with a full-length tie. Karla looks left: a plain belted raincoat with the collar up, a cigarette
-// with smoke rising, and a gold lighter poking out of his hip pocket (the hidden switch into Smiley mode).
+// The two spymasters on the title screen, in as few lines as possible: one unbroken silhouette each
+// (head, neck and body in a single outline, so the neck always meets the collar), bodies turned
+// three-quarters to the player, heads in profile facing each other. Control (Smiley) looks right:
+// gold spectacles, lapels and a full-length tie. Karla looks left: collar up, a cigarette with smoke
+// rising, and a gold lighter poking out of his hip pocket (the hidden switch into Smiley mode).
 // Both are drawn facing right; Karla's figure is mirrored.
-const HEAD = 'M96 28C74 28 58 42 58 62c0 14 5 26 14 35l-1 15 37 4 1-10c5-1 11-4 15-8l2-5 3-2-1-4 7-6-6-7c0-11-2-22-7-30-6-10-14-16-28-16z';
-const BODY = 'M66 114c-20 4-38 14-46 34-9 22-10 66-12 112h184c-1-42-3-82-11-104-8-20-26-32-49-38z';
-const line = (col, op = 0.75, w = 1.4) => `fill="none" stroke="${col}" stroke-opacity="${op}" stroke-width="${w}" stroke-linejoin="round" stroke-linecap="round"`;
-const shape = (fill, col, op = 0.75, w = 1.4) => `fill="${fill}" stroke="${col}" stroke-opacity="${op}" stroke-width="${w}" stroke-linejoin="round"`;
-const lamp = (id, c1, c2, cx) => `<defs><radialGradient id="${id}" cx="${cx}" cy="38%" r="60%"><stop offset="0" stop-color="${c1}" stop-opacity=".75"/><stop offset=".45" stop-color="${c2}" stop-opacity=".38"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient></defs><rect width="200" height="260" fill="url(#${id})"/>`;
-
+const FIGURE = 'M96 28C74 28 58 42 58 62c0 14 5 26 14 35L71 110C52 116 30 126 20 148C11 170 10 214 8 260H192C191 218 189 178 181 156C173 136 155 124 132 118L110 113L109 106c5-1 11-4 15-8l2-5 3-2-1-4 7-6-6-7c0-11-2-22-7-30-6-10-14-16-28-16z';
 const C = '#8fb6e6', K = '#ee8c82';
+const outline = (col) => `fill="none" stroke="${col}" stroke-opacity=".75" stroke-width="1.6" stroke-linejoin="round"`;
 export const SPYMASTER = {
-  control: `<svg viewBox="0 0 200 260" class="spymaster" aria-hidden="true">${lamp('cLamp', '#4a8bd1', '#2f5f93', '55%')}
-    <path d="${HEAD}" ${shape('#07090c', C)}/>
-    <path d="${BODY}" ${shape('#07090c', C)}/>
-    <path d="M90 116l26 74 22-74z" ${shape('#0d1219', C, 0.35, 1.1)}/>
-    <path d="M106 121h9l-1.5 8.5h-6z" ${shape('#07090c', C, 0.9, 1.3)}/>
-    <path d="M107.5 129.5h6l7 62-6.5 8-7.5-8z" ${shape('#07090c', C, 0.9, 1.3)}/>
-    <path d="M93 117l12 14 2-10zM127 117l-11 14-2-10z" ${shape('#07090c', C, 0.7, 1.2)}/>
-    <path d="M88 116L66 150l11 4-4 8 45 46" ${line(C, 0.6)}/>
-    <path d="M130 116l20 30-9 4 3 8-26 50" ${line(C, 0.6)}/>
-    <path d="M118 208c-2 18-3 34-3 52" ${line(C, 0.3)}/>
-    <g fill="${C}" fill-opacity=".55"><circle cx="104" cy="214" r="2.2"/><circle cx="134" cy="214" r="2.2"/><circle cx="105" cy="234" r="2.2"/><circle cx="135" cy="234" r="2.2"/></g>
-    <path d="M32 168c6 30 8 60 8 92" ${line(C, 0.25)}/>
+  control: `<svg viewBox="0 0 200 260" class="spymaster" aria-hidden="true">
+    <path d="${FIGURE}" fill="#07090c" stroke="${C}" stroke-opacity=".75" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M96 114l20 86 16-81" ${outline(C)} stroke-opacity=".4" stroke-width="1.3"/>
+    <path d="M106 114.5l9 1.4-1.6 7.6h-5.4zM108 123.5h5.4l6.4 68-5.6 7.5-7.4-7.5z" fill="#07090c" stroke="${C}" stroke-opacity=".85" stroke-width="1.3" stroke-linejoin="round"/>
     <circle cx="122" cy="67" r="6.5" fill="none" stroke="#e8c77a" stroke-opacity=".9" stroke-width="1.7"/>
     <path d="M115.5 66.5L90 64" stroke="#e8c77a" stroke-opacity=".7" stroke-width="1.5" stroke-linecap="round"/>
   </svg>`,
-  karla: `<svg viewBox="0 0 200 260" class="spymaster" aria-hidden="true">${lamp('kLamp', '#cf4234', '#6e1f1a', '45%')}
+  karla: `<svg viewBox="0 0 200 260" class="spymaster" aria-hidden="true">
     <g transform="matrix(-1 0 0 1 200 0)">
-      <path d="${HEAD}" ${shape('#0b0707', K)}/>
-      <path d="${BODY}" ${shape('#0b0707', K)}/>
-      <path d="M100 117l9 13 9-13" ${line(K, 0.5, 1.2)}/>
-      <path d="M72 104l-12 30 34-14zM122 102l16 30-24-10z" ${shape('#0b0707', K, 0.8, 1.3)}/>
-      <path d="M94 120l-20 36 40 44M114 122l16 26-12 52" ${line(K, 0.55)}/>
-      <path d="M118 200c1 20 1 40 0 60" ${line(K, 0.4)}/>
-      <path d="M14 192c40 4 132 4 172 0" ${line(K, 0.55, 2.2)}/>
-      <rect x="111" y="188" width="14" height="10" rx="1.5" ${shape('#0b0707', K, 0.7, 1.3)}/>
+      <path d="${FIGURE}" fill="#0b0707" stroke="${K}" stroke-opacity=".75" stroke-width="1.6" stroke-linejoin="round"/>
+      <path d="M74 100l-12 32 34-16M110 106l24 22-22-8" ${outline(K)} stroke-opacity=".55" stroke-width="1.3"/>
       <path d="M112 64c4-2 9-2 12 0" stroke="#e86a4f" stroke-opacity=".45" stroke-width="1.5" fill="none"/>
       <path d="M131 92.5L152 96" stroke="#d9d2c4" stroke-opacity=".85" stroke-width="2.6" stroke-linecap="round"/>
       <circle cx="153" cy="96.2" r="2.2" fill="#f07a4a"/>
@@ -120,7 +103,7 @@ export const SPYMASTER = {
       <g class="lighter-g" data-act="smiley"><title>A gold lighter</title><rect x="36" y="196" width="48" height="44" fill="transparent"/>
         <g transform="rotate(8 58 218)"><rect x="53" y="207" width="11" height="16" rx="1.5" fill="#e8c77a"/><rect x="53" y="203" width="11" height="4.8" rx="1" fill="#c9a24e"/></g>
         <path class="lighter-flame" d="M57 193c2.6 2.6 2.8 5.2 0 8-2.8-2.8-2.6-5.4 0-8z" fill="#f4b04c"/>
-        <path d="M40 220l38-3 1 7-38 3z" ${shape('#0b0707', K, 0.65, 1.3)}/></g>
+        <path d="M40 220l38-3 1 7-38 3z" fill="#0b0707" stroke="${K}" stroke-opacity=".6" stroke-width="1.3" stroke-linejoin="round"/></g>
     </g>
   </svg>`,
 };

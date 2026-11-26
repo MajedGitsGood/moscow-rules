@@ -11,7 +11,10 @@ profile facing each other; Smiley double-breasted with a full-length tie, Karla 
 earlier head-on bodies looked flat. A three-quarter body shows the outfit and still lets them face off.
 Smiley's expensive, badly fitting suits and the tie he polishes his spectacles on come from the books;
 Karla stays deliberately anonymous.
+Each is one unbroken outline (head, neck and body together) with as few inner lines as possible.
 **Rejected:** *Pure profiles* (tie and lapels unreadable). *Square-on bodies* (flat, the first version).
+*Separate head and body shapes* (the neck never met the collar cleanly). *Buttons, belts and coat
+seams* (too busy). *A coloured glow behind each figure* (looked tacky).
 
 ## 2026-11-26: Muted relief with hot spots; moles-only means defeat
 **Decision:** Shade the land as relief in a muted grey, keep side tints faint, and light only the
