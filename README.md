@@ -6,6 +6,10 @@ whose side they are really on.
 
 *Your best agent may already be theirs.*
 
+<p>
+  <a href="https://majedgitsgood.github.io/moscow-rules/"><img alt="Play now" src="https://img.shields.io/badge/▶_Play_now-in_your_browser-c9a24e?style=for-the-badge"></a>
+</p>
+
 ![The war room: a lamp-lit chart of Europe, agents in each city, the morning's reports](docs/screenshot.jpg)
 
 ![No build step](https://img.shields.io/badge/build-none-brightgreen)
@@ -14,8 +18,9 @@ whose side they are really on.
 
 ## ▶ Play
 
-A hosted version is on the way. Until then, run it locally (below): it takes a minute, and without
-an API key it plays against the offline bot.
+**[Play it in your browser →](https://majedgitsgood.github.io/moscow-rules/)**
+No install. Claude plays the KGB; if Claude is unavailable or the day's budget is spent, an offline
+bot steps in and the game says so.
 
 ## The idea
 
