@@ -87,8 +87,8 @@ const outline = (col) => `fill="none" stroke="${col}" stroke-opacity=".75" strok
 export const SPYMASTER = {
   control: `<svg viewBox="0 0 200 260" class="spymaster" aria-hidden="true">
     <path d="${FIGURE}" fill="#07090c" stroke="${C}" stroke-opacity=".75" stroke-width="1.6" stroke-linejoin="round"/>
-    <path d="M96 114l20 86 16-81" ${outline(C)} stroke-opacity=".4" stroke-width="1.3"/>
-    <path d="M106 114.5l9 1.4-1.6 7.6h-5.4zM108 123.5h5.4l6.4 68-5.6 7.5-7.4-7.5z" fill="#07090c" stroke="${C}" stroke-opacity=".85" stroke-width="1.3" stroke-linejoin="round"/>
+    <path d="M74 114l17 86 17-81" ${outline(C)} stroke-opacity=".4" stroke-width="1.3"/>
+    <path d="M86.5 114h9l-1.8 8h-5.4zM88.3 122h5.4l2.3 70-4.5 7.5-4.5-7.5z" fill="#07090c" stroke="${C}" stroke-opacity=".85" stroke-width="1.3" stroke-linejoin="round"/>
     <circle cx="122" cy="67" r="6.5" fill="none" stroke="#e8c77a" stroke-opacity=".9" stroke-width="1.7"/>
     <path d="M115.5 66.5L90 64" stroke="#e8c77a" stroke-opacity=".7" stroke-width="1.5" stroke-linecap="round"/>
   </svg>`,
