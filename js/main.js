@@ -191,14 +191,14 @@ function titleScreen() {
   return `<div class="title">
     <div class="title-figs"><div class="fig control">${SPYMASTER.control}<span>Control</span></div><div class="fig karla">${lexMode() === 'smiley' ? SPYMASTER.karla.replace('class="lighter-g"', 'class="lighter-g lit"') : SPYMASTER.karla}<span>Karla</span></div></div>
     <div class="title-text">
-      <h1>${gameName().toUpperCase()}</h1>
+      <h1 class="${lexMode() === 'smiley' ? 'two-line' : ''}">${gameName().toUpperCase().split(' ').join('<br>')}</h1>
       <p class="tagline">Your best agent may already be theirs.</p>
       <div class="setup-opts">
         ${seg('players', [['1', 'One player'], ['2', 'Two players']])}
         ${seg('opponent', [['claude', label('Karla', 'Claude')], ['bot', 'Offline bot']], prefs.players === '2')}
         ${seg('size', [['6', '6 agents'], ['8', '8'], ['10', '10']])}
       </div>
-      <small class="opt-note">${prefs.players === '2' ? 'Hot-seat: pass the device between turns' : prefs.opponent === 'claude' ? (st.llm ? 'Claude plays Moscow Centre' : 'Claude is offline: the bot will play') : 'No Claude needed'}</small>
+      ${prefs.players === '2' ? '<small class="opt-note">Hot-seat: pass the device between turns</small>' : prefs.opponent === 'claude' && !st.llm ? '<small class="opt-note">Claude is offline: the bot will play</small>' : ''}
       <button class="btn gold begin" data-act="new">Begin</button>
       ${saved?.game?.version === 2 && saved.game.phase !== 'over' ? '<button class="btn ghost" data-act="continue">Continue the operation</button>' : ''}
     </div>

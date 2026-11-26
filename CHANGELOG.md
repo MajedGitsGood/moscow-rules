@@ -53,6 +53,9 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
   player, each drawn as one unbroken outline with a few lines: Smiley with gold spectacles and a broad
   tie reaching his waist; Karla with his collar up, a cigarette (smoke drifting up) and the gold lighter
   poking out of his hip pocket. No glow behind them. MI6 and KGB now sit above their heads.
+- Title screen: "Moscow Rules" sits on two smaller lines so it never covers the names above the
+  figures; the setting toggles and Begin are smaller; the "Claude plays…" line is gone (a note
+  shows only for hot-seat or when Claude is offline).
 - The shareable highlight page and X thread use the plain vocabulary and the Spymaster name.
 
 ### Fixed (Karla refusals)
