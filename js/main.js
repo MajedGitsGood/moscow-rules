@@ -182,8 +182,12 @@ const roleTag = (ri, cls = '') => ri.role ? `<span class="rtag r-${ri.role} ${ri
 
 // Title-screen choices, remembered between visits.
 const PREFS = 'mr-prefs';
-let prefs = (() => { try { return { players: '1', opponent: 'claude', size: '10', ...JSON.parse(localStorage.getItem(PREFS) || '{}') }; } catch { return { players: '1', opponent: 'claude', size: '10' }; } })();
-const seg = (key, opts, off = false) => `<div class="seg ${off ? 'off' : ''}" role="radiogroup">${opts.map(([v, label]) => `<button role="radio" aria-checked="${prefs[key] === v}" class="${prefs[key] === v ? 'on' : ''}" data-act="pref" data-key="${key}" data-val="${v}" ${off ? 'disabled' : ''}>${label}</button>`).join('')}</div>`;
+let prefs = (() => { try { return { players: '1', size: '10', ...JSON.parse(localStorage.getItem(PREFS) || '{}') }; } catch { return { players: '1', size: '10' }; } })();
+// A row of choices; `lead` is an icon naming the row, so the buttons themselves stay one word or one glyph.
+const seg = (key, opts, { lead = '', name = '' } = {}) => `<div class="seg ${lead ? 'has-lead' : ''}" role="radiogroup" aria-label="${name}">${lead ? `<span class="seg-lead" title="${name}">${lead}</span>` : ''}${opts.map(([v, label, tip]) => `<button role="radio" aria-checked="${prefs[key] === v}" class="${prefs[key] === v ? 'on' : ''}" data-act="pref" data-key="${key}" data-val="${v}" ${tip ? `title="${tip}" aria-label="${tip}"` : ''}>${label}</button>`).join('')}</div>`;
+const PERSON = '<svg class="ico" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M5 20c.6-4.4 3.3-6.8 7-6.8s6.4 2.4 7 6.8z"/></svg>';
+const PERSONS = '<svg class="ico wide" viewBox="0 0 36 24" fill="currentColor" aria-hidden="true"><circle cx="11" cy="8" r="3.6"/><path d="M4 20c.6-4.4 3.3-6.8 7-6.8s6.4 2.4 7 6.8z"/><circle cx="25" cy="8" r="3.6"/><path d="M18 20c.6-4.4 3.3-6.8 7-6.8s6.4 2.4 7 6.8z"/></svg>';
+const AGENTS = '<svg class="ico" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 15.5c3 1.6 15 1.6 18 0-1 1.9-17 1.9-18 0z"/><path d="M6.5 15c0-5 2-8 5.5-8s5.5 3 5.5 8c-3.5.9-7.5.9-11 0z"/></svg>';
 
 function titleScreen() {
   const saved = load();
@@ -194,11 +198,10 @@ function titleScreen() {
       <h1 class="${lexMode() === 'smiley' ? 'two-line' : ''}">${gameName().toUpperCase().split(' ').join('<br>')}</h1>
       <p class="tagline">Your best agent may already be theirs.</p>
       <div class="setup-opts">
-        ${seg('players', [['1', 'One player'], ['2', 'Two players']])}
-        ${seg('opponent', [['claude', label('Karla', 'Claude')], ['bot', 'Offline bot']], prefs.players === '2')}
-        ${seg('size', [['6', '6 agents'], ['8', '8'], ['10', '10']])}
+        ${seg('players', [['1', PERSON, `One player, against ${label('Karla', 'Claude')}`], ['2', PERSONS, 'Two players on one device']], { name: 'Players' })}
+        ${seg('size', [['6', '6', '6 agents a side'], ['8', '8', '8 agents a side'], ['10', '10', '10 agents a side']], { lead: AGENTS, name: 'Agents a side' })}
       </div>
-      ${prefs.players === '2' ? '<small class="opt-note">Hot-seat: pass the device between turns</small>' : prefs.opponent === 'claude' && !st.llm ? '<small class="opt-note">Claude is offline: the bot will play</small>' : ''}
+      ${prefs.players === '2' ? '<small class="opt-note">Hot-seat: pass the device between turns</small>' : !st.llm ? '<small class="opt-note">Claude is offline: the bot will play</small>' : ''}
       <button class="btn gold begin" data-act="new">Begin</button>
       ${saved?.game?.version === 2 && saved.game.phase !== 'over' ? '<button class="btn ghost" data-act="continue">Continue the operation</button>' : ''}
     </div>
@@ -569,7 +572,7 @@ function onAct(el, ev) {
       return;
     }
     case 'pref': { prefs[el.dataset.key] = el.dataset.val; try { localStorage.setItem(PREFS, JSON.stringify(prefs)); } catch {} return render(); }
-    case 'new': return startNew(prefs.players === '2' ? 'hotseat' : prefs.opponent, Number(prefs.size));
+    case 'new': return startNew(prefs.players === '2' ? 'hotseat' : 'claude', Number(prefs.size)); // Claude, or the bot when Claude can't be reached
     case 'continue': app = load(); app.tab = 'traffic'; app.stationCity = null; if (app.sel) app.sel = { city: null, agent: null }; if (app.screen === 'busy') { app.game.pending = { control: null, karla: null }; app.screen = app.game.phase === 'setup' ? 'setup' : 'play'; app.active = 'control'; } return render();
     case 'manual': return openModal(manualHTML());
     case 'quit': openModal(`<h2>Abandon this operation?</h2><p>The current game will be lost.</p><button class="btn red" data-act="quit-ok">Abandon</button> <button class="btn" data-act="close-modal">Keep playing</button>`); return;

@@ -4,6 +4,15 @@ Why-this-not-that for this project, newest first. Companion to [CHANGELOG.md](CH
 
 ---
 
+## 2026-11-26: No Offline bot choice; glyph toggles
+**Decision:** Drop the opponent toggle (Claude vs Offline bot); one player always faces Claude, with
+the bot as the automatic fallback. The remaining toggles use glyphs (people for players, a hat plus
+numbers for agents) instead of words.
+**Why:** No one chooses a weaker scripted opponent over Claude, the reason the game exists. "6 agents"
+in only one box of three read oddly, and three rows of words was a lot of copy for a title screen.
+**Rejected:** *A caption under each row* (more copy). *Words in every box* ("8 agents", "10 agents":
+repetitive). *Keeping the bot as a hidden option* (the fallback covers the only real use).
+
 ## 2026-11-26: Defensive 6-agent rosters; three approaches, and Recruiters can double up
 **Decision:** The 6-agent roster becomes 1 Assassin, 2 Watchers, 2 Counterspies, 1 Recruiter. Turning
 takes three approaches; every approach counts, so two Recruiters on one target in the same week

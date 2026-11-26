@@ -840,3 +840,10 @@ kbd { font-family: var(--ui); font-size: 9.5px; line-height: 1; padding: 2px 4px
 .mo-x .ico { width: 18px; height: 18px; }
 .moment.mistake .mo-x { color: #ef8a80; } .moment.recruitment .mo-x { color: var(--ok); }
 .moment p { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* title toggles: glyphs and numbers, one icon naming the agents row */
+.seg button .ico { width: 17px; height: 17px; display: block; margin: 0 auto; }
+.seg button .ico.wide { width: 25px; }
+.seg .seg-lead { display: grid; place-items: center; padding: 0 12px; color: var(--gold); border-right: 1px solid rgba(201,162,78,.25); }
+.seg .seg-lead .ico { width: 17px; height: 17px; }
+.seg button { font-size: 13px; }
