@@ -42,8 +42,8 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
   traffic). In plain mode, Claude's reports and debriefs are written without insider slang, and role
   names are always capitalised (Counterspy, Recruiter) so they read as roles.
 - The title-screen spymasters face each other in profile, their bodies turned three-quarters to the
-  player, each drawn as one unbroken outline with a few lines: Smiley with gold spectacles, lapels and
-  a full-length tie; Karla with his collar up, a cigarette (smoke drifting up) and the gold lighter
+  player, each drawn as one unbroken outline with a few lines: Smiley with gold spectacles and a broad
+  tie reaching his waist; Karla with his collar up, a cigarette (smoke drifting up) and the gold lighter
   poking out of his hip pocket. No glow behind them. MI6 and KGB now sit above their heads.
 - The shareable highlight page and X thread use the plain vocabulary and the Spymaster name.
 

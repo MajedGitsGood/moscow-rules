@@ -78,7 +78,7 @@ export function portraitBody(agent, mood = null) {
 // The two spymasters on the title screen, in as few lines as possible: one unbroken silhouette each
 // (head, neck and body in a single outline, so the neck always meets the collar), bodies turned
 // three-quarters to the player, heads in profile facing each other. Control (Smiley) looks right:
-// gold spectacles, lapels and a full-length tie. Karla looks left: collar up, a cigarette with smoke
+// gold spectacles and a long tie. Karla looks left: collar up, a cigarette with smoke
 // rising, and a gold lighter poking out of his hip pocket (the hidden switch into Smiley mode).
 // Both are drawn facing right; Karla's figure is mirrored.
 const FIGURE = 'M96 28C74 28 58 42 58 62c0 14 5 26 14 35L71 110C52 116 30 126 20 148C11 170 10 214 8 260H192C191 218 189 178 181 156C173 136 155 124 132 118L110 113L109 106c5-1 11-4 15-8l2-5 3-2-1-4 7-6-6-7c0-11-2-22-7-30-6-10-14-16-28-16z';
@@ -87,8 +87,7 @@ const outline = (col) => `fill="none" stroke="${col}" stroke-opacity=".75" strok
 export const SPYMASTER = {
   control: `<svg viewBox="0 0 200 260" class="spymaster" aria-hidden="true">
     <path d="${FIGURE}" fill="#07090c" stroke="${C}" stroke-opacity=".75" stroke-width="1.6" stroke-linejoin="round"/>
-    <path d="M74 114l17 86 17-81" ${outline(C)} stroke-opacity=".4" stroke-width="1.3"/>
-    <path d="M86.5 114h9l-1.8 8h-5.4zM88.3 122h5.4l2.3 70-4.5 7.5-4.5-7.5z" fill="#07090c" stroke="${C}" stroke-opacity=".85" stroke-width="1.3" stroke-linejoin="round"/>
+    <path d="M84.5 113.5h13l-2.4 10h-8.2zM86.9 123.5h8.2l5.4 92-9.5 10-9.5-10z" fill="#07090c" stroke="${C}" stroke-opacity=".85" stroke-width="1.3" stroke-linejoin="round"/>
     <circle cx="122" cy="67" r="6.5" fill="none" stroke="#e8c77a" stroke-opacity=".9" stroke-width="1.7"/>
     <path d="M115.5 66.5L90 64" stroke="#e8c77a" stroke-opacity=".7" stroke-width="1.5" stroke-linecap="round"/>
   </svg>`,
