@@ -15,6 +15,18 @@ export const LANDMARK = {
   Rome: 'colosseum', Belgrade: 'fortress', Tangier: 'kasbah',
 };
 
+// Each agent's one distinguishing feature, for their portrait. Spread across a side so colleagues
+// differ; derived from the look seeds, so it draws nothing from the game's RNG.
+export const TRAITS = { male: ['glasses', 'moustache', 'hat', 'beard', 'grey', 'bald'], female: ['glasses', 'headscarf', 'hat', 'grey'] };
+export function traitFor(look) { const t = TRAITS[look.female ? 'female' : 'male']; return look.trait || t[look.seed % t.length]; }
+function assignTraits(agents) {
+  for (const side of SIDES) for (const g of ['male', 'female']) {
+    const group = Object.values(agents).filter((a) => a.side === side && (a.look.female ? 'female' : 'male') === g).sort((a, b) => a.look.seed - b.look.seed);
+    const pool = TRAITS[g], start = group.length ? group[0].look.seed % pool.length : 0;
+    group.forEach((a, j) => { a.look.trait = pool[(start + j) % pool.length]; });
+  }
+}
+
 // A named place in each city, for footprints ("has taken a room overlooking ...").
 export const PLACE = {
   London: 'the clock tower', Moscow: "St Basil's", Paris: 'the Eiffel Tower', Lisbon: 'the tram depot', Bern: 'the Bundesplatz',
@@ -118,5 +130,6 @@ export function generateWorld(rng, roster = RULES.roster, contestedCities = RULE
       }
     }
   }
+  assignTraits(agents);
   return { cities, agents };
 }

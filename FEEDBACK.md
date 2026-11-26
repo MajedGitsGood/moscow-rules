@@ -250,3 +250,9 @@ Played on 6 cities and 5 orders (started before those changes). Final 2-2.
   each other; Karla smokes (animated) with the gold lighter in his breast pocket; Smiley wears a tie.
 - Similar games and how to stand apart: see `docs/positioning.md` (bite-sized like Brawl Stars; Sigma
   Theory's memorable agent faces as a visual benchmark; proposals for more memorable agents).
+
+### Follow-up 12: faces and a living map
+- Agents hard to tell apart; the map felt static next to Sigma Theory. **Done:** one ordinary trait per
+  face, readable on tokens; the night replays on the map each morning (moves, deaths, traps, sightings),
+  with lamplight, sea glints and dusk when orders go out. Colours per agent, a hover card and a motif
+  were declined.

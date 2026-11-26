@@ -11,6 +11,7 @@ import { claudeOrders, claudePlacement } from './controllers/claude.js';
 import { heuristicOrders, heuristicPlacement } from './controllers/heuristic.js';
 import { checkLLM, llmStatus } from './llm.js';
 import { mapBase, mapOverlay, cityXY, tintCells, MAP_SIZE } from './ui/map.js';
+import { playMorning } from './ui/replay.js';
 import { portrait, SPYMASTER } from './ui/portraits.js';
 import { ROLE_ICON, ORDER_ICON, UI_ICON, LANDMARK_ICON } from './ui/icons.js';
 import { manualHTML } from './ui/manual.js';
@@ -81,7 +82,7 @@ async function confirmPlacement() {
 }
 
 async function morning() {
-  busy('The morning traffic is coming in');
+  busy(label('The morning traffic is coming in', 'The morning reports are coming in'));
   for (const side of humanSides()) await voiceMorning(app.game, side);
   app.active = 'control';
   app.sel = { city: null, agent: null }; app.pick = null;
@@ -99,6 +100,7 @@ async function endWeek() {
   if (errors.length) { toast(errors[0]); return; }
   submitOrders(g, side, orders);
   app.queued[side] = [];
+  await dusk();
   const opp = other(side);
   if (!g.pending[opp]) {
     if (isHuman(opp)) { app.active = opp; app.screen = 'handoff'; app.sel = { city: null, agent: null }; app.pick = null; app.tab = 'traffic'; app.stationCity = null; save(); render(); return; }
@@ -120,9 +122,18 @@ async function endWeek() {
   }
   busy('The night passes');
   await new Promise((res) => setTimeout(res, 900));
+  app.prevPos = Object.fromEntries(Object.values(g.agents).map((a) => [a.id, a.city])); // for the morning replay
   resolveWeek(g);
   if (g.phase === 'over') { app.screen = 'debrief'; save(); render(); return; }
   await morning();
+}
+
+// The light goes down on the map as the orders go out.
+async function dusk() {
+  const st = $('.stage');
+  if (!st || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  st.classList.add('dusk');
+  await new Promise((res) => setTimeout(res, 700));
 }
 
 // ---------- render ----------
@@ -136,7 +147,11 @@ function render() {
   if (app.sel) app.stationCity = app.sel.city;
   const screens = { setup: playScreen, play: playScreen, handoff: handoffScreen, busy: busyScreen, debrief: debriefScreen };
   root.innerHTML = lexHTML((screens[app.screen] || playScreen)());
-  if (app.screen === 'play') { tintCells(root, viewFor(app.game, app.active)); placePop(); applyNavFocus(); $('#why-in')?.focus(); }
+  if (app.screen === 'play') {
+    const v = viewFor(app.game, app.active);
+    tintCells(root, v); placePop(); applyNavFocus(); $('#why-in')?.focus();
+    if ($('.stage.replay')) { (app.replayed ||= {})[app.active] = app.game.week; playMorning(root, { prev: app.prevPos, inbox: v.inbox, week: app.game.week }); }
+  }
   if (app.screen === 'setup') tintCells(root, setupView());
 }
 function busy(text) { app.screen = 'busy'; app.busyText = text; render(); }
@@ -213,10 +228,12 @@ function playScreen() {
   const v = setup ? setupView() : viewFor(g, side);
   const moveTargets = app.pick?.type === 'move' ? new Set(g.cities.filter((c) => c !== g.agents[app.pick.agentId].city)) : (setup && app.dragging ? new Set(g.cities) : null);
   const fresh = app.fresh && !setup; app.fresh = false;
-  return `<div class="stage ${fresh ? 'fresh' : ''} ${side} ${setup ? 'is-setup' : ''} ${app.pick ? 'picking' : ''} ${!setup && app.traffic ? 'traffic-open' : ''}">
+  const replay = fresh && app.prevPos && app.replayed?.[side] !== g.week;
+  return `<div class="stage ${fresh ? 'fresh' : ''} ${replay ? 'replay' : ''} ${side} ${setup ? 'is-setup' : ''} ${app.pick ? 'picking' : ''} ${!setup && app.traffic ? 'traffic-open' : ''}">
     <svg class="map" viewBox="0 0 ${MAP_SIZE.W} ${MAP_SIZE.H}" preserveAspectRatio="xMidYMid meet">${base(g)}
       <g id="overlay">${mapOverlay({ view: v, selected: app.sel.city, orders: setup ? [] : app.queued[side], moveTargets, roleOf: roleInfo(side), trustOf: trustOf(side), numbers: null })}</g>
     </svg>
+    <div class="night"></div>
     ${hudTop(v, setup)}
     ${setup ? setupTray(v) : ''}
     ${!setup && app.traffic ? sidePanel(v) : ''}

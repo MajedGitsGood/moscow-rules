@@ -792,3 +792,30 @@ kbd { font-family: var(--ui); font-size: 9.5px; line-height: 1; padding: 2px 4px
   .spymaster .smoke path:nth-child(2) { animation-duration: 5.6s; animation-delay: -2s; }
   @keyframes smoke { 0% { stroke-dashoffset: 0; opacity: 0; } 15% { opacity: .45; } 70% { opacity: .25; } 100% { stroke-dashoffset: -60; opacity: 0; } }
 }
+
+/* ---------- the living map: ambient light, dusk and the morning replay ---------- */
+.lamp { pointer-events: none; transform-box: fill-box; transform-origin: center; }
+.night { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 45% 45%, rgba(3,7,14,.55), rgba(2,4,9,.85)); opacity: 0; transition: opacity .7s ease-in; }
+.dusk .night { opacity: 1; }
+.fx { pointer-events: none; transform-box: fill-box; transform-origin: center; opacity: 0; }
+.fx-death { fill: #1a0303; stroke: #b3322a; stroke-width: 2; }
+.fx-trap { fill: #f6dc8c; }
+.fx-notice { fill: url(#lampg); stroke: #f2d36b; stroke-opacity: .35; stroke-width: 1; }
+@media (prefers-reduced-motion: no-preference) {
+  .glint { animation: glint 22s ease-in-out infinite alternate; }
+  .glint.g2 { animation-duration: 28s; animation-delay: -9s; }
+  .lamp { animation: lamplight 5s ease-in-out infinite; }
+  .fresh .night { animation: dawn 1.3s ease-out both; }
+  .fx-death { animation: fx-death 1.6s ease-out both; }
+  .fx-trap { animation: fx-trap .9s ease-out both; }
+  .fx-notice { animation: fx-notice 1.8s ease-in-out both; }
+  .travelling .tok-inner { animation: none; }
+  .replay .panel { animation: slide .4s ease-out 1.7s both; }
+  .replay .msg { animation: none; }
+}
+@keyframes glint { 0% { transform: translate(-60px, 10px); opacity: .5; } 50% { opacity: 1; } 100% { transform: translate(80px, -20px); opacity: .6; } }
+@keyframes lamplight { 0%, 100% { opacity: .75; } 40% { opacity: 1; } 55% { opacity: .85; } 70% { opacity: .95; } }
+@keyframes dawn { from { opacity: 1; } to { opacity: 0; } }
+@keyframes fx-death { 0% { opacity: 0; transform: scale(.4); } 25% { opacity: .85; } 100% { opacity: 0; transform: scale(2.6); stroke-width: .5; } }
+@keyframes fx-trap { 0% { opacity: 0; transform: scale(.6); } 15% { opacity: .9; } 100% { opacity: 0; transform: scale(2.2); } }
+@keyframes fx-notice { 0% { opacity: 0; transform: scale(.7); } 40% { opacity: 1; } 100% { opacity: 0; transform: scale(1.4); } }

@@ -4,6 +4,20 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 
 ## [Unreleased]
 
+### Added (a living map)
+- **Each morning the night plays out on the map** before the reports slide in: agents who moved
+  slide from their old city, a dark pulse marks a death, a gold flash a sprung trap, and a faint glow
+  each city where one of your people noticed something. It shows only what your side knows.
+- **Ambient life:** lamplight flickers on cities where agents are, soft glints drift across the sea,
+  and the map dims to night as you send your orders, then dawns on the new week.
+- All of it is skipped when the system asks for reduced motion.
+
+### Changed (faces)
+- Every agent now has **one** ordinary distinguishing feature (spectacles, a moustache, a beard, a hat,
+  grey hair, a headscarf or a bald crown), spread across each side so colleagues differ. Drawn
+  heavier so it reads on a map token, and the same face appears everywhere.
+- The loading line in plain mode reads "The morning reports are coming in".
+
 ### Changed (plain language)
 - The game is now **Spymaster**, in plain language: MI6 vs the KGB, Assassins, Watchers,
   Counterspies and Recruiters, Reports and City tabs, and orders such as Recruit, Plan attack,

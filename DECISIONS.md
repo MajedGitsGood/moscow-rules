@@ -4,6 +4,18 @@ Why-this-not-that for this project, newest first. Companion to [CHANGELOG.md](CH
 
 ---
 
+## 2026-11-26: One trait per face; the night replayed on the map
+**Decision:** Draw every agent from one plain template plus exactly one trait, assigned across each
+side from the look seeds (no game RNG, so seeded games are unchanged). Replay each night on the map
+for about two seconds (moves, deaths, traps, things noticed) built only from public positions and the
+side's own inbox; add lamplight, sea glints and a dusk/dawn dim.
+**Why:** Playtests found agents hard to tell apart and the map static next to Sigma Theory. Several
+random features per face made them busier but no more distinct; one trait, drawn to survive 22px, is
+easier to remember without making spies memorable. The replay shows what happened before you read it.
+**Rejected:** *A personal colour per agent* (too many colour signals already). *A hover dossier card*
+(bloat). *A signature motif* (only makes sense in Smiley mode). *Full-screen characters delivering
+reports* (slows every turn). *A repeating-gradient sea shimmer* (rendered as a flat, hard-edged wash).
+
 ## 2026-11-25: Plain language by default; le Carré as an Easter egg
 **Decision:** Show the game as **Spymaster** in plain terms (MI6, KGB, Assassin, Watcher, Counterspy,
 Recruiter, Reports). Karla's gold lighter on the title screen switches to **Moscow Rules** in le Carré's

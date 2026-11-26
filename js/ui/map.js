@@ -50,10 +50,13 @@ export function mapBase(cities) {
     <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#000" flood-opacity=".55"/></filter>
     <radialGradient id="sea" cx="50%" cy="40%" r="75%"><stop offset="0" stop-color="#1d3542"/><stop offset="1" stop-color="#0a141b"/></radialGradient>
     <radialGradient id="vignette" cx="50%" cy="50%" r="70%"><stop offset=".6" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".55"/></radialGradient>
+    <radialGradient id="shim"><stop offset="0" stop-color="#a9d2e4" stop-opacity=".09"/><stop offset=".6" stop-color="#a9d2e4" stop-opacity=".03"/><stop offset="1" stop-color="#a9d2e4" stop-opacity="0"/></radialGradient>
+    <radialGradient id="lampg"><stop offset="0" stop-color="#ffd98a" stop-opacity=".55"/><stop offset=".5" stop-color="#f4c36a" stop-opacity=".2"/><stop offset="1" stop-color="#f4c36a" stop-opacity="0"/></radialGradient>
     <clipPath id="land"><path d="${MAP.land}"/></clipPath>
     <clipPath id="tok" clipPathUnits="objectBoundingBox"><circle cx=".5" cy=".5" r=".5"/></clipPath>
     <marker id="arrow" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#e8c77a"/></marker>
   </defs>
+  <g class="shimmer"><ellipse class="glint g1" cx="${W * 0.3}" cy="${H * 0.72}" rx="230" ry="90" fill="url(#shim)"/><ellipse class="glint g2" cx="${W * 0.72}" cy="${H * 0.3}" rx="200" ry="80" fill="url(#shim)"/></g>
   <g class="graticule">${graticule.join('')}</g>
   <path class="land" d="${MAP.land}" filter="url(#paper)"/>
   <g clip-path="url(#land)">${cities.map((c, i) => `<path class="cell" data-city="${c}" d="${cell(pts, i)}"/>`).join('')}</g>
@@ -98,6 +101,7 @@ export function mapOverlay({ view, selected, orders = [], moveTargets = null, ro
       </g></g>`;
     };
     out.push(`<g class="${cls}" data-city="${c}" transform="translate(${x},${y})" tabindex="0" role="button" aria-label="${c}: ${ours.length} of ours, ${theirs.length} of theirs">
+      ${ours.length + theirs.length ? `<circle class="lamp" r="46" fill="url(#lampg)" style="animation-delay:-${(c.length * 1.7) % 5}s"/>` : ''}
       <circle class="halo" r="34"/>
       <g class="medal" filter="url(#shadow)">
         <circle r="21" class="medal-bg"/>
