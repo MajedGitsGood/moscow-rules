@@ -15,6 +15,8 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 - Report voices are written while the morning plays, instead of before it.
 
 ### Fixed
+- Voiced reports no longer sign off with the sender's name, role and city (the card already shows
+  them); any sign-off is stripped, in saved games too.
 - **Agents' reports are voiced again.** A fact-check bug threw out every rewrite of a report from a
   named agent, so only headquarters messages were ever in Claude's voice.
 

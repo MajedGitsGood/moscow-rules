@@ -29,7 +29,9 @@ Do not add facts, hints, or speculation, and do not soften or reveal anything th
 Never name a city or person the original doesn't name, and never describe a place (quiet, empty, busy) unless the original does. \
 Footprints ("asking about", "turning up where", "a room overlooking", "unfamiliar faces", "the night train", "regular hours") \
 are deliberately ambiguous: report what was seen, never what it might mean. \
-Messages marked "source" come from an enemy agent secretly working for the reader: keep their meaning exact.`;
+Messages marked "source" come from an enemy agent secretly working for the reader: keep their meaning exact. \
+The reader already sees who sent each message: never sign off, and never name the sender, their role or their city \
+unless the original does.`;
 
 export const KARLA = `${WORLD}
 

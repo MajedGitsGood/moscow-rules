@@ -6,7 +6,7 @@ import {
 } from './engine.js';
 import { SIDES, other, SIDE_LABEL, ARCHETYPES, ARCHETYPE_KEYS, RULES, HOME, LANDMARK } from './world.js';
 import { randomSeed } from './rng.js';
-import { voiceMorning } from './voices.js';
+import { voiceMorning, withoutSignoff } from './voices.js';
 import { claudeOrders, claudePlacement } from './controllers/claude.js';
 import { heuristicOrders, heuristicPlacement } from './controllers/heuristic.js';
 import { checkLLM, llmStatus } from './llm.js';
@@ -124,7 +124,7 @@ function applyVoices(g) {
   if (app?.game !== g) return;
   for (const m of g.inbox.control.filter((x) => x.week === g.week && x.voiced)) {
     const p = document.querySelector(`.msg[data-mid="${m.id}"] p`);
-    if (p) p.innerHTML = lexHTML(esc(m.voiced));
+    if (p) p.innerHTML = lexHTML(esc(withoutSignoff(g, m, m.voiced)));
   }
 }
 
@@ -495,7 +495,7 @@ function traffic(v) {
     const tag = !a ? label('Station', 'Headquarters') : a.side === v.side ? roleLabel(a.archetype) : 'Source inside their network';
     return `<article class="msg ${m.kind} ${m.tone || ''}" data-mid="${m.id}" data-act="goto" data-city="${m.city || ''}">
       <div class="msg-who">${a ? portrait(a, { size: 34 }) : `<span class="station">${UI_ICON.traffic}</span>`}<div><b>${esc(who)}</b><small>${esc(tag)}${m.city ? ` · ${m.city}` : ''}</small></div><em>wk ${m.week}</em></div>
-      <p>${esc(m.voiced || m.text)}</p></article>`;
+      <p>${esc(m.voiced ? withoutSignoff(app.game, m, m.voiced) : m.text)}</p></article>`;
   };
   const group = (title, list, cls) => list.length ? `<h3 class="${cls}">${title}</h3>${list.map(msg).join('')}` : '';
   return `${group('What happened', now.filter((m) => m.kind === 'event' || m.kind === 'briefing'), 'h-event')}

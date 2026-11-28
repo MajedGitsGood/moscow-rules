@@ -1,6 +1,6 @@
 // v2 rule checks.   node tools/test.js
 import { newGame, submitOrders, resolveWeek, viewFor, executeAgent, surrender, legalOrders, setStance, validateOrders } from '../js/engine.js';
-import { factsCheck } from '../js/voices.js';
+import { factsCheck, withoutSignoff } from '../js/voices.js';
 import { tradecraft } from '../js/analysis.js';
 import { loyaltyRecord } from '../js/controllers/claude.js';
 
@@ -42,6 +42,11 @@ const inbox = (g, side) => viewFor(g, side).inbox.map((m) => m.text).join(' | ')
   const pass = (t) => factsCheck(g, `${src} ${extra}`, t) && factsCheck(g, `${src} ${extra}`, `${t} ${extra}`, { preserve: true });
   ok(pass(ok1), "a faithful voice rewrite naming its own sender and role passes");
   ok(!pass(`${own.name} reports nothing of note.`), 'a rewrite that drops the reported agent is refused');
+}
+{ const { g, get } = setup();
+  const a = get('control', 'ferret'), m = { from: a.id };
+  ok(withoutSignoff(g, m, `Vasko keeps regular hours. ${a.first} ${a.name}, Ferret, Lisbon.`) === 'Vasko keeps regular hours.', 'a voiced report loses its sign-off');
+  ok(withoutSignoff(g, m, `${a.name} has been asking about Vasko.`) === `${a.name} has been asking about Vasko.`, 'a real sentence about the sender stays');
 }
 { const { g } = setup();
   const fresh = tradecraft(g, 'control');

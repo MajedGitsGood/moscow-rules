@@ -38,6 +38,18 @@ const VOICE_SCHEMA = {
   additionalProperties: false,
 };
 
+// A rewrite that ends by signing off ("... Max Marsh, Counterspy, Lisbon.") loses that last sentence:
+// the card already shows who sent it. Only a final sentence that is the sender's name followed by short
+// comma-separated tags goes; a real sentence about them ("Marsh has been asking about ...") stays.
+export function withoutSignoff(game, m, text) {
+  const a = m?.from && game.agents[m.from];
+  if (!a || !text) return text;
+  const esc = (x) => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const signoff = new RegExp(`(^|[.!?])\\s*[—–-]?\\s*(?:${esc(a.first)}\\s+)?${esc(a.name)}(?:\\s*,\\s*[^.,!?]{1,40}){0,3}\\s*\\.?\\s*$`);
+  const out = text.replace(signoff, (all, end) => end).trim();
+  return out || text;
+}
+
 // Rewrites this week's incoming messages for one side in character. Stores msg.voiced; the
 // template msg.text stays the source of truth.
 export async function voiceMorning(game, side) {
@@ -59,6 +71,7 @@ export async function voiceMorning(game, side) {
     for (const v of r.messages) {
       const m = fresh.find((x) => x.id === v.id);
       if (!m) continue;
+      v.text = withoutSignoff(game, m, v.text);
       const extra = senderOf(m).facts;
       // Nothing new beyond the report and its sender; and every fact in the report survives (the sender's
       // own details count on both sides, since the reader already knows them).
