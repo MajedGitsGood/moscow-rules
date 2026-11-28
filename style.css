@@ -927,3 +927,12 @@ kbd { font-family: var(--ui); font-size: 9.5px; line-height: 1; padding: 2px 4px
 .po-row span { font-size: 13px; color: var(--text-dim); display: inline-flex; align-items: center; gap: 4px; }
 .po-row span .ico { width: 13px; height: 13px; }
 .po-row i { display: block; margin-top: 2px; font-family: var(--type); font-size: 12.5px; color: var(--text); opacity: .85; }
+
+/* the rating parts: a short tooltip on each label, shown at once on hover or focus */
+.as-tip { position: relative; cursor: help; text-decoration: underline dotted rgba(255,255,255,.35); text-underline-offset: 3px; outline: none; }
+.as-tip::after { content: attr(data-tip); position: absolute; left: 0; top: calc(100% + 7px); z-index: 5; width: max-content; max-width: 200px;
+  padding: 6px 9px; border-radius: 4px; background: #0d141b; border: 1px solid rgba(201,162,78,.45); box-shadow: 0 6px 16px rgba(0,0,0,.5);
+  font: 12px/1.35 var(--ui); letter-spacing: 0; text-transform: none; color: var(--text); white-space: normal;
+  opacity: 0; transform: translateY(-3px); pointer-events: none; transition: opacity .12s, transform .12s; }
+.as-tip:hover::after, .as-tip:focus-visible::after { opacity: 1; transform: none; }
+.as-part:last-child .as-tip::after { left: auto; right: -40px; }

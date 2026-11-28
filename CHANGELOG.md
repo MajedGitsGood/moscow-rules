@@ -7,6 +7,8 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 ### Changed (rules and safety)
 - **A prepared attack expires.** It can be used the week after it's prepared and no other; strike then
   or lose it. (It used to last until the agent struck or moved.)
+- The debrief's Kept, Damage, Intel and Security labels show a short explanation the moment you hover
+  over (or tab to) them.
 - **Your orders so far:** a folded section under Earlier reports lists every order you gave in past
   weeks, newest first, with the reason you wrote for it.
 - **Ending the week with orders to spare asks first:** "Send only 1 of 5 orders?", with Keep planning.
