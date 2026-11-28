@@ -1,6 +1,7 @@
 {
   "name": "moscow-rules",
   "private": true,
+  "license": "PolyForm-Noncommercial-1.0.0",
   "type": "module",
   "dependencies": {
     "@anthropic-ai/sdk": "^1.13.0"

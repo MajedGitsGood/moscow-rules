@@ -4,6 +4,16 @@ Why-this-not-that for this project, newest first. Companion to [CHANGELOG.md](CH
 
 ---
 
+## 2026-11-28: PolyForm Noncommercial instead of MIT, history rewritten
+**Decision:** License the code under PolyForm Noncommercial 1.0.0 and rewrite the repo's history so the
+MIT license it briefly carried (two days, no forks) never appears in it.
+**Why:** The repo stays public as a portfolio piece, but no one else may sell the game, and selling it
+(for example on Steam) stays open to the author. A license switch alone would have left every earlier
+commit under MIT, and the newest of those was essentially the whole game.
+**Rejected:** *Keep MIT* (anyone could sell it). *Make the repo private* (loses the portfolio value).
+*All rights reserved* (stops others even running it for fun; noncommercial use is harmless and good for
+reach). Note: no license protects game mechanics; only the code, art and writing.
+
 ## 2026-11-26: Host on GitHub Pages with a locked-down Cloudflare Worker
 **Decision:** Serve the game from GitHub Pages (like Hall of Mirrors) and proxy Claude through a
 Cloudflare Worker that accepts only the game's own system prompts, caps message size, and enforces a
