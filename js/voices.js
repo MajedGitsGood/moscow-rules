@@ -38,7 +38,8 @@ const VOICE_SCHEMA = {
   additionalProperties: false,
 };
 
-// A rewrite that ends by signing off ("... Max Marsh, Counterspy, Lisbon.") loses that last sentence:
+// A rewrite that ends by signing off ("... Max Marsh, Counterspy, Lisbon.") or opens by announcing the
+// sender ("Marsh reporting from Lisbon.") loses that part:
 // the card already shows who sent it. Only a final sentence that is the sender's name followed by short
 // comma-separated tags goes; a real sentence about them ("Marsh has been asking about ...") stays.
 export function withoutSignoff(game, m, text) {
@@ -46,8 +47,10 @@ export function withoutSignoff(game, m, text) {
   if (!a || !text) return text;
   const esc = (x) => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const signoff = new RegExp(`(^|[.!?])\\s*[—–-]?\\s*(?:${esc(a.first)}\\s+)?${esc(a.name)}(?:\\s*,\\s*[^.,!?]{1,40}){0,3}\\s*\\.?\\s*$`);
-  const out = text.replace(signoff, (all, end) => end).trim();
-  return out || text;
+  // ...and an opening that only announces the sender ("Marsh reporting from Lisbon." / "Marsh here:").
+  const opener = new RegExp(`^\\s*(?:${esc(a.first)}\\s+)?${esc(a.name)}\\s*[,—–-]?\\s*(?:here|reporting|reports)(?:\\s+(?:from|in)\\s+[A-Z][\\p{L} ]{1,30})?\\s*[.:,—–-]\\s*`, 'u');
+  const out = text.replace(signoff, (all, end) => end).replace(opener, '').trim();
+  return out ? out[0].toUpperCase() + out.slice(1) : text;
 }
 
 // Rewrites this week's incoming messages for one side in character. Stores msg.voiced; the

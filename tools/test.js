@@ -47,6 +47,7 @@ const inbox = (g, side) => viewFor(g, side).inbox.map((m) => m.text).join(' | ')
   const a = get('control', 'ferret'), m = { from: a.id };
   ok(withoutSignoff(g, m, `Vasko keeps regular hours. ${a.first} ${a.name}, Ferret, Lisbon.`) === 'Vasko keeps regular hours.', 'a voiced report loses its sign-off');
   ok(withoutSignoff(g, m, `${a.name} has been asking about Vasko.`) === `${a.name} has been asking about Vasko.`, 'a real sentence about the sender stays');
+  ok(withoutSignoff(g, m, `${a.name} reporting from Lisbon. Vasko met someone off the night train.`) === 'Vasko met someone off the night train.', 'a voiced report loses an opening that only names its sender');
 }
 { const { g } = setup();
   const fresh = tradecraft(g, 'control');
