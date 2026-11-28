@@ -502,8 +502,22 @@ function traffic(v) {
     ${group('From our sources inside', now.filter((m) => m.kind === 'source'), 'h-source')}
     ${group('Reports from our people', now.filter((m) => m.kind === 'report'), 'h-report')}
     ${now.length ? '' : '<p class="empty">A quiet night. Nothing came in.</p>'}
-    ${earlier.length ? `<details><summary>Earlier traffic</summary>${earlier.map(msg).join('')}</details>` : ''}`;
+    ${earlier.length ? `<details><summary>Earlier traffic</summary>${earlier.map(msg).join('')}</details>` : ''}
+    ${pastOrders(v)}`;
 }
+// Your own orders from the weeks gone by, with the reasons you gave: kept apart from the reports, and
+// folded away until you want them. Only your side's orders, newest week first.
+function pastOrders(v) {
+  const g = app.game, log = g.orderLog.filter((o) => o.side === v.side && o.week < v.week);
+  if (!log.length) return '';
+  const weeks = [...new Set(log.map((o) => o.week))].sort((a, b) => b - a);
+  const row = (o) => {
+    const a = g.agents[o.agentId];
+    return `<div class="po-row">${portrait(a, { size: 26, mood: a.alive ? null : 'dead' })}<div><b>${esc(a.name)}</b> <span>${ORDER_ICON[o.type] || ''}${esc(describeOrder(o, g))}</span>${o.why ? `<i>${esc(o.why)}</i>` : ''}</div></div>`;
+  };
+  return `<details class="past-orders"><summary>Your orders so far</summary>${weeks.map((w) => `<div class="po-week"><h4>Week ${w}</h4>${log.filter((o) => o.week === w).map(row).join('')}</div>`).join('')}</details>`;
+}
+
 // Your own verdict on each of your agents. Shown on their tokens so you don't have to remember.
 const TRUST = { trusted: { label: 'Trusted', mark: '' }, suspect: { label: 'Suspect', mark: '?' }, mole: { label: 'Mole', mark: 'M' } };
 const trustOf = (side) => (a) => (a.side === side ? app.notes[side].trust[a.id] || 'trusted' : null);
