@@ -98,8 +98,8 @@ function moments(story, game) {
 // How each side played: a Tradecraft rating out of 100 from the record (analysis.js), its four parts,
 // and Claude's verdict on what the side did best and where it went wrong.
 const CHECK = '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
-const PARTS = [['kept', 'Kept'], ['damage', 'Damage'], ['intel', 'Intel'], ['security', 'Security']];
-const PART_TIP = { kept: 'Your agents still loyal and alive at the end.', damage: 'Their agents you killed, trapped or turned.', intel: 'Their roles you identified correctly.', security: 'Lost for moles you missed, loyal agents you executed, and attackers caught in traps.' };
+const PARTS = [['efficiency', 'Efficiency'], ['damage', 'Damage'], ['intel', 'Intel'], ['security', 'Security']];
+const PART_TIP = { efficiency: 'Your orders that paid off: attacks that killed, pitches that landed, moves that led somewhere. Unused orders count against you.', damage: 'Their agents you killed, trapped or turned.', intel: 'Their roles you identified correctly.', security: 'Lost for moles you missed, loyal agents you executed, and attackers caught in traps.' };
 function assessment(game, story) {
   if (!story) return '';
   const play = story.play || (story.lessons && Object.fromEntries(SIDES.map((s) => [s, { bad: story.lessons[s] }]))); // older saves had lessons only

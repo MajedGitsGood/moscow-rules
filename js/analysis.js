@@ -5,7 +5,7 @@
 import { callClaude, LLMUnavailable } from './llm.js';
 import { DEBRIEF, DEBRIEF_PLAIN } from './prompts.js';
 import { lexMode } from './lexicon.js';
-import { ARCHETYPES, SIDES, SIDE_LABEL } from './world.js';
+import { ARCHETYPES, SIDES, SIDE_LABEL, RULES } from './world.js';
 import { describeOrder } from './engine.js';
 
 const other = (s) => (s === 'control' ? 'karla' : 'control');
@@ -29,24 +29,58 @@ const cityAt = (a, w) => { let c = a.history[0]?.city; for (const h of a.history
 // Facts the rules can see on their own: recruitments, ignored warnings, undefended targets, executions.
 // Tradecraft: a 0-100 rating of how a side played, from the record alone (never from Claude), so it
 // is the same every time and can be checked. Four parts of 25:
-//   kept      your agents still loyal and alive at the end
-//   damage    their agents you removed, or turned and kept
-//   intel     their roles you had correctly identified by the end
-//   security  moles you missed, loyal agents you executed, and attackers you lost to traps count against you
+//   efficiency  your orders that paid off, out of all the orders you could have given (see below)
+//   damage      their agents you removed, or turned and kept
+//   intel       their roles you had correctly identified by the end
+//   security    moles you missed, loyal agents you executed, and attackers you lost to traps count against you
+// Efficiency: which of a side's orders paid off. An attack that killed; a pitch that landed; a
+// surveillance that named someone new; a plan followed by the attack; a trap that caught someone;
+// lying low on the night someone came for you; a check of loyalty (always information); and a move
+// that led to one of those within two weeks. Unused orders count against you; fake orders and moles'
+// lies are left out.
+export function efficiency(game, side) {
+  const inbox = game.inbox[side], log = game.orderLog.filter((o) => o.side === side), enemy = game.orderLog.filter((o) => o.side !== side);
+  const last = lastWeek(game), opw = game.ordersPerWeek || RULES.ordersPerWeek;
+  const said = (a, w) => inbox.filter((m) => m.week === w + 1 && m.from === a);
+  const knownBy = (w) => new Set(inbox.filter((m) => m.week <= w).flatMap((m) => (m.facts?.roles || []).map((r) => r.id)));
+  const paid = (o) => {
+    const t = o.targetId && game.agents[o.targetId], w = o.week;
+    switch (o.type) {
+      case 'strike': return !!t && t.eliminated?.week === w && t.eliminated.how === 'killed' && t.eliminated.by === side;
+      case 'approach': return said(o.agentId, w).some((m) => m.facts?.approach === o.targetId || m.facts?.turned === o.targetId);
+      case 'surveil': { const before = knownBy(w); return said(o.agentId, w).some((m) => (m.facts?.roles || []).some((r) => !before.has(r.id))); }
+      case 'prepare': return log.some((x) => x.week === w + 1 && x.agentId === o.agentId && x.type === 'strike' && x.targetId === o.targetId);
+      case 'trap': return inbox.some((m) => (m.week === w + 1 || m.week === w + 2) && m.from === o.agentId && m.kind === 'event' && /trap/i.test(m.text));
+      case 'lielow': return enemy.some((x) => x.week === w && x.type === 'strike' && x.targetId === o.agentId);
+      case 'vet': return true;
+      case 'move': return log.some((x) => x.agentId === o.agentId && x.type !== 'move' && x.week > w && x.week <= w + 2 && paid(x));
+      default: return false;
+    }
+  };
+  let good = 0, counted = 0, slots = 0;
+  for (let w = 1; w <= last; w++) {
+    const alive = Object.values(game.agents).filter((a) => a.side === side && (!a.eliminated || a.eliminated.week >= w)).length;
+    const mine = log.filter((o) => o.week === w), skipped = mine.filter((o) => o.type === 'feed' || o.type === 'lie').length;
+    slots += Math.max(0, Math.min(opw, alive) - skipped);
+    for (const o of mine) if (o.type !== 'feed' && o.type !== 'lie') { counted++; if (paid(o)) good++; }
+  }
+  return { paid: good, given: counted, possible: slots, share: slots ? good / slots : 0 };
+}
+
 export function tradecraft(game, side) {
   const all = Object.values(game.agents), mine = all.filter((a) => a.side === side), theirs = all.filter((a) => a.side !== side);
   const n = mine.length || 1, m = theirs.length || 1;
   const clamp = (x) => Math.max(0, Math.min(1, x));
-  const kept = mine.filter((a) => a.alive && !a.turnedBy).length / n;
+  const eff = efficiency(game, side).share;
   const damage = clamp(theirs.filter((a) => !a.alive || a.turnedBy === side).length / m);
   const intel = theirs.filter((a) => (game.intel[side]?.[a.id]?.roles || []).some((r) => r.archetype === a.archetype)).length / m;
   const missed = mine.filter((a) => a.turnedBy && a.alive).length;
   const framed = mine.filter((a) => a.eliminated?.how === 'executed' && !a.turnedBy).length;
   const trapped = mine.filter((a) => a.eliminated?.how === 'trapped').length;
   const security = clamp(1 - (missed + framed + 0.5 * trapped) / n);
-  const parts = { kept, damage, intel, security };
+  const parts = { efficiency: eff, damage, intel, security };
   for (const k in parts) parts[k] = Math.round(parts[k] * 25);
-  return { score: parts.kept + parts.damage + parts.intel + parts.security, parts };
+  return { score: parts.efficiency + parts.damage + parts.intel + parts.security, parts };
 }
 
 export function findMoments(game) {
@@ -235,7 +269,7 @@ function strengthFor(game, side) {
   if (caught) return `${caught} of their attackers walked into your traps.`;
   if (killed >= 2) return `${killed} of their agents were removed by your strikes.`;
   if (t.intel >= 15) return 'You identified most of their network by the end.';
-  if (t.kept >= 15) return 'You kept most of your network alive and loyal.';
+  if (t.efficiency >= 15) return 'Most of your orders paid off: little wasted motion.';
   return 'Nothing stood out; you held on without a clear advantage.';
 }
 

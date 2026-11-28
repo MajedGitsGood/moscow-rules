@@ -1,7 +1,7 @@
 // v2 rule checks.   node tools/test.js
 import { newGame, submitOrders, resolveWeek, viewFor, executeAgent, surrender, legalOrders, setStance, validateOrders } from '../js/engine.js';
 import { factsCheck, withoutSignoff } from '../js/voices.js';
-import { tradecraft } from '../js/analysis.js';
+import { tradecraft, efficiency } from '../js/analysis.js';
 import { loyaltyRecord } from '../js/controllers/claude.js';
 
 let fails = 0;
@@ -49,13 +49,19 @@ const inbox = (g, side) => viewFor(g, side).inbox.map((m) => m.text).join(' | ')
   ok(withoutSignoff(g, m, `${a.name} has been asking about Vasko.`) === `${a.name} has been asking about Vasko.`, 'a real sentence about the sender stays');
   ok(withoutSignoff(g, m, `${a.name} reporting from Lisbon. Vasko met someone off the night train.`) === 'Vasko met someone off the night train.', 'a voiced report loses an opening that only names its sender');
 }
+{ const { g, get } = setup({ control: { scalphunter: 'A', talentspotter: 'B' }, karla: { lamplighter: 'A' } });
+  const sh = get('control', 'scalphunter'), ts = get('control', 'talentspotter'), ll = get('karla', 'lamplighter');
+  week(g, [{ agentId: sh.id, type: 'strike', targetId: ll.id }, { agentId: ts.id, type: 'lielow' }]);
+  const e = efficiency(g, 'control');
+  ok(e.paid === 1 && e.given === 2 && e.possible === g.ordersPerWeek, 'efficiency: a kill pays off; an order that did nothing and unused orders do not');
+}
 { const { g } = setup();
   const fresh = tradecraft(g, 'control');
-  ok(fresh.parts.kept === 25 && fresh.parts.damage === 0 && fresh.parts.security === 25 && fresh.score === 50, 'tradecraft: a fresh network keeps 25, does 0 damage, loses no security');
+  ok(fresh.parts.efficiency === 0 && fresh.parts.damage === 0 && fresh.parts.security === 25 && fresh.score === 25, 'tradecraft: a fresh network has no orders paid off, no damage, and full security');
   const k = Object.values(g.agents).find((a) => a.side === 'karla'); k.alive = false;
   const c = Object.values(g.agents).find((a) => a.side === 'control'); c.turnedBy = 'karla';
   const t = tradecraft(g, 'control');
-  ok(t.parts.damage > 0 && t.parts.kept < 25 && t.parts.security < 25 && t.score === Object.values(t.parts).reduce((x, y) => x + y, 0), 'tradecraft: kills add damage; an undetected mole costs kept and security');
+  ok(t.parts.damage > 0 && t.parts.security < 25 && t.score === Object.values(t.parts).reduce((x, y) => x + y, 0), 'tradecraft: kills add damage; an undetected mole costs security');
 }
 { const { g } = setup();
   const ks = Object.values(g.agents).filter((a) => a.side === 'karla');

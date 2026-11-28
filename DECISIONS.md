@@ -4,6 +4,16 @@ Why-this-not-that for this project, newest first. Companion to [CHANGELOG.md](CH
 
 ---
 
+## 2026-11-28: Efficiency replaces Kept in the Tradecraft rating
+**Decision:** The first quarter of the rating is the share of a side's orders that paid off, out of all
+the orders it could have given; Kept (agents still loyal and alive) is dropped.
+**Why:** Kept repeated the final score (loyal agents plus turned enemies). Movement alone can't be
+graded fairly, but what it leads to can: a move counts when the agent's next order there pays off
+within two weeks. On four saved games the winner was the more efficient side every time, and the
+offline bot's two weeks in game 420352038 scored 0 and 1 out of 5.
+**Rejected:** *Grading movement directly* (a move is only good or bad by what follows). *Counting
+unfired traps or precautionary lying low as paid* (deterrence leaves no record to check).
+
 ## 2026-11-28: Prepared attacks last one week
 **Decision:** A preparation can be used only in the week right after it is made.
 **Why:** An open-ended preparation let one agent hold a strike in reserve indefinitely while doing
