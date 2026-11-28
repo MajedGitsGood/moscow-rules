@@ -4,6 +4,13 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 
 ## [Unreleased]
 
+### Added (plans on the map)
+- **Rings show what's under way:** a dashed orange ring around one of your agents who has prepared an
+  attack, a dotted green ring around one who has set a trap, and a three-part purple ring around an
+  enemy agent you are recruiting, one part lit per pitch. Each sits on a dark outline so it reads on
+  land, sea and the KGB's red token rims; hover a token for the details ("Attack prepared on Gorev",
+  "Pitched 2 of 3").
+
 ### Changed (speed)
 - **The KGB plans while you do.** Its weekly orders start as soon as the morning arrives, and its
   placement as soon as a game is created, so End Week usually finds them ready: End Week to the map

@@ -1,7 +1,7 @@
 // The war-room map: Natural Earth coastlines, a territory around each city (Voronoi cells clipped
 // to land, tinted by whoever holds the city), city medallions with landmarks, and agent tokens.
 import { MAP } from '../mapdata.js';
-import { LANDMARK, HOME } from '../world.js';
+import { LANDMARK, HOME, RULES } from '../world.js';
 import { LANDMARK_ICON, ORDER_ICON, ROLE_ICON, sized } from './icons.js';
 import { portraitBody } from './portraits.js';
 
@@ -124,6 +124,25 @@ export function mapOverlay({ view, selected, orders = [], moveTargets = null, ro
     const theirs = view.enemies.filter((a) => a.alive && a.city === c);
     const trap = view.traps.find((t) => t.city === c);
     const cls = ['city', selected === c ? 'selected' : '', moveTargets?.has(c) ? 'target' : '', HOME[c] ? `home-${HOME[c]}` : ''].join(' ');
+    // Plans in progress, as rings around the token: an attack one of ours has prepared (dashed orange),
+    // a trap one of ours has set (dotted green), and an enemy agent being recruited (three purple
+    // segments, one lit per pitch). Each colour sits on a dark outline so it reads on land, sea and rims.
+    const nameOf = (id) => [...view.own, ...view.enemies].find((x) => x.id === id)?.name;
+    const plans = (a) => {
+      const out = [], tips = [];
+      if (a.prep && nameOf(a.prep.targetId)) { out.push('<circle r="16.5" class="pr-under"/><circle r="16.5" class="pr-prep"/>'); tips.push(`Attack prepared on ${nameOf(a.prep.targetId)}`); }
+      const trap = view.traps.find((t) => t.setterId === a.id);
+      // The trap ring sits just outside, so an agent with both a prepared attack and a trap shows both.
+      if (trap) { out.push('<circle r="20" class="pr-under"/><circle r="20" class="pr-trap"/>'); tips.push(`Trap set: catches ${trap.active ? 'tonight' : 'next week'}`); }
+      const n = view.approachProgress?.[a.id];
+      if (n) {
+        const k = RULES.approachesToTurn, r = 16.5, gap = 0.3;
+        const arc = (i) => { const a0 = -Math.PI / 2 + (i * 2 * Math.PI) / k + gap / 2, a1 = a0 + (2 * Math.PI) / k - gap; return `M${(r * Math.cos(a0)).toFixed(2)},${(r * Math.sin(a0)).toFixed(2)} A${r},${r} 0 0 1 ${(r * Math.cos(a1)).toFixed(2)},${(r * Math.sin(a1)).toFixed(2)}`; };
+        out.push(Array.from({ length: k }, (_, i) => `<path d="${arc(i)}" class="pr-under seg"/><path d="${arc(i)}" class="pr-seg ${i < n ? 'on' : ''}"/>`).join(''));
+        tips.push(`Pitched ${n} of ${k}`);
+      }
+      return { svg: out.join(''), tip: tips.length ? ` · ${tips.join(' · ')}` : '' };
+    };
     const tok = (a, i, n, sideCls) => {
       const left = sideCls === 'ours';
       const spread = Math.min(26, 110 / Math.max(n, 1));
@@ -131,13 +150,15 @@ export function mapOverlay({ view, selected, orders = [], moveTargets = null, ro
       const tx = Math.cos(ang) * 40, ty = Math.sin(ang) * 40 + 4;
       const queued = orders.find((o) => o.agentId === a.id);
       const ri = roleOf(a), role = ri?.role ?? (typeof ri === 'string' ? ri : null), sure = ri?.sure ?? true;
+      const plan = plans(a);
       return `<g class="token ${sideCls} ${a.asset ? 'asset' : ''} ${queued ? 'queued' : ''}" data-agent="${a.id}" transform="translate(${tx.toFixed(1)},${ty.toFixed(1)})"><g class="tok-inner">
+        ${plan.svg}
         <circle r="12.5" class="ring"/>
         <svg x="-11" y="-11" width="22" height="22" viewBox="0 0 64 64" clip-path="url(#tok)">${portraitBody(a, a.alive ? null : 'dead')}</svg>
         ${role ? `<g class="badge r-${role} ${sure ? '' : 'guess'}" transform="translate(${sideCls === 'ours' ? -13 : 13},5)"><circle r="8.5"/>${sized(ROLE_ICON[role], 12.5)}</g>` : ''}
         ${['suspect', 'mole'].includes(trustOf(a)) ? `<g class="tmark t-${trustOf(a)}" transform="translate(10,-10)"><title>You marked them: ${trustOf(a)}</title><circle r="7"/><text y="3.5" text-anchor="middle">${trustOf(a) === 'mole' ? 'M' : '?'}</text></g>` : ''}
         ${queued ? `<g class="qmark" transform="translate(-9,-9)"><circle r="6.5"/>${sized(ORDER_ICON[queued.type] || '', 9)}</g>` : ''}
-        <title>${a.first} ${a.name}</title>
+        <title>${a.first} ${a.name}${plan.tip}</title>
       </g></g>`;
     };
     out.push(`<g class="${cls}" data-city="${c}" transform="translate(${x},${y})" tabindex="0" role="button" aria-label="${c}: ${ours.length} of ours, ${theirs.length} of theirs">

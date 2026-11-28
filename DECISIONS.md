@@ -4,6 +4,16 @@ Why-this-not-that for this project, newest first. Companion to [CHANGELOG.md](CH
 
 ---
 
+## 2026-11-28: Rings for plans in progress
+**Decision:** Mark prepared attacks, traps and recruitment progress with rings around tokens, in the
+matching role colours, each drawn over a dark outline.
+**Why:** Once agents move, nothing on the map showed who had prepared what or who was halfway
+recruited. Rings add nothing beside the token, so crowded cities stay readable; the dark outline keeps
+the colours legible on beige land, dark sea and red KGB rims (the user's worry about contrast).
+**Rejected (mocked):** *Pips* (one more badge on tokens that already carry a role badge and trust mark).
+*Threads from actor to target* (show who is after whom, but cross the city emblem in busy cities; the
+hover text covers it instead). *Green dashed for traps* (already means a turned enemy agent).
+
 ## 2026-11-28: The KGB thinks during your turn
 **Decision:** Start Claude's orders for the week as soon as the morning arrives (and its placement when
 the game is created), and await them at End Week; shorten the morning to 2.5-4 s and make it skippable.

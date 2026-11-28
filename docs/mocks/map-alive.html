@@ -39,6 +39,26 @@
   .card small { display: block; font: 600 10px var(--ui); color: #6b5e45; margin-bottom: 3px; letter-spacing: .02em; }
   .card.new { box-shadow: 0 0 0 2px rgba(242,211,107,.55), 0 2px 6px rgba(0,0,0,.3); }
   .card.old { opacity: 1; }
+
+  /* plans in progress */
+  .opts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+  @media (max-width: 1000px) { .opts { grid-template-columns: 1fr; } }
+  .opt .frame { border-radius: 4px; overflow: hidden; background: radial-gradient(ellipse at 40% 45%, #1f3a48 0%, #12232d 45%, #0a141b 85%); box-shadow: 0 10px 30px rgba(0,0,0,.45); }
+  .opt svg.map { position: static; display: block; width: 100%; height: auto; }
+  .opt figcaption { margin-top: 9px; } .opt figcaption b { font-family: var(--serif); letter-spacing: .1em; text-transform: uppercase; font-size: 13px; }
+  .opt figcaption span { display: block; color: var(--text-dim); font-size: 13px; margin-top: 4px; line-height: 1.45; }
+  .legend { display: flex; flex-wrap: wrap; gap: 18px; margin-top: 14px; color: var(--text-dim); font-size: 12.5px; }
+  .legend .sw { display: inline-block; width: 22px; height: 0; border-top: 2.5px dashed; vertical-align: middle; margin-right: 7px; }
+  .sw.prep { border-color: #ef8a4c; } .sw.pitch { border-color: #b493ec; border-top-style: solid; } .sw.trap { border-color: #62c48f; }
+  .pl-prep { fill: none; stroke: #ef8a4c; stroke-width: 2.2; stroke-dasharray: 3.2 2.4; }
+  .pl-seg { fill: none; stroke-width: 2.6; stroke-linecap: round; }
+  .pl-seg.on { stroke: #b493ec; } .pl-seg.off { stroke: rgba(255,255,255,.18); }
+  .pl-trap { fill: none; stroke: #62c48f; stroke-width: 2.2; stroke-dasharray: 3.2 2.4; }
+  .pl-pip circle { stroke: #0a0f14; stroke-width: 1.2; }
+  .pl-pip text { font: 700 6.5px var(--ui); fill: #0a0f14; text-anchor: middle; }
+  .pl-line { fill: none; stroke-width: 1.8; stroke-linecap: round; }
+  .pl-line.prep { stroke: #ef8a4c; stroke-dasharray: 4 3; } .pl-line.pitch { stroke: #b493ec; stroke-dasharray: 1.5 3; }
+  .pl-tag { font: 700 7px var(--ui); fill: #b493ec; text-anchor: middle; paint-order: stroke; stroke: #0a0f14; stroke-width: 2.5px; }
 </style>
 </head>
 <body>
@@ -48,6 +68,17 @@
   <div class="desk">
     <div class="mapwrap" id="mapwrap"><span class="clock" id="clock"></span><span class="phase" id="phase"></span><div class="wires" id="wires"></div></div>
     <aside class="reports" id="reports"><div class="tabs"><b>REPORTS</b><span>CITY</span><span>OURS</span><span>THEIRS</span></div><h4>WHAT HAPPENED</h4></aside>
+  </div>
+
+  <h1 style="margin-top:56px">PLANS IN PROGRESS</h1>
+  <p>Three ways to mark what's under way from last week, shown on the same situation, zoomed in on Berlin and Vienna at real token size.
+  In Berlin, our Assassin <b>Marsh</b> has prepared an attack on their Watcher, and our Recruiter has pitched their Counterspy twice (2 of 3).
+  In Vienna, our Counterspy has a trap set for next week, and their Recruiter has been pitched once (1 of 3). Green dashed rings stay as they are: an enemy agent you've turned.</p>
+  <div class="opts" id="opts"></div>
+  <div class="legend">
+    <span><i class="sw prep"></i>attack prepared (Assassin orange)</span>
+    <span><i class="sw pitch"></i>being recruited (Recruiter purple), one segment per pitch</span>
+    <span><i class="sw trap"></i>trap set (Counterspy green)</span>
   </div>
 </div>
 <script type="module">
@@ -134,6 +165,71 @@ window.mockAt = (t) => { frozen = t; render(t); };
 window.mockPlay = () => { frozen = null; };
 const tick = (now) => { if (frozen === null) render(((now - t0) / 1000) % LOOP); requestAnimationFrame(tick); };
 if (matchMedia('(prefers-reduced-motion: reduce)').matches) render(LOOP - 1); else requestAnimationFrame(tick);
+</script>
+<script type="module">
+// Plans in progress: three ways to mark them, on one situation.
+import { mapBase, mapOverlay, mapLight, tintCells, cityXY } from '/js/ui/map.js';
+import { ORDER_ICON, sized } from '/js/ui/icons.js';
+import { newGame, viewFor } from '/js/engine.js';
+
+const CITIES = ['London', 'Berlin', 'Vienna', 'Rome', 'Istanbul', 'Moscow', 'Helsinki'];
+const g = newGame(11, { size: 8 });
+g.cities = CITIES;
+const by = (side, arch, i = 0) => Object.values(g.agents).filter((a) => a.side === side && a.archetype === arch)[i];
+for (const a of Object.values(g.agents)) a.city = a.side === 'control' ? 'London' : 'Moscow';
+const ours = { sh: by('control', 'scalphunter'), ts: by('control', 'talentspotter'), ts2: by('control', 'talentspotter', 1), fe: by('control', 'ferret'), ll: by('control', 'lamplighter') };
+const theirs = { ll: by('karla', 'lamplighter'), fe: by('karla', 'ferret'), ts: by('karla', 'talentspotter'), sh: by('karla', 'scalphunter') };
+ours.sh.city = ours.ts.city = ours.ll.city = 'Berlin'; theirs.ll.city = theirs.fe.city = 'Berlin';
+ours.fe.city = ours.ts2.city = 'Vienna'; theirs.ts.city = theirs.sh.city = 'Vienna';
+g.placed = { control: true, karla: true }; g.phase = 'orders';
+const view = viewFor(g, 'control');
+const known = new Set([theirs.ll.id, theirs.fe.id, theirs.ts.id]);
+const roleOf = (a) => (a.side === 'control' ? { role: a.archetype, sure: true } : known.has(a.id) ? { role: a.archetype, sure: true } : null);
+const plans = { prep: { by: ours.sh, on: theirs.ll }, pitches: [{ by: ours.ts, on: theirs.fe, n: 2 }, { by: ours.ts2, on: theirs.ts, n: 1 }], trap: ours.fe };
+g.traps = [{ side: 'control', city: 'Vienna', setterId: ours.fe.id, night: 2 }];
+view.traps = [{ city: 'Vienna', setterId: ours.fe.id, night: 2, active: false }];
+
+const NS = 'http://www.w3.org/2000/svg';
+const tok = (svg, a) => svg.querySelector(`.token[data-agent="${a.id}"]`);
+const inner = (svg, a) => tok(svg, a).querySelector('.tok-inner');
+const at = (svg, a) => { const t = tok(svg, a); const [cx, cy] = cityXY(t.closest('.city').dataset.city); const m = /translate\(([-\d.]+),([-\d.]+)\)/.exec(t.getAttribute('transform')); return [cx + +m[1], cy + +m[2]]; };
+// A ring of n segments, k of them lit: one per pitch (three turn an agent).
+const segs = (k, n = 3, r = 16) => Array.from({ length: n }, (_, i) => {
+  const gap = 0.22, a0 = -Math.PI / 2 + (i * 2 * Math.PI) / n + gap / 2, a1 = a0 + (2 * Math.PI) / n - gap;
+  return `<path class="pl-seg ${i < k ? 'on' : 'off'}" d="M${(r * Math.cos(a0)).toFixed(2)},${(r * Math.sin(a0)).toFixed(2)} A${r},${r} 0 0 1 ${(r * Math.cos(a1)).toFixed(2)},${(r * Math.sin(a1)).toFixed(2)}"/>`;
+}).join('');
+const pip = (x, y, col, icon, txt) => `<g class="pl-pip" transform="translate(${x},${y})"><circle r="6.2" fill="${col}"/>${icon ? sized(icon, 8.5) : `<text y="2.3">${txt}</text>`}</g>`;
+
+const OPTIONS = [
+  { title: 'A. Rings', note: 'An orange dashed ring on an agent who has prepared an attack; a purple ring in three segments on an enemy being recruited, one lit per pitch. Traps keep their mark under the city. Nothing new on the map itself, and the ring reads even in a crowd.', draw(svg) {
+    inner(svg, plans.prep.by).insertAdjacentHTML('beforeend', '<circle class="pl-prep" r="16"/>');
+    for (const p of plans.pitches) inner(svg, p.on).insertAdjacentHTML('beforeend', segs(p.n));
+  } },
+  { title: 'B. Pips', note: 'A small badge on the token, like the queued-order mark: a crosshair for a prepared attack, a trap for a trap set by that agent, and a purple 1/3, 2/3 on an enemy being recruited. Precise, but one more thing on every busy token.', draw(svg) {
+    inner(svg, plans.prep.by).insertAdjacentHTML('beforeend', pip(10, -10, '#ef8a4c', ORDER_ICON.prepare || ORDER_ICON.strike));
+    inner(svg, plans.trap).insertAdjacentHTML('beforeend', pip(10, -10, '#62c48f', ORDER_ICON.trap));
+    for (const p of plans.pitches) inner(svg, p.on).insertAdjacentHTML('beforeend', pip(10, -10, '#b493ec', null, `${p.n}/3`));
+  } },
+  { title: 'C. Threads', note: 'A short dashed line from whoever is acting to their target: orange from the Assassin to the agent they prepared on, dotted purple from the Recruiter to the agent being pitched, with the count. Shows who is after whom, which A and B do not.', draw(svg) {
+    const g2 = document.createElementNS(NS, 'g');
+    const line = (a, b, cls, tag) => { const [x1, y1] = at(svg, a), [x2, y2] = at(svg, b); const mx = (x1 + x2) / 2, my = Math.min(y1, y2) - 16;
+      return `<path class="pl-line ${cls}" d="M${x1},${y1 - 9} Q${mx},${my} ${x2},${y2 - 9}"/>${tag ? `<text class="pl-tag" x="${mx}" y="${my + 4}">${tag}</text>` : ''}`; };
+    g2.innerHTML = line(plans.prep.by, plans.prep.on, 'prep') + plans.pitches.map((p) => line(p.by, p.on, 'pitch', `${p.n}/3`)).join('');
+    svg.querySelector('#overlay').appendChild(g2);
+  } },
+];
+
+const wrap = document.getElementById('opts');
+for (const o of OPTIONS) {
+  const fig = document.createElement('figure');
+  fig.className = 'opt';
+  fig.innerHTML = `<div class="frame"><svg class="map" viewBox="420 250 180 152">${mapBase(CITIES)}<g id="overlay">${mapOverlay({ view, selected: null, orders: [], roleOf })}</g>${mapLight()}</svg></div>
+    <figcaption><b>${o.title}</b><span>${o.note}</span></figcaption>`;
+  wrap.appendChild(fig);
+  const svg = fig.querySelector('svg');
+  tintCells(svg, view);
+  o.draw(svg);
+}
 </script>
 </body>
 </html>
