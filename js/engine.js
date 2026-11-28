@@ -330,11 +330,12 @@ export function resolveWeek(game) {
     attacks.push({ city: s.city, attacker: s, target: t, result: 'killed' });
   }
 
-  // 4. Preparations.
+  // 4. Preparations. A preparation is good for the following week only: strike then or lose it.
   for (const o of of('prepare')) {
     const a = game.agents[o.agentId], t = game.agents[o.targetId];
     if (t.alive && t.city === a.city) a.prep = { targetId: t.id, week: w };
   }
+  for (const a of Object.values(game.agents)) if (a.prep && a.prep.week < w) a.prep = null;
 
   // 5. Approaches. RULES.approachesToTurn approaches turn the target, and every approach counts, so two
   //    Talent-spotters working the same target in one week double the pace. Approaches are never

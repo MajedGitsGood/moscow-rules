@@ -4,6 +4,11 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 
 ## [Unreleased]
 
+### Changed (rules and safety)
+- **A prepared attack expires.** It can be used the week after it's prepared and no other; strike then
+  or lose it. (It used to last until the agent struck or moved.)
+- **Ending the week with orders to spare asks first:** "Send only 1 of 5 orders?", with Keep planning.
+
 ### Added (plans on the map)
 - **Rings show what's under way:** a dashed orange ring around one of your agents who has prepared an
   attack, a dotted green ring around one who has set a trap, and a three-part purple ring around an

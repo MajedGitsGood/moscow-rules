@@ -31,7 +31,7 @@ const ORDER_HINT = {
   move: 'Any city, arriving tomorrow. Everyone sees the move.',
   surveil: 'Report on this city. Lamplighters learn every role.',
   lielow: "Disappear for a week. Can't be found or reported on.",
-  prepare: 'Study a target, so you can strike next week. Leaves footprints.',
+  prepare: 'Study a target, so you can strike next week (next week only). Leaves footprints.',
   strike: 'Kill the target. Fails, fatally, if they have a trap here.',
   trap: 'Catches anyone who strikes here next week, one night only. Loud while it is set up.',
   trapTonight: 'Ferrets: catches anyone who strikes here tonight, one night only.',
@@ -365,7 +365,7 @@ function orderPop(v) {
   const q = app.queued[side].find((o) => o.agentId === a.id);
   const chips = [];
   if (q) chips.push(chip(`${ORDER_ICON[q.type]}${esc(describeOrder(q, g))}`, 'queued'));
-  if (mine && a.prep) chips.push(chip(`${ORDER_ICON.prepare}Ready to strike ${esc(g.agents[a.prep.targetId].name)}`));
+  if (mine && a.prep) chips.push(chip(`${ORDER_ICON.prepare}Ready to strike ${esc(g.agents[a.prep.targetId].name)}, this week only`));
   if (!mine && v.approachProgress[a.id]) chips.push(chip(`${ORDER_ICON.approach}Pitched ${v.approachProgress[a.id]}/${RULES.approachesToTurn}`, 'good'));
   if (asset) chips.push(chip('Our source', 'good'));
   const head = `<div class="pop-head">${portrait(a, { size: 40 })}<div class="pop-id"><b>${esc(a.first)} ${esc(a.name)}</b><small>${a.city}</small></div>
@@ -688,7 +688,19 @@ function onAct(el, ev) {
     case 'guess-ok': { const r = el.dataset.role; if (r === 'unknown') delete app.notes[side].roles[el.dataset.agent]; else app.notes[side].roles[el.dataset.agent] = r; closeModal(); save(); return render(); }
     case 'accept': ev.stopPropagation(); app.notes[side].roles[el.dataset.agent] = el.dataset.role; save(); return render();
     case 'goto': if (el.dataset.city) { app.sel = { city: el.dataset.city, agent: null }; app.tab = 'station'; app.traffic = true; render(); } return;
-    case 'end': return endWeek();
+    case 'end': {
+      // Sending fewer orders than you could is easy to do by accident: ask first.
+      const n = app.queued[side].length, v = viewFor(g, side);
+      const free = v.own.filter((a) => a.alive && !app.queued[side].some((o) => o.agentId === a.id)).length;
+      const left = Math.min(v.ordersPerWeek - n, free);
+      if (left > 0) {
+        openModal(`<h2>${n ? `Send only ${n} of ${v.ordersPerWeek} orders?` : 'End the week with no orders?'}</h2><p>You still have ${left} order${left > 1 ? 's' : ''} this week. Orders you don't use are lost.</p>
+          <button class="btn gold" data-act="end-ok">${n ? `Send ${n}` : 'End the week'}</button> <button class="btn" data-act="close-modal">Keep planning</button>`);
+        return;
+      }
+      return endWeek();
+    }
+    case 'end-ok': closeModal(); return endWeek();
     case 'again': clearSave(); app = null; return render();
     case 'casefile': { // the whole finished game, for later analysis
       const url = URL.createObjectURL(new Blob([JSON.stringify({ game: app.game, story: app.story, mode: app.mode }, null, 1)], { type: 'application/json' }));

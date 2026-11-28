@@ -71,6 +71,13 @@ const inbox = (g, side) => viewFor(g, side).inbox.map((m) => m.text).join(' | ')
   week(g, [{ agentId: ll.id, type: 'strike', targetId: ts.id }]);
   ok(!ts.alive, 'prepared strike kills');
 }
+{ const { g, get } = setup({ control: { lamplighter: 'A' }, karla: { talentspotter: 'A' } });
+  const ll = get('control', 'lamplighter'), ts = get('karla', 'talentspotter');
+  week(g, [{ agentId: ll.id, type: 'prepare', targetId: ts.id }]);
+  ok(ll.prep?.targetId === ts.id, 'a preparation is ready the following week');
+  week(g, [{ agentId: ll.id, type: 'surveil' }]);
+  ok(!ll.prep && !legalOrders(g, 'control', ll.id).some((l) => l.type === 'strike'), 'an unused preparation expires after that week');
+}
 { const { g, get } = setup({ control: { scalphunter: 'A' }, karla: { ferret: 'A', lamplighter: 'A' } });
   const sh = get('control', 'scalphunter'), fe = get('karla', 'ferret'), ll = get('karla', 'lamplighter');
   week(g, [{ agentId: sh.id, type: 'strike', targetId: ll.id }], [{ agentId: fe.id, type: 'trap' }]);

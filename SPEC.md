@@ -23,7 +23,7 @@ Ten agents a side (2 Scalphunters, 3 Lamplighters, 3 Ferrets, 2 Talent-spotters)
   in one week both count. Never reported; cannot kill or trap.
 
 ## Orders (five a week, one per agent)
-Move, Surveil, Lie low, Prepare (a strike on someone in the same city), Strike, Set trap, Approach,
+Move, Surveil, Lie low, Prepare (a strike on someone in the same city, usable the next week only), Strike, Set trap, Approach,
 Vet, Feed (give an agent a fake order: they do nothing, but a mole who hears of it passes it on exactly
 like a real one), and for enemy agents you
 have turned, choose their lie. Executing one of your own agents is free.

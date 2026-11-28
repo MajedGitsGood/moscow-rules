@@ -4,6 +4,14 @@ Why-this-not-that for this project, newest first. Companion to [CHANGELOG.md](CH
 
 ---
 
+## 2026-11-28: Prepared attacks last one week
+**Decision:** A preparation can be used only in the week right after it is made.
+**Why:** An open-ended preparation let one agent hold a strike in reserve indefinitely while doing
+other work (preparing, then trapping, then still able to strike), which made threats hard to read. One
+week makes a spotted preparation a real "about to happen" signal for both sides. Simulated balance is
+unchanged (800 games at 6 agents: 328-362 before 322-349; 200 at 8: 92-89).
+**Rejected:** *Keep it open-ended* (unreadable). *Expire after two weeks* (still lets agents bank strikes).
+
 ## 2026-11-28: Rings for plans in progress
 **Decision:** Mark prepared attacks, traps and recruitment progress with rings around tokens, in the
 matching role colours, each drawn over a dark outline.

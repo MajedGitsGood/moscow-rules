@@ -32,7 +32,7 @@ const ORDERS = [
   ['move', 'Move', 'Any city by tomorrow'],
   ['surveil', 'Surveil', 'Lamplighters only: learn every role here'],
   ['lielow', 'Lie low', 'Vanish for a week'],
-  ['prepare', 'Prepare', 'Study a target, strike next week'],
+  ['prepare', 'Prepare', 'Study a target, strike next week (or lose it)'],
   ['strike', 'Strike', 'Kill, unless trapped that night'],
   ['trap', 'Trap', 'One night. Ferrets: tonight. Others: next week (loud)'],
   ['approach', 'Approach', `${RULES.approachesToTurn} pitches turn them, unseen`],
