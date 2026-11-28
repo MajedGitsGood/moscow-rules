@@ -7,7 +7,7 @@ compatibility_date = "2026-11-01"
 # then paste the id it prints below.
 [[kv_namespaces]]
 binding = "BUDGET"
-id = "PASTE_KV_NAMESPACE_ID_HERE"
+id = "969d3486b9f44a1399b31908c2d27cd2"
 
 [vars]
 # Who may call the proxy (the GitHub Pages site, and local testing).
