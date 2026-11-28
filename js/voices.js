@@ -47,7 +47,8 @@ export async function voiceMorning(game, side) {
     const a = m.from ? game.agents[m.from] : null;
     if (!a) return { label: 'Station (headquarters staff)', facts: '' };
     const what = a.side === side ? `our ${ARCHETYPES[a.archetype].label}` : 'their agent, secretly working for us';
-    return { label: `${a.first} ${a.name}, ${what}, in ${m.city}`, facts: `${a.first} ${a.name} ${m.city || ''}` };
+    // The reader knows their own agent's role, so naming it in the rewrite isn't a new fact.
+    return { label: `${a.first} ${a.name}, ${what}, in ${m.city}`, facts: `${a.first} ${a.name} ${m.city || ''} ${a.side === side ? ARCHETYPES[a.archetype].label : ''}` };
   };
   try {
     const user = JSON.stringify({
@@ -59,7 +60,9 @@ export async function voiceMorning(game, side) {
       const m = fresh.find((x) => x.id === v.id);
       if (!m) continue;
       const extra = senderOf(m).facts;
-      if (factsCheck(game, `${m.text} ${extra}`, v.text) && factsCheck(game, m.text, `${v.text} ${extra}`, { preserve: true })) m.voiced = v.text;
+      // Nothing new beyond the report and its sender; and every fact in the report survives (the sender's
+      // own details count on both sides, since the reader already knows them).
+      if (factsCheck(game, `${m.text} ${extra}`, v.text) && factsCheck(game, `${m.text} ${extra}`, `${v.text} ${extra}`, { preserve: true })) m.voiced = v.text;
       else console.warn('voice rewrite dropped (changed facts):', v.text);
     }
   } catch (e) {

@@ -36,6 +36,13 @@ const inbox = (g, side) => viewFor(g, side).inbox.map((m) => m.text).join(' | ')
   ok(ll.alive && rec.some((x) => /slipped away/.test(x)) && rec.some((x) => /vetted by .*TURNED/.test(x)), "Karla's loyalty record shows a mole's failed strike and the vet verdict");
   ok(!loyaltyRecord(g, 'karla', fe), 'a loyal agent with nothing against them has no record');
 }
+{ const { g, get } = setup();
+  const own = get('control', 'lamplighter'), en = get('karla', 'ferret'), city = g.cities[1], extra = `${own.first} ${own.name} ${city} Lamplighter`;
+  const src = `${en.name} has been surveilling us.`, ok1 = `${own.first} ${own.name}, our Lamplighter in ${city}, reports that ${en.name} has been conducting surveillance on our people there.`;
+  const pass = (t) => factsCheck(g, `${src} ${extra}`, t) && factsCheck(g, `${src} ${extra}`, `${t} ${extra}`, { preserve: true });
+  ok(pass(ok1), "a faithful voice rewrite naming its own sender and role passes");
+  ok(!pass(`${own.name} reports nothing of note.`), 'a rewrite that drops the reported agent is refused');
+}
 { const { g } = setup();
   const fresh = tradecraft(g, 'control');
   ok(fresh.parts.kept === 25 && fresh.parts.damage === 0 && fresh.parts.security === 25 && fresh.score === 50, 'tradecraft: a fresh network keeps 25, does 0 damage, loses no security');
