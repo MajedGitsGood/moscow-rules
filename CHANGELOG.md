@@ -11,7 +11,7 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 ### Added (hosting)
 - **Public repo and a hosted setup:** the game is served from GitHub Pages, and a Cloudflare Worker
   (`worker/`) holds the API key and calls Claude for it. The Worker only accepts the game's own
-  prompts, caps each visitor's tokens per day and the whole site's per day, and lets the owner token
+  prompts, caps each visitor at 200k tokens a day (about two games) and the whole site at 1M (about ten games, at most ~$7 a day), and lets the owner token
   skip both. Without it, or once a budget is spent, the game plays offline. Deployment steps are in
   `worker/README.md`. Live at https://majedgitsgood.github.io/moscow-rules/, with the Worker at
   https://spymaster-api.moscow-rules.workers.dev.

@@ -12,10 +12,10 @@ id = "969d3486b9f44a1399b31908c2d27cd2"
 [vars]
 # Who may call the proxy (the GitHub Pages site, and local testing).
 ALLOWED_ORIGINS = "https://majedgitsgood.github.io,http://localhost:8643"
-# Tokens one visitor (by IP) may spend per day: a full game is roughly 200-300k.
-VISITOR_DAILY_TOKENS = "400000"
-# Tokens the whole site may spend per day, across everyone. Raise it when you're ready to pay for more.
-SITE_DAILY_TOKENS = "4000000"
+# Tokens one visitor (by IP) may spend per day: a full game is roughly 90-100k (about $0.70).
+VISITOR_DAILY_TOKENS = "200000"
+# Tokens the whole site may spend per day, across everyone: 1M is about 10 games, at most ~$7 a day.
+SITE_DAILY_TOKENS = "1000000"
 
 # Secrets (never in this file):  npx wrangler secret put ANTHROPIC_API_KEY
 #                                npx wrangler secret put OWNER_TOKEN
