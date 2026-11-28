@@ -4,6 +4,16 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 
 ## [Unreleased]
 
+### Changed (speed)
+- **The KGB plans while you do.** Its weekly orders start as soon as the morning arrives, and its
+  placement as soon as a game is created, so End Week usually finds them ready: End Week to the map
+  went from about 14 seconds to about 1. If you end the week before it has finished, you wait only for
+  the remainder.
+- **A brisker morning:** the lamp tour and telegrams take about 2.5 to 4 seconds instead of 10, a click
+  or any key skips straight to the reports, and if you are in another window or tab the reports are
+  simply there when you return.
+- Report voices are written while the morning plays, instead of before it.
+
 ### Fixed
 - **Agents' reports are voiced again.** A fact-check bug threw out every rewrite of a report from a
   named agent, so only headquarters messages were ever in Claude's voice.

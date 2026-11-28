@@ -4,6 +4,15 @@ Why-this-not-that for this project, newest first. Companion to [CHANGELOG.md](CH
 
 ---
 
+## 2026-11-28: The KGB thinks during your turn
+**Decision:** Start Claude's orders for the week as soon as the morning arrives (and its placement when
+the game is created), and await them at End Week; shorten the morning to 2.5-4 s and make it skippable.
+**Why:** Measured on the live site, End Week to readable reports took 23 s: 10 s of Opus thinking and
+10 s of morning animation. Orders are simultaneous and placement is blind, so the KGB's view never
+depends on the player's choices; asking early changes nothing it knows and hides the wait.
+**Rejected:** *Lower effort or a smaller model for the KGB* (makes the opponent worse to save time the
+player is already spending on their own turn). *Streaming a "thinking" indicator* (still a wait).
+
 ## 2026-11-28: PolyForm Noncommercial instead of MIT, history rewritten
 **Decision:** License the code under PolyForm Noncommercial 1.0.0 and rewrite the repo's history so the
 MIT license it briefly carried (two days, no forks) never appears in it.

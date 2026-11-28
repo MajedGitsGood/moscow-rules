@@ -54,18 +54,21 @@ export function playMorning(root, { prev, inbox, week }) {
 
   const wires = nightWires(inbox, week);
   const panel = stage.querySelector('.panel');
-  if (!wires.length) { if (panel) panel.style.animationDelay = '.5s'; return; }
+  // A hidden tab pauses animation, so a morning that started while you were away would make you sit
+  // through it on your return: skip it and show the reports straight away.
+  if (!wires.length || document.hidden) { if (panel) panel.style.animationDelay = document.hidden ? '0s' : '.5s'; return; }
 
   // The timeline, in seconds from now.
   const cities = [...new Set(wires.map((w) => w.city))];
-  const lampKeys = [[0, LAMP_REST], [0.9, LAMP_REST]];
-  let t = 0.9;
-  for (const c of cities) { lampKeys.push([t += 0.7, [...cityXY(c), 230]], [t += 0.6, [...cityXY(c), 230]]); }
-  lampKeys.push([t += 0.9, LAMP_REST]);
-  const slipAt = (i) => t + 0.2 + i * 1.15;                       // each slip slides in, then types
-  const typeFor = (w) => Math.min(1.4, 0.35 + w.text.length / 55);
-  const flyAt = slipAt(wires.length - 1) + typeFor(wires.at(-1)) + 0.9;
-  const FLY = 0.7, end = flyAt + FLY + 0.3;
+  // Brisk: about 2.5 s for one event, 4 s for three. A click or key skips straight to the reports.
+  const lampKeys = [[0, LAMP_REST], [0.3, LAMP_REST]];
+  let t = 0.3;
+  for (const c of cities) { lampKeys.push([t += 0.35, [...cityXY(c), 230]], [t += 0.25, [...cityXY(c), 230]]); }
+  lampKeys.push([t += 0.4, LAMP_REST]);
+  const slipAt = (i) => t - 0.1 + i * 0.35;                       // each slip slides in, then types
+  const typeFor = (w) => Math.min(0.7, 0.2 + w.text.length / 110);
+  const flyAt = Math.max(...wires.map((w, i) => slipAt(i) + 0.15 + typeFor(w))) + 0.35;
+  const FLY = 0.5, end = flyAt + FLY + 0.1;
   if (panel) panel.style.animationDelay = `${(flyAt + 0.35).toFixed(2)}s`; // the panel arrives as the slips do
 
   // The lamp (map.js mapLight) and the slips.
@@ -76,9 +79,15 @@ export function playMorning(root, { prev, inbox, week }) {
   stage.appendChild(box);
   const slips = [...box.children];
 
-  const start = performance.now();
+  let start = performance.now();
+  const skip = () => { start = performance.now() - end * 1000; if (panel) panel.style.animationDelay = '0s'; };
+  const onHide = () => { if (document.hidden) skip(); };
+  stage.addEventListener('pointerdown', skip, { once: true, capture: true });
+  addEventListener('keydown', skip, { once: true });
+  document.addEventListener('visibilitychange', onHide);
+  const done = () => { removeEventListener('keydown', skip); document.removeEventListener('visibilitychange', onHide); };
   const frame = (now) => {
-    if (!box.isConnected) return; // re-rendered: the morning was cut short
+    if (!box.isConnected) { done(); return; } // re-rendered: cut short
     const s = (now - start) / 1000;
     const [x, y, r] = tween(lampKeys, s);
     if (lamp && dark) {
@@ -89,7 +98,7 @@ export function playMorning(root, { prev, inbox, week }) {
     const reach = pr ? pr.left - br.left : innerWidth;
     slips.forEach((el, i) => {
       const w = wires[i], tin = slipAt(i), slide = ease(clamp((s - tin) / 0.35));
-      const typed = Math.floor(clamp((s - tin - 0.3) / typeFor(w)) * w.text.length);
+      const typed = Math.floor(clamp((s - tin - 0.15) / typeFor(w)) * w.text.length);
       const fly = ease(clamp((s - flyAt - (wires.length - 1 - i) * 0.12) / FLY));
       el.innerHTML = `<small>WEEK ${week} · ${w.city.toUpperCase()}</small>${w.text.slice(0, typed)}${s > tin && typed < w.text.length ? '<i class="caret"></i>' : ''}`;
       el.style.opacity = s < tin ? 0 : (1 - clamp((fly - 0.35) / 0.65)).toFixed(3);
@@ -97,6 +106,7 @@ export function playMorning(root, { prev, inbox, week }) {
     });
     if (s < end) { requestAnimationFrame(frame); return; }
     box.remove();
+    done();
     // The night's reports, just landed, are marked as new for a moment.
     for (const w of wires) stage.querySelector(`.msg[data-mid="${w.id}"]`)?.classList.add('landed');
   };

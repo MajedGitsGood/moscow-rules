@@ -53,6 +53,24 @@ const humanSides = () => (app.mode === 'hotseat' ? SIDES : ['control']);
 const isHuman = (side) => humanSides().includes(side);
 
 // ---------- flow ----------
+// The KGB plans while you do. Orders are simultaneous and placement is blind, so its view never depends
+// on yours: its placement starts as the game is created, and each week's orders start at the morning.
+// End Week then usually finds them ready. Anything you do that it could see first (executing one of your
+// own agents) changes the key, and End Week asks again.
+let ahead = null, aheadPlacement = null;
+const aheadKey = (g) => `${g.seed}:${g.week}:${Object.values(g.agents).filter((a) => a.alive).length}`;
+function prefetchKarla() {
+  const g = app?.game;
+  if (!g || app.mode !== 'claude' || g.phase === 'over' || !g.placed.karla || g.pending.karla) return;
+  const key = aheadKey(g);
+  if (ahead?.key !== key) ahead = { key, promise: claudeOrders(g, 'karla', viewFor(g, 'karla')) };
+}
+function karlaOrders(g, side) {
+  const p = ahead?.key === aheadKey(g) ? ahead.promise : claudeOrders(g, side, viewFor(g, side));
+  ahead = null;
+  return p;
+}
+
 function startNew(mode, size = 10) {
   const game = newGame(randomSeed(), { size });
   app = {
@@ -63,6 +81,8 @@ function startNew(mode, size = 10) {
   };
   app.setup.control = {};
   app.setupSel = Object.values(game.agents).find((a) => a.side === 'control').id;
+  ahead = null;
+  aheadPlacement = mode === 'claude' ? { seed: game.seed, promise: claudePlacement(game, 'karla', viewFor(game, 'karla')) } : null;
   save(); render();
 }
 
@@ -74,7 +94,8 @@ async function confirmPlacement() {
     if (isHuman(opp)) { app.active = opp; app.setup[opp] = {}; app.setupSel = Object.values(g.agents).find((a) => a.side === opp).id; app.screen = 'handoff'; save(); render(); return; }
     busy('Moscow Centre is placing its networks');
     const v = viewFor(g, opp);
-    const r = app.mode === 'claude' ? await claudePlacement(g, opp, v) : { placement: heuristicPlacement(v, g.seed) };
+    const r = app.mode === 'claude' ? await (aheadPlacement?.seed === g.seed ? aheadPlacement.promise : claudePlacement(g, opp, v)) : { placement: heuristicPlacement(v, g.seed) };
+    aheadPlacement = null;
     placeAgents(g, opp, r.placement);
     if (r.journal) addJournal(g, opp, r.journal);
   }
@@ -82,14 +103,29 @@ async function confirmPlacement() {
 }
 
 async function morning() {
-  busy(label('The morning traffic is coming in', 'The morning reports are coming in'));
-  for (const side of humanSides()) await voiceMorning(app.game, side);
+  const g = app.game;
+  // Hot-seat waits for both sides' voices behind the handoff screen; one player gets the map at once
+  // and the voices land in the reports while the morning plays out.
+  if (app.mode === 'hotseat') {
+    busy(label('The morning traffic is coming in', 'The morning reports are coming in'));
+    for (const side of humanSides()) await voiceMorning(g, side);
+  }
   app.active = 'control';
   app.sel = { city: null, agent: null }; app.pick = null;
   app.tab = 'traffic'; app.stationCity = null; app.traffic = true; // each morning opens on the new traffic
   app.screen = app.mode === 'hotseat' ? 'handoff' : 'play';
   app.fresh = true;
   save(); render();
+  if (app.mode !== 'hotseat') voiceMorning(g, 'control').then(() => { applyVoices(g); save(); });
+  prefetchKarla();
+}
+// Put freshly voiced reports into the panel without re-rendering (which would cut the morning short).
+function applyVoices(g) {
+  if (app?.game !== g) return;
+  for (const m of g.inbox.control.filter((x) => x.week === g.week && x.voiced)) {
+    const p = document.querySelector(`.msg[data-mid="${m.id}"] p`);
+    if (p) p.innerHTML = lexHTML(esc(m.voiced));
+  }
 }
 
 async function endWeek() {
@@ -106,7 +142,7 @@ async function endWeek() {
     if (isHuman(opp)) { app.active = opp; app.screen = 'handoff'; app.sel = { city: null, agent: null }; app.pick = null; app.tab = 'traffic'; app.stationCity = null; save(); render(); return; }
     busy("Moscow Centre's networks are at work"); // the wait is the night's work, not Karla reading
     const v = viewFor(g, opp);
-    const r = app.mode === 'claude' ? await claudeOrders(g, opp, v) : { orders: heuristicOrders(g, v, g.seed), executions: [] };
+    const r = app.mode === 'claude' ? await karlaOrders(g, opp) : { orders: heuristicOrders(g, v, g.seed), executions: [] };
     // Never fall back silently: if Claude couldn't play Karla this week, say so until it can again.
     if (app.mode === 'claude') {
       const was = app.karlaDown;
@@ -122,7 +158,7 @@ async function endWeek() {
     submitOrders(g, opp, r.orders.filter((o) => g.agents[o.agentId].alive));
   }
   busy('The night passes');
-  await new Promise((res) => setTimeout(res, 900));
+  await new Promise((res) => setTimeout(res, 500));
   app.prevPos = Object.fromEntries(Object.values(g.agents).map((a) => [a.id, a.city])); // for the morning replay
   resolveWeek(g);
   if (g.phase === 'over') { app.screen = 'debrief'; save(); render(); return; }
@@ -574,7 +610,7 @@ function onAct(el, ev) {
     }
     case 'pref': { prefs[el.dataset.key] = el.dataset.val; try { localStorage.setItem(PREFS, JSON.stringify(prefs)); } catch {} return render(); }
     case 'new': return startNew(prefs.players === '2' ? 'hotseat' : 'claude', Number(prefs.size)); // Claude, or the bot when Claude can't be reached
-    case 'continue': app = load(); app.tab = 'traffic'; app.stationCity = null; if (app.sel) app.sel = { city: null, agent: null }; if (app.screen === 'busy') { app.game.pending = { control: null, karla: null }; app.screen = app.game.phase === 'setup' ? 'setup' : 'play'; app.active = 'control'; } return render();
+    case 'continue': app = load(); app.tab = 'traffic'; app.stationCity = null; if (app.sel) app.sel = { city: null, agent: null }; if (app.screen === 'busy') { app.game.pending = { control: null, karla: null }; app.screen = app.game.phase === 'setup' ? 'setup' : 'play'; app.active = 'control'; } render(); prefetchKarla(); return;
     case 'manual': return openModal(manualHTML());
     case 'quit': openModal(`<h2>Abandon this operation?</h2><p>The current game will be lost.</p><button class="btn red" data-act="quit-ok">Abandon</button> <button class="btn" data-act="close-modal">Keep playing</button>`); return;
     case 'quit-ok': clearSave(); app = null; closeModal(); return render();
