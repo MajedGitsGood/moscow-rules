@@ -624,7 +624,7 @@ function onAct(el, ev) {
     }
     case 'pref': { prefs[el.dataset.key] = el.dataset.val; try { localStorage.setItem(PREFS, JSON.stringify(prefs)); } catch {} return render(); }
     case 'new': return startNew(prefs.players === '2' ? 'hotseat' : 'claude', Number(prefs.size)); // Claude, or the bot when Claude can't be reached
-    case 'continue': app = load(); app.tab = 'traffic'; app.stationCity = null; if (app.sel) app.sel = { city: null, agent: null }; if (app.screen === 'busy') { app.game.pending = { control: null, karla: null }; app.screen = app.game.phase === 'setup' ? 'setup' : 'play'; app.active = 'control'; } render(); prefetchKarla(); return;
+    case 'continue': app = load(); if (llmStatus().llm) app.karlaDown = null; /* Claude is reachable again: drop last week's "offline" label */ app.tab = 'traffic'; app.stationCity = null; if (app.sel) app.sel = { city: null, agent: null }; if (app.screen === 'busy') { app.game.pending = { control: null, karla: null }; app.screen = app.game.phase === 'setup' ? 'setup' : 'play'; app.active = 'control'; } render(); prefetchKarla(); return;
     case 'manual': return openModal(manualHTML());
     case 'quit': openModal(`<h2>Abandon this operation?</h2><p>The current game will be lost.</p><button class="btn red" data-act="quit-ok">Abandon</button> <button class="btn" data-act="close-modal">Keep playing</button>`); return;
     case 'quit-ok': clearSave(); app = null; closeModal(); return render();
