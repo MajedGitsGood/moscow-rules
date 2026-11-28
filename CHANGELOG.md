@@ -29,6 +29,9 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 - Report voices are written while the morning plays, instead of before it.
 
 ### Fixed
+- After an update, a page still holding the old version used to lose Claude without saying why. It
+  now says "Spymaster was updated: refresh the page to bring Claude back" (and the Offline Karla
+  plate reads "Game updated · refresh the page").
 - Voiced reports no longer sign off with the sender's name, role and city (the card already shows
   them); any sign-off is stripped, in saved games too.
 - **Agents' reports are voiced again.** A fact-check bug threw out every rewrite of a report from a

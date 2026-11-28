@@ -83,9 +83,12 @@ export default {
       let body;
       try { body = await req.json(); } catch { return json(env, req, 400, { ok: false, error: 'bad request body' }); }
       const { kind, system, user, schema, max_tokens: maxTokens } = body || {};
-      if (!PROMPTS[kind]?.includes(system) || typeof user !== 'string' || user.length > MAX_USER_CHARS || !schema || typeof schema !== 'object') {
+      if (!PROMPTS[kind] || typeof user !== 'string' || user.length > MAX_USER_CHARS || !schema || typeof schema !== 'object') {
         return json(env, req, 400, { ok: false, error: 'bad request' });
       }
+      // A known kind with a prompt we don't recognise is almost always a page loaded before the game was
+      // updated (the browser still has the old prompts): say so, so the player can refresh.
+      if (!PROMPTS[kind].includes(system)) return json(env, req, 409, { ok: false, stale: true, error: 'Spymaster was updated: refresh the page to bring Claude back.' });
       const b = owner ? null : await budget(env, ip);
       if (b && b.left <= 0) return json(env, req, 402, { ok: false, error: b.siteSpent ? "Today's Claude budget is spent; the game continues offline." : 'Your Claude budget for today is spent; the game continues offline.', remaining: 0 });
 

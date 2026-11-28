@@ -56,7 +56,7 @@ export async function callClaude(kind, { system, user, schema, maxTokens }) {
   }
   const j = await r.json().catch(() => ({}));
   if (j.remaining !== undefined) status.remaining = j.remaining;
-  if (r.status === 402 || r.status === 503) {
+  if (r.status === 402 || r.status === 503 || (r.status === 409 && j.stale)) {
     status.llm = false;
     status.reason = j.error || 'Budget exhausted';
     throw new LLMUnavailable(status.reason);
